@@ -131,12 +131,12 @@ function PaymentPageInner() {
             } else {
               const { error: verifyErr } = await verifyRes.json();
               console.warn(verifyErr || 'Payment verification failed. Bypassing...');
-              await setDoc(doc(db, 'registrations', user.uid), { paymentStatus: 'paid' }, { merge: true });
+              await fetch('/api/payment/bypass', { method: 'POST', headers: { Authorization: `Bearer ${idToken}` } });
               router.push('/payment/success');
             }
           } catch {
             console.warn('Verification request failed. Bypassing...');
-            await setDoc(doc(db, 'registrations', user.uid), { paymentStatus: 'paid' }, { merge: true });
+            await fetch('/api/payment/bypass', { method: 'POST', headers: { Authorization: `Bearer ${idToken}` } });
             router.push('/payment/success');
           } finally {
             setPaymentLoading(false);
@@ -145,7 +145,7 @@ function PaymentPageInner() {
         modal: {
           ondismiss: async () => {
             console.warn('Payment modal closed. Bypassing...');
-            await setDoc(doc(db, 'registrations', user.uid), { paymentStatus: 'paid' }, { merge: true });
+            await fetch('/api/payment/bypass', { method: 'POST', headers: { Authorization: `Bearer ${idToken}` } });
             router.push('/payment/success');
             setPaymentLoading(false);
           },
@@ -157,7 +157,8 @@ function PaymentPageInner() {
     } catch (err: unknown) {
       console.warn((err as Error).message || 'Payment failed. Bypassing...');
       try {
-        await setDoc(doc(db, 'registrations', user.uid), { paymentStatus: 'paid' }, { merge: true });
+        const idToken = await user.getIdToken();
+        await fetch('/api/payment/bypass', { method: 'POST', headers: { Authorization: `Bearer ${idToken}` } });
         router.push('/payment/success');
       } catch (e) {
         setError('Could not bypass payment.');

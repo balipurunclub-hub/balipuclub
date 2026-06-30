@@ -3,12 +3,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDummyKeyDummyKeyDummyKeyDummyKey',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'dummy.firebaseapp.com',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dummy-project',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'dummy.appspot.com',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:1234567890:web:dummy',
+  apiKey: "AIzaSyDmXvd8cMgrmaTjTrQISdFbvs2qnxvPPxw",
+  authDomain: "balipu.firebaseapp.com",
+  projectId: "balipu",
+  storageBucket: "balipu.firebasestorage.app",
+  messagingSenderId: "283632424868",
+  appId: "1:283632424868:web:109c92e6a9200da01d9331",
+  measurementId: "G-21B0WHDLVF"
 };
 
 // Prevent re-initializing on hot reload

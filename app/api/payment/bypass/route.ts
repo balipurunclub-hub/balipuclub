@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { getAdminAuth, getAdminDb } from '@/lib/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -7,6 +6,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 export async function POST(request: NextRequest) {
   const adminAuth = getAdminAuth();
   const adminDb = getAdminDb();
+  
   // 1. Verify Firebase ID token
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
@@ -23,56 +23,15 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Invalid token' }, { status: 401 });
   }
 
-  // 2. Parse body
-  let body: {
-    razorpay_order_id: string;
-    razorpay_payment_id: string;
-    razorpay_signature: string;
-  };
-
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 });
-  }
-
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
-
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-    return Response.json({ error: 'Missing payment fields' }, { status: 400 });
-  }
-
-  // 3. Verify Razorpay signature (HMAC-SHA256)
-  const secret = process.env.RAZORPAY_KEY_SECRET!;
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    .digest('hex');
-
-  if (expectedSignature !== razorpay_signature) {
-    // Mark as failed if signature mismatch
-    await adminDb.collection('registrations').doc(uid).update({
-      paymentStatus: 'failed',
-      orderId: razorpay_order_id,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-
-    return Response.json(
-      { error: 'Payment verification failed. Signature mismatch.' },
-      { status: 400 }
-    );
-  }
-
-  // 4. Mark as paid in Firestore
+  // 2. Mark as paid in Firestore
   try {
     await adminDb.collection('registrations').doc(uid).update({
       paymentStatus: 'paid',
-      orderId: razorpay_order_id,
-      paymentId: razorpay_payment_id,
+      paymentId: 'bypassed_' + Math.random().toString(36).substring(7),
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    // 5. Send confirmation email
+    // 3. Send confirmation email
     try {
       const userDoc = await adminDb.collection('registrations').doc(uid).get();
       const userData = userDoc.data();
@@ -116,7 +75,7 @@ export async function POST(request: NextRequest) {
                   <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px; line-height: 1.8;">
                     <li><strong>Name:</strong> ${userData.name}</li>
                     <li><strong>Jersey Size:</strong> ${userData.jerseySize || 'N/A'}</li>
-                    <li><strong>Payment ID:</strong> ${razorpay_payment_id}</li>
+                    <li><strong>Payment ID:</strong> Bypassed (Test)</li>
                   </ul>
                 </div>
                 
@@ -137,12 +96,12 @@ export async function POST(request: NextRequest) {
         await transporter.sendMail(mailOptions);
       }
     } catch (emailErr) {
-      console.error('[Razorpay verify] Email sending failed:', emailErr);
+      console.error('[Payment bypass] Email sending failed:', emailErr);
     }
 
-    return Response.json({ success: true, paymentId: razorpay_payment_id });
+    return Response.json({ success: true });
   } catch (err) {
-    console.error('[Razorpay verify] Firestore update failed:', err);
-    return Response.json({ error: 'Payment verified but DB update failed. Contact support.' }, { status: 500 });
+    console.error('[Payment bypass] Firestore update failed:', err);
+    return Response.json({ error: 'Payment bypass failed.' }, { status: 500 });
   }
 }
