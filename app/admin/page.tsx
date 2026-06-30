@@ -39,7 +39,7 @@ function AdminDashboardInner() {
 
   const totalRevenue = registrations
     .filter((reg) => reg.paymentStatus === 'paid')
-    .reduce((acc, _reg) => acc + parseInt(process.env.NEXT_PUBLIC_REGISTRATION_FEE || '299'), 0);
+    .reduce((acc, _reg) => acc + parseInt(process.env.NEXT_PUBLIC_REGISTRATION_FEE || '200'), 0);
 
   const paidCount = registrations.filter((reg) => reg.paymentStatus === 'paid').length;
 

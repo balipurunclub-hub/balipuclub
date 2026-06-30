@@ -100,7 +100,7 @@ export default function Home() {
             className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 divide-y md:divide-y-0 md:divide-x divide-slate-200"
           >
             <motion.div variants={fadeInUp} className="flex flex-col items-center text-center pt-8 md:pt-0 md:px-8 first:pt-0">
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Organised by</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Co-founders</span>
               <div className="text-xl font-heading text-[#1B1B4D]">Balipu Run Club</div>
             </motion.div>
 
@@ -173,7 +173,7 @@ export default function Home() {
             </motion.p>
             <motion.div variants={fadeInUp}>
               <Link href="/register" className="btn-primary text-xl px-12 py-5 shadow-2xl hover:shadow-[#F5841F]/50">
-                Join Now — ₹299
+                Join Now — ₹200
               </Link>
             </motion.div>
           </motion.div>

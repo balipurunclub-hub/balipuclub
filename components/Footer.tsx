@@ -55,7 +55,7 @@ export function Footer() {
       </div>
       
       {/* Decorative strip at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#6B2FA0] via-[#F5841F] to-[#6B2FA0]" />
+      <div className="absolute bottom-0 left-0 right-0 h-2 bg-linear-to-r from-[#6B2FA0] via-[#F5841F] to-[#6B2FA0]" />
     </footer>
   );
 }

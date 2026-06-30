@@ -180,7 +180,10 @@ function PaymentPageInner() {
       <div className="text-center py-16 animate-fade-in">
         <CheckCircle2 className="w-14 h-14 text-green-400 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-[#1B1B4D] mb-2">Payment Complete!</h2>
-        <p className="text-slate-600 mb-6">Your registration is confirmed.</p>
+        <div className="text-slate-600 mb-6 space-y-2">
+          <p>Your registration is confirmed.</p>
+          <p className="text-sm">A confirmation email will be sent to you shortly. Please check your spam folder as well.</p>
+        </div>
         <button onClick={() => router.push('/dashboard')} className="btn-primary">
           View My Registration
         </button>
@@ -188,7 +191,7 @@ function PaymentPageInner() {
     );
   }
 
-  const fee = parseInt(process.env.NEXT_PUBLIC_REGISTRATION_FEE || '299');
+  const fee = parseInt(process.env.NEXT_PUBLIC_REGISTRATION_FEE || '200');
 
   return (
     <>
