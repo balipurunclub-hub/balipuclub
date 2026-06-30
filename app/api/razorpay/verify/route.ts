@@ -63,13 +63,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 4. Mark as paid in Firestore
+  // 4. Mark as paid in Firestore and assign BIB number
+  let finalBibNumber = 'Pending';
   try {
-    await adminDb.collection('registrations').doc(uid).update({
-      paymentStatus: 'paid',
-      orderId: razorpay_order_id,
-      paymentId: razorpay_payment_id,
-      updatedAt: FieldValue.serverTimestamp(),
+    await adminDb.runTransaction(async (transaction) => {
+      const counterRef = adminDb.collection('metadata').doc('counters');
+      const counterDoc = await transaction.get(counterRef);
+      
+      let newBibNumber = 201; // Start from 201 as 200 are already registered
+      if (counterDoc.exists && counterDoc.data()?.registrationCount) {
+        newBibNumber = counterDoc.data()!.registrationCount + 1;
+      }
+      
+      transaction.set(counterRef, { registrationCount: newBibNumber }, { merge: true });
+      
+      const regRef = adminDb.collection('registrations').doc(uid);
+      transaction.update(regRef, {
+        paymentStatus: 'paid',
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        bibNumber: newBibNumber,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      
+      finalBibNumber = newBibNumber.toString();
     });
 
     // 5. Send confirmation email
@@ -116,8 +133,18 @@ export async function POST(request: NextRequest) {
                   <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px; line-height: 1.8;">
                     <li><strong>Name:</strong> ${userData.name}</li>
                     <li><strong>Jersey Size:</strong> ${userData.jerseySize || 'N/A'}</li>
+                    <li><strong>BIB Number:</strong> ${finalBibNumber}</li>
                     <li><strong>Payment ID:</strong> ${razorpay_payment_id}</li>
                   </ul>
+                </div>
+                
+                <div style="background-color: #e6f7ea; padding: 20px; border-left: 4px solid #25D366; margin: 20px 0; border-radius: 4px;">
+                  <h3 style="margin-top: 0; color: #1B1B4D;">Join our WhatsApp Community!</h3>
+                  <p style="font-size: 15px; line-height: 1.5; margin-bottom: 0;">
+                    Stay updated with the latest event announcements and connect with fellow runners.
+                    <br><br>
+                    <a href="https://chat.whatsapp.com/Drd93iPcBwv4sXneIDuoPc" style="background-color: #25D366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Join WhatsApp Group</a>
+                  </p>
                 </div>
                 
                 <p style="font-size: 15px; line-height: 1.5; margin-top: 30px;">

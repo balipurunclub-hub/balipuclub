@@ -100,8 +100,11 @@ function AdminDashboardInner() {
           <button onClick={fetchRegistrations} className="btn-secondary">Try Again</button>
         </div>
       ) : loading ? (
-        <div className="flex items-center justify-center py-20 card">
-          <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-4 animate-pulse">
+          <div className="h-12 bg-slate-100 rounded" />
+          <div className="h-12 bg-slate-100 rounded" />
+          <div className="h-12 bg-slate-100 rounded" />
+          <div className="h-12 bg-slate-100 rounded" />
         </div>
       ) : (
         <RegistrationsTable data={registrations} />

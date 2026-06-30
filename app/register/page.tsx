@@ -79,39 +79,23 @@ function RegistrationFormInner() {
     if (!user) return;
     setSubmitError('');
     try {
-      await runTransaction(db, async (transaction) => {
-        // 1. Get current counter
-        const counterRef = doc(db, 'metadata', 'counters');
-        const counterDoc = await transaction.get(counterRef);
-        
-        let newBibNumber = 201; // Start from 201 as 200 are already registered
-        if (counterDoc.exists() && counterDoc.data().registrationCount) {
-          newBibNumber = counterDoc.data().registrationCount + 1;
-        }
-
-        // 2. Set new counter
-        transaction.set(counterRef, { registrationCount: newBibNumber }, { merge: true });
-
-        // 3. Save registration with bibNumber
-        const regRef = doc(db, 'registrations', user.uid);
-        transaction.set(regRef, {
-          uid: user.uid,
-          bibNumber: newBibNumber,
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          age: data.age,
-          gender: data.gender,
-          city: data.city,
-          emergencyContact: data.emergencyContact,
-          idProofType: data.idProofType,
-          idProofNumber: data.idProofNumber,
-          source: data.source,
-          jerseySize: data.jerseySize,
-          paymentStatus: 'pending',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
+      const regRef = doc(db, 'registrations', user.uid);
+      await setDoc(regRef, {
+        uid: user.uid,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        age: data.age,
+        gender: data.gender,
+        city: data.city,
+        emergencyContact: data.emergencyContact,
+        idProofType: data.idProofType,
+        idProofNumber: data.idProofNumber,
+        source: data.source,
+        jerseySize: data.jerseySize,
+        paymentStatus: 'pending',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
       router.push('/payment');
     } catch (err) {
@@ -122,8 +106,16 @@ function RegistrationFormInner() {
 
   if (checking) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-5 animate-pulse">
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div className="h-12 bg-slate-200 rounded" />
+          <div className="h-12 bg-slate-200 rounded" />
+        </div>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div className="h-12 bg-slate-200 rounded" />
+          <div className="h-12 bg-slate-200 rounded" />
+        </div>
+        <div className="h-24 bg-slate-200 rounded" />
       </div>
     );
   }

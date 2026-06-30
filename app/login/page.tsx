@@ -23,14 +23,18 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace('/dashboard');
+      if (isAdmin) {
+        router.replace('/admin');
+      } else {
+        router.replace('/dashboard');
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, isAdmin, router]);
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -44,8 +48,14 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     setAuthError('');
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/dashboard');
+      const credential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      const email = credential.user.email;
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
+      if (email && email.toLowerCase() === adminEmail.toLowerCase()) {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
@@ -63,8 +73,14 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      router.push('/dashboard');
+      const credential = await signInWithPopup(auth, provider);
+      const email = credential.user.email;
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
+      if (email && email.toLowerCase() === adminEmail.toLowerCase()) {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code !== 'auth/popup-closed-by-user') {
