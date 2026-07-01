@@ -92,7 +92,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 pt-28 pb-12">
       {/* Glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-violet-600/15 blur-3xl -z-10" />
 

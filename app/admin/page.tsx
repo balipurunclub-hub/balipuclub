@@ -47,45 +47,48 @@ function AdminDashboardInner() {
     <div className="space-y-6">
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center text-violet-600">
+        <div className="relative overflow-hidden rounded-2xl bg-[#1B1B4D]/80 border border-white/10 p-5 flex items-center gap-4 shadow-lg">
+          <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-violet-500/20 blur-2xl" />
+          <div className="w-12 h-12 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-slate-600 text-sm font-medium">Total Registrations</p>
-            <h3 className="text-2xl font-bold text-[#1B1B4D]">{registrations.length}</h3>
+            <p className="text-slate-400 text-sm font-medium">Total Registrations</p>
+            <h3 className="text-2xl font-bold text-white">{registrations.length}</h3>
           </div>
         </div>
 
-        <div className="card p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+        <div className="relative overflow-hidden rounded-2xl bg-[#1B1B4D]/80 border border-white/10 p-5 flex items-center gap-4 shadow-lg">
+          <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-green-500/20 blur-2xl" />
+          <div className="w-12 h-12 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 shrink-0">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-slate-600 text-sm font-medium">Successful Payments</p>
-            <h3 className="text-2xl font-bold text-[#1B1B4D]">{paidCount}</h3>
+            <p className="text-slate-400 text-sm font-medium">Successful Payments</p>
+            <h3 className="text-2xl font-bold text-white">{paidCount}</h3>
           </div>
         </div>
 
-        <div className="card p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+        <div className="relative overflow-hidden rounded-2xl bg-[#1B1B4D]/80 border border-white/10 p-5 flex items-center gap-4 shadow-lg">
+          <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-[#F5841F]/20 blur-2xl" />
+          <div className="w-12 h-12 rounded-full bg-[#F5841F]/20 border border-[#F5841F]/30 flex items-center justify-center text-[#F5841F] shrink-0">
             <IndianRupee className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-slate-600 text-sm font-medium">Total Revenue</p>
-            <h3 className="text-2xl font-bold text-[#1B1B4D]">₹{totalRevenue.toLocaleString('en-IN')}</h3>
+            <p className="text-slate-400 text-sm font-medium">Total Revenue</p>
+            <h3 className="text-2xl font-bold text-white">₹{totalRevenue.toLocaleString('en-IN')}</h3>
           </div>
         </div>
       </div>
 
       {/* Main content */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <h2 className="text-lg font-bold text-[#1B1B4D]">Registration Data</h2>
+        <h2 className="text-lg font-bold text-white">Registration Data</h2>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchRegistrations}
             disabled={loading}
-            className="btn-secondary text-sm py-1.5 px-3 rounded-lg flex items-center gap-1.5"
+            className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -101,10 +104,10 @@ function AdminDashboardInner() {
         </div>
       ) : loading ? (
         <div className="space-y-4 animate-pulse">
-          <div className="h-12 bg-slate-100 rounded" />
-          <div className="h-12 bg-slate-100 rounded" />
-          <div className="h-12 bg-slate-100 rounded" />
-          <div className="h-12 bg-slate-100 rounded" />
+          <div className="h-12 bg-white/5 rounded-xl" />
+          <div className="h-12 bg-white/5 rounded-xl" />
+          <div className="h-12 bg-white/5 rounded-xl" />
+          <div className="h-12 bg-white/5 rounded-xl" />
         </div>
       ) : (
         <RegistrationsTable data={registrations} />
@@ -116,15 +119,25 @@ function AdminDashboardInner() {
 export default function AdminDashboardPage() {
   return (
     <AdminRoute>
-      <div className="min-h-[calc(100vh-64px)] p-4 md:p-8">
-        <div className="mx-auto max-w-7xl animate-fade-in">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-violet-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-[#1B1B4D] leading-tight">Admin Dashboard</h1>
-              <p className="text-slate-500 text-sm">Manage Balipu Run registrations</p>
+      <div className="min-h-screen bg-[#0D0D2B]">
+        {/* Spacer for fixed navbar */}
+        <div className="h-28" />
+
+        {/* Content */}
+        <div className="mx-auto max-w-7xl px-4 md:px-8 py-4 md:py-8 animate-fade-in">
+          {/* Page header */}
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-[#F5841F] blur-lg opacity-20 rounded-full" />
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-[#F5841F]/20 to-[#F5841F]/5 border border-[#F5841F]/30 flex items-center justify-center relative shadow-[0_0_15px_rgba(245,132,31,0.15)]">
+                  <ShieldCheck className="w-6 h-6 text-[#F5841F]" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-heading tracking-wide text-white leading-tight drop-shadow-md">ADMIN DASHBOARD</h1>
+                <p className="text-slate-400 text-sm mt-0.5">Manage Balipu x Nexus registrations</p>
+              </div>
             </div>
           </div>
 

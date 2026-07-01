@@ -26,11 +26,24 @@ export default function Home() {
     { name: "Bharath N Acharya", title: "Inaugural Guest", info: "National President Of JCI RPP", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIjOmqeOGOJa3kuXNydo-cUuNmnRbBHl-rhQ&s" }
   ];
 
+
+
   return (
     <div className="flex flex-col min-h-screen bg-white overflow-hidden">
       {/* HERO SECTION */}
-      <section className="relative w-full pt-20 pb-32 lg:pt-32 lg:pb-40 overflow-hidden bg-gradient-to-br from-[#6B2FA0]/10 via-[#F5841F]/10 to-blue-100">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30 mix-blend-overlay"></div>
+      <section className="relative w-full pt-32 pb-32 lg:pt-44 lg:pb-40 overflow-hidden bg-linear-to-br from-[#1B1B4D] via-[#2D1B36] to-[#F5841F]/30">
+        {/* Animated Background Orbs */}
+        <motion.div
+          animate={{ x: [0, 100, 0], y: [0, -50, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-0 left-0 w-96 h-96 bg-[#6B2FA0]/20 rounded-full blur-[120px] mix-blend-multiply"
+        />
+        <motion.div
+          animate={{ x: [0, -100, 0], y: [0, 100, 0] }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute top-40 right-0 w-120 h-120 bg-[#F5841F]/20 rounded-full blur-[120px] mix-blend-multiply"
+        />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.15] mix-blend-overlay"></div>
 
 
 
@@ -47,34 +60,55 @@ export default function Home() {
               </div>
             </motion.div>
 
-            <motion.h1 variants={fadeInUp} className="font-heading text-6xl sm:text-7xl md:text-8xl text-[#1B1B4D] uppercase italic transform -skew-x-6 tracking-tight mb-2">
-              BALIPU <span className="text-[#F5841F]">x</span> NEXUS
-            </motion.h1>
+            {/* Hero Title - Poster Style */}
+            <motion.div variants={fadeInUp} className="relative font-heading uppercase italic tracking-tighter mb-12 mt-6 -skew-x-3 text-center max-w-lg mx-auto px-4">
+              {/* BALIPU */}
+              <div className="text-[#F5841F] drop-shadow-[0_4px_24px_rgba(245,132,31,0.6)] text-[clamp(3.5rem,16vw,9rem)] leading-[0.85]">
+                BALIPU
+              </div>
+              {/* X overlapping between lines - centered on all screens */}
+              <div className="text-white font-sans font-black text-[clamp(2.5rem,12vw,7rem)] leading-none -my-1 sm:-my-2 drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)] pointer-events-none select-none text-center">
+                X
+              </div>
+              {/* NEXUS - center on mobile, slight left shift on desktop */}
+              <div className="text-white drop-shadow-[0_4px_24px_rgba(255,255,255,0.15)] text-[clamp(3.5rem,16vw,9rem)] leading-[0.85] sm:-translate-x-6">
+                NEXUS
+              </div>
+            </motion.div>
 
-            <motion.p variants={fadeInUp} className="text-xl sm:text-2xl text-slate-700 font-medium mb-1">
+            <motion.p variants={fadeInUp} className="text-xl sm:text-2xl text-white font-medium mb-2 drop-shadow-md">
               A Community Run & Youth Fitness Initiative
             </motion.p>
-            <motion.p variants={fadeInUp} className="text-lg sm:text-xl text-[#F5841F] italic font-semibold mb-12">
+            <motion.p variants={fadeInUp} className="text-lg sm:text-xl text-[#F5841F] italic font-semibold mb-12 drop-shadow-md">
               "Run for a Better Tomorrow"
             </motion.p>
 
-            <motion.div variants={fadeInUp} className="card-dark inline-block p-6 sm:p-8 mx-auto w-full max-w-3xl mb-12 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#F5841F] rounded-full blur-3xl opacity-20 transform translate-x-1/2 -translate-y-1/2"></div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 relative z-10">
+            <motion.div variants={fadeInUp} className="card-dark inline-block p-8 mx-auto w-full max-w-3xl mb-12 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#F5841F] rounded-full blur-3xl opacity-30 group-hover:opacity-40 transition-opacity duration-500"></div>
+              <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-[#6B2FA0] rounded-full blur-3xl opacity-30 group-hover:opacity-40 transition-opacity duration-500"></div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-4 relative z-10">
                 <div className="flex flex-col items-center justify-center text-center">
-                  <Calendar className="w-8 h-8 text-[#F5841F] mb-3" />
-                  <span className="text-slate-300 text-sm uppercase tracking-wider mb-1">Date</span>
-                  <strong className="text-xl">12th July 2026</strong>
+                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-4 border border-white/10 group-hover:border-[#F5841F]/50 transition-colors">
+                    <Calendar className="w-6 h-6 text-[#F5841F]" />
+                  </div>
+                  <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Date</span>
+                  <strong className="text-lg text-white font-medium">12th July 2026</strong>
                 </div>
                 <div className="flex flex-col items-center justify-center text-center sm:border-x sm:border-white/10 px-4">
-                  <Clock className="w-8 h-8 text-[#F5841F] mb-3" />
-                  <span className="text-slate-300 text-sm uppercase tracking-wider mb-1">Time</span>
-                  <strong className="text-xl">6:30 AM</strong>
+                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-4 border border-white/10 group-hover:border-[#F5841F]/50 transition-colors">
+                    <Clock className="w-6 h-6 text-[#F5841F]" />
+                  </div>
+                  <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Time</span>
+                  <strong className="text-lg text-white font-medium">6:30 AM</strong>
                 </div>
                 <div className="flex flex-col items-center justify-center text-center">
-                  <MapPin className="w-8 h-8 text-[#F5841F] mb-3" />
-                  <span className="text-slate-300 text-sm uppercase tracking-wider mb-1">Venue</span>
-                  <strong className="text-lg leading-tight">Fiza by Nexus Mall<br />Pandeshwar</strong>
+                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-4 border border-white/10 group-hover:border-[#F5841F]/50 transition-colors">
+                    <MapPin className="w-6 h-6 text-[#F5841F]" />
+                  </div>
+                  <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Venue</span>
+                  <strong className="text-base text-white font-medium leading-tight">Fiza by Nexus Mall<br />Pandeshwar</strong>
                 </div>
               </div>
             </motion.div>
@@ -101,7 +135,8 @@ export default function Home() {
           >
             <motion.div variants={fadeInUp} className="flex flex-col items-center text-center pt-8 md:pt-0 md:px-8 first:pt-0">
               <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Co-founders</span>
-              <div className="text-xl font-heading text-[#1B1B4D]">Balipu Run Club</div>
+              <div className="text-xl font-heading text-[#1B1B4D]">Jeethesh A &amp; Sohan Raj</div>
+              <span className="text-sm font-sans font-medium text-slate-500 mt-1">Balipu Run Club</span>
             </motion.div>
 
             <motion.div variants={fadeInUp} className="flex flex-col items-center text-center pt-8 md:pt-0 md:px-8">
@@ -110,8 +145,8 @@ export default function Home() {
             </motion.div>
 
             <motion.div variants={fadeInUp} className="flex flex-col items-center text-center pt-8 md:pt-0 md:px-8">
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Medical Partner</span>
-              <div className="text-xl font-heading text-[#1B1B4D]">KMC Mangalore</div>
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Health Partner</span>
+              <div className="text-xl font-heading text-[#1B1B4D]">KMC Hospital</div>
             </motion.div>
           </motion.div>
         </div>
@@ -140,22 +175,94 @@ export default function Home() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {guests.map((guest, i) => (
-              <motion.div key={i} variants={fadeInUp} className="card p-6 flex flex-col items-center text-center group hover:-translate-y-2 transition-transform duration-300">
-                <div className="w-32 h-32 rounded-full overflow-hidden mb-4 border-4 border-white shadow-lg group-hover:border-[#F5841F] transition-colors bg-white">
+              <motion.div key={i} variants={fadeInUp} className="card p-6 flex flex-col items-center text-center group hover:-translate-y-3 hover:shadow-2xl transition-all duration-300 relative overflow-hidden">
+                <div className="absolute inset-0 bg-linear-to-b from-transparent to-[#1B1B4D]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="w-32 h-32 rounded-full overflow-hidden mb-5 border-4 border-white shadow-lg group-hover:border-[#F5841F] transition-colors bg-white relative z-10 group-hover:shadow-[#F5841F]/30">
                   <img src={guest.img} alt={guest.name} className="w-full h-full object-cover object-top" />
                 </div>
-                <h3 className="font-bold text-lg text-[#1B1B4D] mb-1">{guest.name}</h3>
-                <p className="text-sm text-[#F5841F] font-bold mb-1">{guest.title}</p>
-                <p className="text-xs text-slate-500">{guest.info}</p>
+                <h3 className="font-bold text-lg text-[#1B1B4D] mb-1 relative z-10">{guest.name}</h3>
+                <p className="text-sm text-[#F5841F] font-semibold mb-2 relative z-10">{guest.title}</p>
+                <p className="text-xs text-slate-500 relative z-10">{guest.info}</p>
               </motion.div>
             ))}
           </motion.div>
         </div>
       </section>
 
+      {/* PRICING PHASES */}
+      <section className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={fadeInUp}
+            className="text-center mb-12"
+          >
+            <h2 className="font-heading text-4xl sm:text-5xl text-[#1B1B4D] uppercase italic -skew-x-6 mb-2">Registration Fee</h2>
+            <div className="w-24 h-1.5 bg-[#F5841F] mx-auto mt-4 rounded-full" />
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-8"
+          >
+            {/* Phase 1 */}
+            <motion.div variants={fadeInUp} className="relative card p-8 border-2 border-slate-200 opacity-70 overflow-hidden grayscale">
+              <div className="absolute top-4 right-4">
+                <span className="bg-slate-500 text-white text-xs font-bold px-3 py-1 rounded-full">SOLD OUT</span>
+              </div>
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-slate-400 rounded-full blur-3xl opacity-10" />
+              <p className="text-slate-500 text-sm font-semibold uppercase tracking-widest mb-2">Phase 1</p>
+              <div className="flex items-end gap-1 mb-4">
+                <span className="text-5xl font-bold text-[#1B1B4D]">₹200</span>
+              </div>
+              <p className="text-slate-600 text-sm mb-6">
+                All 50 early bird spots have been filled!
+              </p>
+              <ul className="space-y-2 text-sm text-slate-600 mb-8">
+                <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Race BIB &amp; Timing Chip</li>
+                <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Event T-Shirt</li>
+                <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Finisher Certificate</li>
+                <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Refreshments</li>
+              </ul>
+            </motion.div>
+
+            {/* Phase 2 */}
+            <motion.div variants={fadeInUp} className="relative card p-8 border-2 border-[#F5841F]/40 overflow-hidden shadow-[0_0_40px_rgba(245,132,31,0.15)] transform md:scale-105 z-10 bg-white">
+              <div className="absolute top-4 right-4">
+                <span className="bg-[#F5841F] text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">ACTIVE NOW</span>
+              </div>
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-[#F5841F] rounded-full blur-3xl opacity-10" />
+              <p className="text-[#F5841F] text-sm font-semibold uppercase tracking-widest mb-2">Phase 2</p>
+              <div className="flex items-end gap-2 mb-4">
+                <span className="text-5xl font-bold text-[#1B1B4D]">₹299</span>
+                <span className="text-slate-400 line-through text-lg mb-1">₹200</span>
+              </div>
+              <p className="text-slate-600 text-sm mb-6">
+                Register now before slots are completely filled!
+              </p>
+              <ul className="space-y-2 text-sm text-slate-600 mb-8">
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Race BIB &amp; Timing Chip</li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Event T-Shirt</li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Finisher Certificate</li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Refreshments</li>
+              </ul>
+              
+              <Link href="/register" className="btn-primary w-full text-center py-4 bg-linear-to-r from-[#F5841F] to-[#ff9b44] hover:from-[#ff9b44] hover:to-[#ffb26a] border-none text-white shadow-xl">
+                Register Now — ₹299
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* REGISTRATION TEASER */}
       <section className="py-24 bg-[#1B1B4D] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#6B2FA0]/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-r from-[#6B2FA0]/40 to-transparent"></div>
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#F5841F] rounded-full blur-[120px] opacity-30"></div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 text-center">
@@ -173,7 +280,7 @@ export default function Home() {
             </motion.p>
             <motion.div variants={fadeInUp}>
               <Link href="/register" className="btn-primary text-xl px-12 py-5 shadow-2xl hover:shadow-[#F5841F]/50">
-                Join Now — ₹200
+                Register Now
               </Link>
             </motion.div>
           </motion.div>

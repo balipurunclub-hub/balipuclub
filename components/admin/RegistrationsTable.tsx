@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Filter, Mail, Phone } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Filter, Mail, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Registration, PaymentStatus } from '@/types';
 
 interface Props {
@@ -11,14 +11,36 @@ interface Props {
 export function RegistrationsTable({ data }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ROWS_PER_PAGE = 20;
 
-  const filteredData = data.filter((reg) => {
-    const matchesSearch =
-      reg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || reg.paymentStatus === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredData = useMemo(() => {
+    return data.filter((reg) => {
+      const matchesSearch =
+        reg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reg.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || reg.paymentStatus === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [data, searchTerm, statusFilter]);
+
+  const totalPages = Math.ceil(filteredData.length / ROWS_PER_PAGE);
+  const currentTableData = useMemo(() => {
+    const firstPageIndex = (currentPage - 1) * ROWS_PER_PAGE;
+    const lastPageIndex = firstPageIndex + ROWS_PER_PAGE;
+    return filteredData.slice(firstPageIndex, lastPageIndex);
+  }, [currentPage, filteredData]);
+
+  // Reset to page 1 when search or filter changes
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (val: string) => {
+    setStatusFilter(val as PaymentStatus | 'all');
+    setCurrentPage(1);
+  };
 
   return (
     <div className="space-y-4">
@@ -30,7 +52,7 @@ export function RegistrationsTable({ data }: Props) {
             type="text"
             placeholder="Search name or email..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="form-input pl-9 w-full"
           />
         </div>
@@ -39,7 +61,7 @@ export function RegistrationsTable({ data }: Props) {
           <Filter className="w-4 h-4 text-slate-500" />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as PaymentStatus | 'all')}
+            onChange={(e) => handleStatusChange(e.target.value)}
             className="form-input py-1.5 px-3 text-sm"
           >
             <option value="all">All Status</option>
@@ -65,14 +87,14 @@ export function RegistrationsTable({ data }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredData.length === 0 ? (
+              {currentTableData.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                     No registrations found matching your criteria.
                   </td>
                 </tr>
               ) : (
-                filteredData.map((reg) => (
+                currentTableData.map((reg) => (
                   <tr key={reg.uid} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-slate-800">
                       {reg.bibNumber ? `#${reg.bibNumber}` : '-'}
@@ -125,8 +147,34 @@ export function RegistrationsTable({ data }: Props) {
         </div>
       </div>
       
-      <div className="text-xs text-slate-500 text-right">
-        Showing {filteredData.length} of {data.length} total registrations
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-xs text-slate-500">
+          Showing {filteredData.length > 0 ? (currentPage - 1) * ROWS_PER_PAGE + 1 : 0} to{' '}
+          {Math.min(currentPage * ROWS_PER_PAGE, filteredData.length)} of {filteredData.length} entries
+          {filteredData.length !== data.length && ` (filtered from ${data.length} total)`}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 rounded bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-sm font-medium text-slate-600 px-2">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 rounded bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

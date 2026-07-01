@@ -41,10 +41,10 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="font-bold text-lg">Contact Us</h4>
             <ul className="space-y-2 text-slate-300 text-sm">
-              <li>Email: hello@balipurun.com</li>
-              <li>Phone: +91 98765 43210</li>
+              <li>Email: Balipurunclub@gmail.com</li>
+              <li>Phone: +91 8317380741, +91 7349791297</li>
               <li>Venue: Fiza by Nexus Mall, Mangaluru</li>
-              <li>Organizers: Jeethesh A & Sohan</li>
+              <li>Co-founders: Jeethesh A & Sohan Raj</li>
             </ul>
           </div>
         </div>

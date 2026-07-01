@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+@keyframes dash-streak {
+  0%   { transform: translateX(-120%) skewX(-20deg); opacity: 0; }
+  10%  { opacity: 1; }
+  80%  { opacity: 0.6; }
+  100% { transform: translateX(120vw) skewX(-20deg); opacity: 0; }
+}
+
+.speed-line {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(245,132,31,0.8), white, transparent);
+  animation: dash-streak linear infinite;
+  pointer-events: none;
+}
+
 @layer base {
   :root {
     --color-navy: 27 27 77; /* #1B1B4D */
@@ -27,16 +42,21 @@
   /* Glass card */
   .card {
     background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .card-dark {
-    background: #1B1B4D;
+    background: rgba(27, 27, 77, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     color: white;
-    border-radius: 1rem;
-    box-shadow: 0 10px 25px -5px rgba(27, 27, 77, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 40px -10px rgba(27, 27, 77, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   /* Primary button */
@@ -45,24 +65,24 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: #F5841F;
+    background: linear-gradient(135deg, #F5841F 0%, #ff9b44 100%);
     color: white;
     font-weight: 700;
     font-size: 1rem;
-    padding: 0.875rem 2rem;
+    padding: 0.875rem 2.5rem;
     border-radius: 9999px;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 14px rgba(245, 132, 31, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 20px -6px rgba(245, 132, 31, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: #e67515;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(245, 132, 31, 0.5);
+    background: linear-gradient(135deg, #ff9b44 0%, #ffb26a 100%);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 24px -8px rgba(245, 132, 31, 0.7), inset 0 1px 0 rgba(255,255,255,0.3);
   }
 
   .btn-primary:disabled {

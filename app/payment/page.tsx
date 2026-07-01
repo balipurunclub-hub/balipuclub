@@ -2,18 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthProvider';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Script from 'next/script';
-import {
-  CreditCard,
-  ShieldCheck,
-  AlertCircle,
-  CheckCircle2,
-  RefreshCw,
-} from 'lucide-react';
+import { CreditCard, ShieldCheck, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
 import type { Registration } from '@/types';
 
 declare global {
@@ -130,23 +124,16 @@ function PaymentPageInner() {
               router.push('/payment/success');
             } else {
               const { error: verifyErr } = await verifyRes.json();
-              console.warn(verifyErr || 'Payment verification failed. Bypassing...');
-              await fetch('/api/payment/bypass', { method: 'POST', headers: { Authorization: `Bearer ${idToken}` } });
-              router.push('/payment/success');
+              setError(verifyErr || 'Payment verification failed.');
             }
           } catch {
-            console.warn('Verification request failed. Bypassing...');
-            await fetch('/api/payment/bypass', { method: 'POST', headers: { Authorization: `Bearer ${idToken}` } });
-            router.push('/payment/success');
+            setError('Verification request failed. Please contact support.');
           } finally {
             setPaymentLoading(false);
           }
         },
         modal: {
-          ondismiss: async () => {
-            console.warn('Payment modal closed. Bypassing...');
-            await fetch('/api/payment/bypass', { method: 'POST', headers: { Authorization: `Bearer ${idToken}` } });
-            router.push('/payment/success');
+          ondismiss: () => {
             setPaymentLoading(false);
           },
         },
@@ -155,14 +142,7 @@ function PaymentPageInner() {
       const rz = new window.Razorpay(options);
       rz.open();
     } catch (err: unknown) {
-      console.warn((err as Error).message || 'Payment failed. Bypassing...');
-      try {
-        const idToken = await user.getIdToken();
-        await fetch('/api/payment/bypass', { method: 'POST', headers: { Authorization: `Bearer ${idToken}` } });
-        router.push('/payment/success');
-      } catch (e) {
-        setError('Could not bypass payment.');
-      }
+      setError((err as Error).message || 'Failed to initiate payment.');
       setPaymentLoading(false);
     }
   };
@@ -292,7 +272,7 @@ function PaymentPageInner() {
 export default function PaymentPage() {
   return (
     <ProtectedRoute>
-      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center px-4 pt-28 pb-12">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-[#F5841F]/15 blur-3xl -z-10" />
 
         <div className="w-full max-w-md animate-fade-in">

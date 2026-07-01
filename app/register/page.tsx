@@ -336,7 +336,7 @@ function RegistrationFormInner() {
 export default function RegisterPage() {
   return (
     <ProtectedRoute>
-      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center px-4 pt-28 pb-12">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#F5841F]/10 blur-[120px] -z-10" />
 
         <div className="w-full max-w-2xl animate-fade-in">
@@ -354,7 +354,8 @@ export default function RegisterPage() {
             <div className="flex-1 h-1.5 rounded-full bg-slate-200" />
           </div>
 
-          <div className="card p-8">
+          <div className="bg-white/95 backdrop-blur-xl border border-slate-100/80 rounded-3xl p-6 sm:p-10 shadow-[0_8px_40px_rgb(0,0,0,0.06)] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-bl from-[#F5841F]/10 to-transparent rounded-full blur-3xl -z-10"></div>
             <RegistrationFormInner />
           </div>
         </div>

@@ -4,7 +4,7 @@ import { getAdminAuth } from '@/lib/firebaseAdmin';
 
 export async function POST(request: NextRequest) {
   const adminAuth = getAdminAuth();
-  
+
   // 1. Verify Firebase ID token
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
     const order = await razorpay.orders.create({
       amount: REGISTRATION_FEE_PAISE,
       currency: 'INR',
-      receipt: `reg_${uid}_${Date.now()}`,
+      receipt: `reg_${uid.slice(0, 8)}_${Date.now()}`,
       notes: {
         uid,
-        event: process.env.NEXT_PUBLIC_EVENT_NAME || 'TechFest 2025',
+        event: process.env.NEXT_PUBLIC_EVENT_NAME || 'Balipu',
       },
     });
 

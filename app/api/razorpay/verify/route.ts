@@ -70,9 +70,11 @@ export async function POST(request: NextRequest) {
       const counterRef = adminDb.collection('metadata').doc('counters');
       const counterDoc = await transaction.get(counterRef);
       
-      let newBibNumber = 201; // Start from 201 as 200 are already registered
+      let newBibNumber = 259; // Start from 259 as requested
       if (counterDoc.exists && counterDoc.data()?.registrationCount) {
-        newBibNumber = counterDoc.data()!.registrationCount + 1;
+        const currentCount = counterDoc.data()!.registrationCount;
+        // If the counter is lower than our starting point, jump to 259. Otherwise increment normally.
+        newBibNumber = currentCount >= 259 ? currentCount + 1 : 259;
       }
       
       transaction.set(counterRef, { registrationCount: newBibNumber }, { merge: true });
