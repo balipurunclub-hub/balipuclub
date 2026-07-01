@@ -47,37 +47,38 @@ export function RegistrationsTable({ data }: Props) {
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search name or email..."
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="form-input pl-9 w-full"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-white placeholder:text-slate-400 focus:outline-none focus:border-[#F5841F]/50 focus:ring-1 focus:ring-[#F5841F]/50 transition-colors text-sm"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-slate-500" />
+          <Filter className="w-4 h-4 text-slate-400" />
           <select
             value={statusFilter}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="form-input py-1.5 px-3 text-sm"
+            className="bg-white/5 border border-white/10 rounded-xl py-2 px-3 pr-8 text-white focus:outline-none focus:border-[#F5841F]/50 focus:ring-1 focus:ring-[#F5841F]/50 transition-colors text-sm appearance-none"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em' }}
           >
-            <option value="all">All Status</option>
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
+            <option value="all" className="bg-[#1B1B4D] text-white">All Status</option>
+            <option value="paid" className="bg-[#1B1B4D] text-white">Paid</option>
+            <option value="pending" className="bg-[#1B1B4D] text-white">Pending</option>
+            <option value="failed" className="bg-[#1B1B4D] text-white">Failed</option>
           </select>
         </div>
       </div>
 
       {/* Table */}
-      <div className="card overflow-hidden">
+      <div className="bg-[#1B1B4D]/80 border border-white/10 rounded-2xl overflow-hidden shadow-lg backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-50 text-slate-600 uppercase text-xs tracking-wider">
-              <tr>
+            <thead className="bg-white/5 text-slate-400 uppercase text-xs tracking-wider border-b border-white/10">
+              <tr className="divide-x divide-white/10">
                 <th className="px-6 py-4 font-semibold">BIB No.</th>
                 <th className="px-6 py-4 font-semibold">Participant</th>
                 <th className="px-6 py-4 font-semibold">Contact</th>
@@ -86,43 +87,43 @@ export function RegistrationsTable({ data }: Props) {
                 <th className="px-6 py-4 font-semibold">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {currentTableData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
                     No registrations found matching your criteria.
                   </td>
                 </tr>
               ) : (
                 currentTableData.map((reg) => (
-                  <tr key={reg.uid} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-800">
+                  <tr key={reg.uid} className="hover:bg-white/5 transition-colors divide-x divide-white/5">
+                    <td className="px-6 py-4 font-medium text-white">
                       {reg.bibNumber ? `#${reg.bibNumber}` : '-'}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-slate-800">{reg.name}</div>
-                      <div className="text-xs text-slate-500 font-mono mt-0.5">UID: {reg.uid.slice(0, 8)}...</div>
+                      <div className="font-medium text-white">{reg.name}</div>
+                      <div className="text-xs text-slate-400 font-mono mt-0.5">UID: {reg.uid.slice(0, 8)}...</div>
                     </td>
                     <td className="px-6 py-4 space-y-1">
-                      <div className="flex items-center gap-1.5 text-slate-600">
-                        <Mail className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
                         <span className="truncate max-w-[150px]">{reg.email}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-slate-600">
-                        <Phone className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" />
                         {reg.phone}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">
+                      <div className="text-xs text-slate-400 mt-1">
                         Emg: {reg.emergencyContact || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm space-y-0.5">
-                      <div className="text-slate-700">
+                      <div className="text-slate-300">
                         {reg.age ? `${reg.age} yrs` : 'N/A'}, {reg.gender || 'N/A'}
                       </div>
-                      <div className="text-slate-600">{reg.city || 'N/A'}</div>
-                      <div className="text-slate-600 text-xs mt-1">
-                        Jersey: <span className="text-slate-800 font-medium">{reg.jerseySize || 'N/A'}</span>
+                      <div className="text-slate-400">{reg.city || 'N/A'}</div>
+                      <div className="text-slate-400 text-xs mt-1">
+                        Jersey: <span className="text-white font-medium">{reg.jerseySize || 'N/A'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -131,11 +132,11 @@ export function RegistrationsTable({ data }: Props) {
                           {reg.paymentStatus.charAt(0).toUpperCase() + reg.paymentStatus.slice(1)}
                         </span>
                         {reg.paymentId && (
-                          <span className="text-[10px] text-slate-500 font-mono">{reg.paymentId}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{reg.paymentId}</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 text-xs">
+                    <td className="px-6 py-4 text-slate-400 text-xs">
                       {reg.createdAt?.toDate().toLocaleDateString() || 'N/A'}<br/>
                       {reg.createdAt?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || ''}
                     </td>
@@ -148,7 +149,7 @@ export function RegistrationsTable({ data }: Props) {
       </div>
       
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-xs text-slate-500">
+        <div className="text-xs text-slate-400">
           Showing {filteredData.length > 0 ? (currentPage - 1) * ROWS_PER_PAGE + 1 : 0} to{' '}
           {Math.min(currentPage * ROWS_PER_PAGE, filteredData.length)} of {filteredData.length} entries
           {filteredData.length !== data.length && ` (filtered from ${data.length} total)`}
@@ -159,17 +160,17 @@ export function RegistrationsTable({ data }: Props) {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-lg bg-white/5 text-white border border-white/10 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm font-medium text-slate-600 px-2">
+            <span className="text-sm font-medium text-slate-300 px-2">
               Page {currentPage} of {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-lg bg-white/5 text-white border border-white/10 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

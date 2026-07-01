@@ -61,7 +61,7 @@ export function ExportCSVButton({ data }: { data: Registration[] }) {
     <button
       onClick={handleExport}
       disabled={data.length === 0}
-      className="btn-secondary text-sm py-1.5 px-3 rounded-lg flex items-center gap-1.5"
+      className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <Download className="w-4 h-4" />
       Export CSV

@@ -82,7 +82,7 @@ function AdminDashboardInner() {
       </div>
 
       {/* Main content */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <h2 className="text-lg font-bold text-white">Registration Data</h2>
         <div className="flex items-center gap-3">
           <button
