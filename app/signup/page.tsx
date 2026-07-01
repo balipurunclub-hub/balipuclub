@@ -81,9 +81,10 @@ export default function SignupPage() {
       await signInWithPopup(auth, provider);
       router.push('/register');
     } catch (err: unknown) {
-      const code = (err as { code?: string }).code;
-      if (code !== 'auth/popup-closed-by-user') {
-        setAuthError('Google sign-in failed. Please try again.');
+      const errorObj = err as any;
+      console.error(errorObj);
+      if (errorObj.code !== 'auth/popup-closed-by-user') {
+        setAuthError(`Google sign-in failed: ${errorObj.message || errorObj.code}`);
       }
     } finally {
       setGoogleLoading(false);

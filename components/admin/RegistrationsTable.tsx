@@ -79,7 +79,7 @@ export function RegistrationsTable({ data }: Props) {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-white/5 text-slate-400 uppercase text-xs tracking-wider border-b border-white/10">
               <tr className="divide-x divide-white/10">
-                <th className="px-6 py-4 font-semibold">BIB No.</th>
+                <th className="px-6 py-4 font-semibold">Ticket ID</th>
                 <th className="px-6 py-4 font-semibold">Participant</th>
                 <th className="px-6 py-4 font-semibold">Contact</th>
                 <th className="px-6 py-4 font-semibold">Details</th>
@@ -97,8 +97,8 @@ export function RegistrationsTable({ data }: Props) {
               ) : (
                 currentTableData.map((reg) => (
                   <tr key={reg.uid} className="hover:bg-white/5 transition-colors divide-x divide-white/5">
-                    <td className="px-6 py-4 font-medium text-white">
-                      {reg.bibNumber ? `#${reg.bibNumber}` : '-'}
+                    <td className="px-6 py-4 font-medium text-white font-mono">
+                      {reg.ticketId || reg.bibNumber || '-'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-white">{reg.name}</div>

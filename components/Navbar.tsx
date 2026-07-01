@@ -33,13 +33,6 @@ export function Navbar() {
         {/* Dark warm gradient background */}
         <div className="absolute inset-0 bg-linear-to-r from-[#0D0D2B]/95 via-[#1a0800]/90 to-[#0D0D2B]/95 backdrop-blur-xl" />
 
-        {/* Animated sprint speed-lines */}
-        <span className="speed-line" style={{ top: '25%', width: '35%', animationDuration: '2.2s', animationDelay: '0s' }} />
-        <span className="speed-line" style={{ top: '40%', width: '55%', animationDuration: '1.8s', animationDelay: '0.7s' }} />
-        <span className="speed-line" style={{ top: '55%', width: '28%', animationDuration: '2.8s', animationDelay: '1.3s' }} />
-        <span className="speed-line" style={{ top: '70%', width: '45%', animationDuration: '2s', animationDelay: '0.4s' }} />
-        <span className="speed-line" style={{ top: '15%', width: '20%', animationDuration: '3s', animationDelay: '1.8s' }} />
-        <span className="speed-line" style={{ top: '80%', width: '60%', animationDuration: '2.4s', animationDelay: '0.9s' }} />
 
         <div className="relative px-5 sm:px-8">
           <div className="flex justify-between items-center h-16">

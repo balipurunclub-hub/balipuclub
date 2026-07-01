@@ -5,6 +5,7 @@ export type PaymentStatus = 'pending' | 'paid' | 'failed';
 
 export interface Registration {
   uid: string;
+  ticketId?: string;
   bibNumber?: number;
   name: string;
   email: string;

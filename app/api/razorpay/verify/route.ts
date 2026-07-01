@@ -63,32 +63,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 4. Mark as paid in Firestore and assign BIB number
-  let finalBibNumber = 'Pending';
+  // 4. Mark as paid in Firestore and generate unique ticket ID
+  let ticketId = '';
   try {
-    await adminDb.runTransaction(async (transaction) => {
-      const counterRef = adminDb.collection('metadata').doc('counters');
-      const counterDoc = await transaction.get(counterRef);
-      
-      let newBibNumber = 259; // Start from 259 as requested
-      if (counterDoc.exists && counterDoc.data()?.registrationCount) {
-        const currentCount = counterDoc.data()!.registrationCount;
-        // If the counter is lower than our starting point, jump to 259. Otherwise increment normally.
-        newBibNumber = currentCount >= 259 ? currentCount + 1 : 259;
-      }
-      
-      transaction.set(counterRef, { registrationCount: newBibNumber }, { merge: true });
-      
-      const regRef = adminDb.collection('registrations').doc(uid);
-      transaction.update(regRef, {
-        paymentStatus: 'paid',
-        orderId: razorpay_order_id,
-        paymentId: razorpay_payment_id,
-        bibNumber: newBibNumber,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-      
-      finalBibNumber = newBibNumber.toString();
+    // Generate a 6-character random alphanumeric ticket ID
+    ticketId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    await adminDb.collection('registrations').doc(uid).update({
+      paymentStatus: 'paid',
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      ticketId: ticketId,
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     // 5. Send confirmation email
@@ -135,7 +121,7 @@ export async function POST(request: NextRequest) {
                   <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px; line-height: 1.8;">
                     <li><strong>Name:</strong> ${userData.name}</li>
                     <li><strong>Jersey Size:</strong> ${userData.jerseySize || 'N/A'}</li>
-                    <li><strong>BIB Number:</strong> ${finalBibNumber}</li>
+                    <li><strong>Ticket ID:</strong> ${ticketId}</li>
                     <li><strong>Payment ID:</strong> ${razorpay_payment_id}</li>
                   </ul>
                 </div>

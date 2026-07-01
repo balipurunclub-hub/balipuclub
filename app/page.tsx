@@ -61,18 +61,14 @@ export default function Home() {
             </motion.div>
 
             {/* Hero Title - Poster Style */}
-            <motion.div variants={fadeInUp} className="relative font-heading uppercase italic tracking-tighter mb-12 mt-6 -skew-x-3 text-center max-w-lg mx-auto px-4">
+            <motion.div variants={fadeInUp} className="relative font-heading uppercase italic tracking-tighter mb-12 mt-6 -skew-x-3 text-center mx-auto px-4">
               {/* BALIPU */}
               <div className="text-[#F5841F] drop-shadow-[0_4px_24px_rgba(245,132,31,0.6)] text-[clamp(3.5rem,16vw,9rem)] leading-[0.85]">
                 BALIPU
               </div>
-              {/* X overlapping between lines - centered on all screens */}
-              <div className="text-white font-sans font-black text-[clamp(2.5rem,12vw,7rem)] leading-none -my-1 sm:-my-2 drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)] pointer-events-none select-none text-center">
-                X
-              </div>
-              {/* NEXUS - center on mobile, slight left shift on desktop */}
-              <div className="text-white drop-shadow-[0_4px_24px_rgba(255,255,255,0.15)] text-[clamp(3.5rem,16vw,9rem)] leading-[0.85] sm:-translate-x-6">
-                NEXUS
+              {/* RUN CLUB - center on mobile, slight left shift on desktop to match the skew visual */}
+              <div className="text-white drop-shadow-[0_4px_24px_rgba(255,255,255,0.15)] text-[clamp(3.5rem,16vw,9rem)] leading-[0.85] sm:-translate-x-6 mt-2">
+                RUN CLUB
               </div>
             </motion.div>
 
@@ -224,10 +220,9 @@ export default function Home() {
                 All 50 early bird spots have been filled!
               </p>
               <ul className="space-y-2 text-sm text-slate-600 mb-8">
-                <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Race BIB &amp; Timing Chip</li>
+                <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Race BIB</li>
                 <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Event T-Shirt</li>
                 <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Finisher Certificate</li>
-                <li className="flex items-center gap-2"><span className="text-slate-400 font-bold">✓</span> Refreshments</li>
               </ul>
             </motion.div>
 
@@ -246,10 +241,9 @@ export default function Home() {
                 Register now before slots are completely filled!
               </p>
               <ul className="space-y-2 text-sm text-slate-600 mb-8">
-                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Race BIB &amp; Timing Chip</li>
+                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Race BIB</li>
                 <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Event T-Shirt</li>
                 <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Finisher Certificate</li>
-                <li className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> Refreshments</li>
               </ul>
               
               <Link href="/register" className="btn-primary w-full text-center py-4 bg-linear-to-r from-[#F5841F] to-[#ff9b44] hover:from-[#ff9b44] hover:to-[#ffb26a] border-none text-white shadow-xl">

@@ -137,7 +137,7 @@ function DashboardInner() {
   }
 
   const fields: [string, string][] = [
-    ['BIB Number', registration.bibNumber ? registration.bibNumber.toString() : 'Pending Payment'],
+    ['Ticket ID', registration.ticketId || (registration.bibNumber ? registration.bibNumber.toString() : 'Pending Payment')],
     ['Name', registration.name],
     ['Email', registration.email],
     ['Phone', registration.phone],
