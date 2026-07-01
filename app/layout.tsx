@@ -13,8 +13,8 @@ const poppins = Poppins({
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
 
 export const metadata: Metadata = {
-  title: "Balipu x Nexus — Run for a Better Tomorrow",
-  description: "A Community Run & Youth Fitness Initiative in Mangaluru.",
+  title: "Balipu Run Club | Mangaluru",
+  description: "Mangaluru's premier community of runners and fitness enthusiasts. Run for a better tomorrow.",
 };
 
 export default function RootLayout({

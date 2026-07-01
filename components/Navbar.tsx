@@ -25,7 +25,7 @@ export function Navbar() {
 
   return (
     <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 sm:px-6 pointer-events-none">
-      <nav className="w-full max-w-5xl pointer-events-auto relative rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+      <nav className="w-full max-w-7xl pointer-events-auto relative rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
 
         {/* Top racing stripe */}
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-linear-to-r from-[#F5841F] via-white/60 to-[#F5841F]" />
@@ -48,11 +48,6 @@ export function Navbar() {
               </div>
             </Link>
 
-            {/* Center event badge */}
-            <div className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-              <Timer className="w-4 h-4 text-[#F5841F]" />
-              <span className="text-xs font-bold tracking-[0.15em] text-white/60 uppercase">12 July 2026 · 6:30 AM</span>
-            </div>
 
             {/* Nav links */}
             <div className="flex items-center gap-4">
