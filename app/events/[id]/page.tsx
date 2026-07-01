@@ -18,10 +18,10 @@ export default function EventPage() {
   const eventsData: Record<string, any> = {
     'monsoon-run': {
       title: "The Monsoon Run",
-      sponsors: ["Nexus", "JCI Mangalore"],
+      sponsors: ["JCI Mangalore"],
       date: "12th July 2026",
       time: "6:30 AM",
-      venue: "Fiza by Nexus Mall, Pandeshwar",
+      venue: "Pandeshwar, Mangaluru",
       guests: [
         { name: "Captain Brijesh Chowta", title: "Chief Guest", info: "Member of Parliament, Dakshina Kannada Lok Sabha Constituency", img: "https://imgs.etvbharat.com/etvbharat/prod-images/14-03-2024/1200-675-20984062-thumbnail-16x9-etvbharat.JPG" },
         { name: "Dr Bharath Shetty", title: "Guest of honour", info: "MLA, Mangaluru City North", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAJ8BijrOP9Giay3tfBTX2gnboPFUl5BG5FQ&s" },
@@ -71,58 +71,57 @@ export default function EventPage() {
           <div className="w-24 h-1.5 bg-[#F5841F] mx-auto mt-6 rounded-full"></div>
         </motion.div>
 
-        {/* Sponsors Marquee */}
         <motion.div
           initial="hidden"
           animate="visible"
           variants={fadeInUp}
-          className="w-full overflow-hidden bg-white py-6 mb-12 rounded-2xl border border-slate-200 shadow-sm relative"
+          className="w-full overflow-hidden bg-white py-8 mb-12 rounded-2xl border border-slate-200 shadow-sm relative"
         >
-          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10"></div>
-          <div className="flex whitespace-nowrap animate-marquee w-[200%]">
-            <div className="flex justify-around items-center w-1/2 px-8 gap-16">
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=NM&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">NEXUS MALL</span>
+          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10"></div>
+          <div className="flex whitespace-nowrap animate-marquee w-max">
+            <div className="flex items-center px-8 gap-16 md:gap-24 pr-16 md:pr-24">
+              <div className="flex items-center gap-6">
+                <img src="/jci.png" alt="JCI Mangalore" className="h-20 sm:h-28 w-auto object-contain" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">JCI MANGALORE</span>
               </div>
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=JM&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">JCI MANGALORE</span>
+              <div className="flex items-center gap-6">
+                <img src="https://ui-avatars.com/api/?name=CB&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">CANARA BANK</span>
               </div>
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=DC&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">DECATHLON</span>
+              <div className="flex items-center gap-6">
+                <img src="https://ui-avatars.com/api/?name=DC&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DECATHLON</span>
               </div>
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=KH&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">KMC HOSPITAL</span>
+              <div className="flex items-center gap-6">
+                <img src="/kmc.png" alt="KMC Hospital" className="h-20 sm:h-28 w-auto object-contain" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">KMC HOSPITAL</span>
               </div>
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=D1&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">DUMMY SPONSOR</span>
+              <div className="flex items-center gap-6">
+                <img src="https://ui-avatars.com/api/?name=D1&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DUMMY SPONSOR</span>
               </div>
             </div>
-            <div className="flex justify-around items-center w-1/2 px-8 gap-16">
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=NM&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">NEXUS MALL</span>
+            <div className="flex items-center px-8 gap-16 md:gap-24 pr-16 md:pr-24">
+              <div className="flex items-center gap-6">
+                <img src="/jci.png" alt="JCI Mangalore" className="h-20 sm:h-28 w-auto object-contain" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">JCI MANGALORE</span>
               </div>
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=JM&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">JCI MANGALORE</span>
+              <div className="flex items-center gap-6">
+                <img src="https://ui-avatars.com/api/?name=CB&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">CANARA BANK</span>
               </div>
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=DC&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">DECATHLON</span>
+              <div className="flex items-center gap-6">
+                <img src="https://ui-avatars.com/api/?name=DC&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DECATHLON</span>
               </div>
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=KH&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">KMC HOSPITAL</span>
+              <div className="flex items-center gap-6">
+                <img src="/kmc.png" alt="KMC Hospital" className="h-20 sm:h-28 w-auto object-contain" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">KMC HOSPITAL</span>
               </div>
-              <div className="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=D1&background=f1f5f9&color=94a3b8" alt="Logo" className="w-10 h-10 rounded-full" />
-                <span className="text-2xl font-heading italic text-slate-300">DUMMY SPONSOR</span>
+              <div className="flex items-center gap-6">
+                <img src="https://ui-avatars.com/api/?name=D1&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DUMMY SPONSOR</span>
               </div>
             </div>
           </div>
@@ -215,13 +214,18 @@ export default function EventPage() {
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeInUp}
-          className="bg-white rounded-3xl p-8 md:p-12 mt-12 mb-8 shadow-sm border border-slate-200 flex flex-col md:flex-row flex-wrap justify-center items-center gap-10 md:gap-20 text-[#1B1B4D]"
+          className="bg-white rounded-3xl p-8 md:p-12 mt-12 mb-8 shadow-sm border border-slate-200 flex flex-col md:flex-row flex-wrap justify-center items-center gap-10 md:gap-16 text-[#1B1B4D]"
         >
           <div className="text-center">
             <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Supported By</span>
             <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">JCI Mangalore</h3>
           </div>
-          <div className="w-full md:w-px h-px md:h-20 bg-slate-200"></div>
+          <div className="w-full md:w-px h-px md:h-16 bg-slate-200"></div>
+          <div className="text-center">
+            <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Banking Partner</span>
+            <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">Canara Bank</h3>
+          </div>
+          <div className="w-full md:w-px h-px md:h-16 bg-slate-200"></div>
           <div className="text-center">
             <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Health Partner</span>
             <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">KMC Hospital</h3>
