@@ -202,12 +202,12 @@ function DashboardInner() {
           Your Details
         </h3>
         {fields.map(([label, value]) => (
-          <div key={label} className="flex justify-between items-start sm:items-center gap-4 text-sm py-2 border-b border-slate-100 last:border-0">
+          <div key={label} className="flex justify-between items-start sm:items-center gap-4 text-sm py-2 border-b border-slate-100 last:border-0 min-w-0">
             <span className="text-slate-500 shrink-0">{label}</span>
-            <span className="text-slate-800 font-medium text-right break-all sm:break-normal">{value}</span>
+            <span className="text-slate-800 font-medium text-right break-words min-w-0">{value}</span>
           </div>
         ))}
-        <div className="flex justify-between items-center gap-4 text-sm py-2">
+        <div className="flex justify-between items-center gap-4 text-sm py-2 min-w-0">
           <span className="text-slate-500 shrink-0">Payment Status</span>
           <span className={`badge-${registration.paymentStatus} shrink-0`}>
             {registration.paymentStatus === 'paid' && '✓ '}
@@ -215,9 +215,9 @@ function DashboardInner() {
           </span>
         </div>
         {registration.paymentId && (
-          <div className="flex justify-between items-start sm:items-center gap-4 text-sm py-2">
+          <div className="flex justify-between items-start sm:items-center gap-4 text-sm py-2 min-w-0">
             <span className="text-slate-500 shrink-0">Payment ID</span>
-            <span className="text-slate-400 font-mono text-xs text-right break-all">{registration.paymentId}</span>
+            <span className="text-slate-400 font-mono text-xs text-right break-all min-w-0">{registration.paymentId}</span>
           </div>
         )}
       </div>

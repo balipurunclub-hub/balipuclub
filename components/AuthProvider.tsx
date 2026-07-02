@@ -40,8 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
 
   useEffect(() => {
+    let redirectFinished = false;
+    let authStateFired = false;
+
     // Process any pending redirect results (from signInWithRedirect)
-    getRedirectResult(auth).catch(console.error);
+    getRedirectResult(auth)
+      .catch(console.error)
+      .finally(() => {
+        redirectFinished = true;
+        if (authStateFired) {
+          setLoading(false);
+        }
+      });
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
@@ -62,7 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsScanner(false);
       }
       
-      setLoading(false);
+      authStateFired = true;
+      if (redirectFinished) {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
