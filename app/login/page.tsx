@@ -85,13 +85,24 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const errorObj = err as any;
       console.error(errorObj);
-      if (errorObj.code === 'auth/popup-blocked') {
+      
+      const errorCode = errorObj.code;
+      
+      if (errorCode === 'auth/popup-blocked') {
         // Fallback for browsers that block popups (e.g. mobile Safari, in-app browsers)
         signInWithRedirect(auth, new GoogleAuthProvider());
-      } else if (errorObj.code !== 'auth/popup-closed-by-user') {
-        setAuthError(`Google sign-in failed: ${errorObj.message || errorObj.code}`);
+      } else if (
+        errorCode === 'auth/web-storage-unsupported' || 
+        errorCode === 'auth/third-party-auth-error' ||
+        errorCode === 'auth/network-request-failed'
+      ) {
+        setAuthError('Google sign-in was blocked by your browser or an extension (like Brave Shields or AdBlocker). Please disable it for this site, or use Email/Password.');
+        setGoogleLoading(false);
+      } else if (errorCode !== 'auth/popup-closed-by-user') {
+        setAuthError(`Google sign-in failed: ${errorObj.message || errorCode}. You may need to disable ad-blockers.`);
         setGoogleLoading(false);
       } else {
+        // Popup closed by user, just stop loading
         setGoogleLoading(false);
       }
     }

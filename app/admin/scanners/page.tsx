@@ -89,7 +89,7 @@ export default function ScannersPage() {
           )}
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <form onSubmit={addScanner} className="flex gap-3 max-w-md">
+            <form onSubmit={addScanner} className="flex flex-col sm:flex-row gap-3 max-w-md">
               <input
                 type="email"
                 value={newEmail}
@@ -98,15 +98,15 @@ export default function ScannersPage() {
                 className="flex-1 form-input"
                 required
               />
-              <button type="submit" className="btn-primary py-2 whitespace-nowrap flex items-center gap-2">
+              <button type="submit" className="btn-primary py-2 whitespace-nowrap flex items-center justify-center gap-2">
                 <UserPlus className="w-4 h-4" />
                 Add Scanner
               </button>
             </form>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <table className="w-full text-left border-collapse">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[300px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email Address</th>

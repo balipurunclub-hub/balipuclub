@@ -6,7 +6,7 @@ import { db } from '@/lib/firebase';
 import { AdminRoute } from '@/components/AdminRoute';
 import { RegistrationsTable } from '@/components/admin/RegistrationsTable';
 import { ExportCSVButton } from '@/components/admin/ExportCSVButton';
-import { ShieldCheck, Users, IndianRupee, RefreshCw, QrCode } from 'lucide-react';
+import { ShieldCheck, Users, IndianRupee, RefreshCw, QrCode, Lock } from 'lucide-react';
 import type { Registration } from '@/types';
 import Link from 'next/link';
 
@@ -83,10 +83,10 @@ function AdminDashboardInner() {
       </div>
 
       <div className="flex justify-end">
-        <Link href="/admin/scanners" className="btn-secondary flex items-center gap-2">
-          <QrCode className="w-4 h-4" />
-          Manage Scanners
-        </Link>
+        <button disabled className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl bg-white/5 text-white/40 border border-white/5 cursor-not-allowed">
+          <Lock className="w-4 h-4" />
+          Manage Scanners (Locked)
+        </button>
       </div>
 
       {/* Main content */}
