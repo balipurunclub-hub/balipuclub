@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthProvider';
@@ -84,11 +85,15 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const errorObj = err as any;
       console.error(errorObj);
-      if (errorObj.code !== 'auth/popup-closed-by-user') {
+      if (errorObj.code === 'auth/popup-blocked') {
+        // Fallback for browsers that block popups (e.g. mobile Safari, in-app browsers)
+        signInWithRedirect(auth, new GoogleAuthProvider());
+      } else if (errorObj.code !== 'auth/popup-closed-by-user') {
         setAuthError(`Google sign-in failed: ${errorObj.message || errorObj.code}`);
+        setGoogleLoading(false);
+      } else {
+        setGoogleLoading(false);
       }
-    } finally {
-      setGoogleLoading(false);
     }
   };
 
