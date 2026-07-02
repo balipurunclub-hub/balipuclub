@@ -58,11 +58,11 @@ export async function POST(request: NextRequest) {
 
   if (expectedSignature !== razorpay_signature) {
     // Mark as failed if signature mismatch
-    await adminDb.collection('registrations').doc(uid).update({
+    await adminDb.collection('registrations').doc(uid).set({
       paymentStatus: 'failed',
       orderId: razorpay_order_id,
       updatedAt: FieldValue.serverTimestamp(),
-    });
+    }, { merge: true });
 
     return Response.json(
       { error: 'Payment verification failed. Signature mismatch.' },
@@ -76,13 +76,13 @@ export async function POST(request: NextRequest) {
     // Generate a 6-character random alphanumeric ticket ID
     ticketId = Math.random().toString(36).substring(2, 8).toUpperCase();
     
-    await adminDb.collection('registrations').doc(uid).update({
+    await adminDb.collection('registrations').doc(uid).set({
       paymentStatus: 'paid',
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
       ticketId: ticketId,
       updatedAt: FieldValue.serverTimestamp(),
-    });
+    }, { merge: true });
 
     // 5. Send confirmation email
     try {
@@ -163,8 +163,9 @@ export async function POST(request: NextRequest) {
     }
 
     return Response.json({ success: true, paymentId: razorpay_payment_id });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Razorpay verify] Firestore update failed:', err);
-    return Response.json({ error: 'Payment verified but DB update failed. Contact support.' }, { status: 500 });
+    const msg = err?.message || String(err);
+    return Response.json({ error: `Payment verified but DB update failed: ${msg}` }, { status: 500 });
   }
 }
