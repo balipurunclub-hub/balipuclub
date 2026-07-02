@@ -23,6 +23,8 @@ export interface Registration {
   paymentId?: string;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
+  attended?: boolean;
+  attendedAt?: Timestamp;
 }
 
 export interface RegistrationFormData {

@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { getAdminAuth, getAdminDb } from '@/lib/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
+import QRCode from 'qrcode';
 
 export async function POST(request: NextRequest) {
   let adminAuth;
@@ -73,8 +74,17 @@ export async function POST(request: NextRequest) {
   // 4. Mark as paid in Firestore and generate unique ticket ID
   let ticketId = '';
   try {
-    // Generate a 6-character random alphanumeric ticket ID
-    ticketId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Generate sequential unique ticket ID (e.g. BRC-MR-1001)
+    const counterRef = adminDb.collection('eventCounters').doc('monsoon-run');
+    ticketId = await adminDb.runTransaction(async (t) => {
+      const docSnap = await t.get(counterRef);
+      let count = 1000;
+      if (docSnap.exists) {
+        count = (docSnap.data()?.count || 1000) + 1;
+      }
+      t.set(counterRef, { count }, { merge: true });
+      return `BRC-MR-${count}`;
+    });
     
     await adminDb.collection('registrations').doc(uid).set({
       paymentStatus: 'paid',
@@ -123,12 +133,16 @@ export async function POST(request: NextRequest) {
                   </ul>
                 </div>
 
-                <div style="background-color: #f0f4f8; padding: 20px; border-left: 4px solid #F5841F; margin: 20px 0; border-radius: 4px;">
-                  <h3 style="margin-top: 0; color: #1B1B4D;">Your Ticket Details</h3>
-                  <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px; line-height: 1.8;">
+                <div style="background-color: #f0f4f8; padding: 20px; border-left: 4px solid #F5841F; margin: 20px 0; border-radius: 4px; text-align: center;">
+                  <h3 style="margin-top: 0; color: #1B1B4D;">Your Ticket</h3>
+                  <div style="background: white; padding: 15px; display: inline-block; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;">
+                    <img src="cid:qrcode" alt="Your QR Code Ticket" style="width: 200px; height: 200px; display: block; margin: 0 auto;"/>
+                    <p style="font-family: monospace; font-size: 20px; font-weight: bold; margin-top: 10px; margin-bottom: 0; letter-spacing: 2px;">${ticketId}</p>
+                  </div>
+                  
+                  <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px; line-height: 1.8; text-align: left;">
                     <li><strong>Name:</strong> ${userData.name}</li>
                     <li><strong>Jersey Size:</strong> ${userData.jerseySize || 'N/A'}</li>
-                    <li><strong>Ticket ID:</strong> ${ticketId}</li>
                     <li><strong>Payment ID:</strong> ${razorpay_payment_id}</li>
                   </ul>
                 </div>
@@ -156,7 +170,18 @@ export async function POST(request: NextRequest) {
           `,
         };
 
-        await transporter.sendMail(mailOptions);
+        // Generate QR code buffer for email attachment
+        const qrBuffer = await QRCode.toBuffer(ticketId);
+
+        const info = await transporter.sendMail({
+          ...mailOptions,
+          attachments: [{
+            filename: 'qrcode.png',
+            content: qrBuffer,
+            cid: 'qrcode' // same cid value as in the html img src
+          }]
+        });
+        console.log('Confirmation email sent: %s', info.messageId);
       }
     } catch (emailErr) {
       console.error('[Razorpay verify] Email sending failed:', emailErr);

@@ -6,8 +6,9 @@ import { db } from '@/lib/firebase';
 import { AdminRoute } from '@/components/AdminRoute';
 import { RegistrationsTable } from '@/components/admin/RegistrationsTable';
 import { ExportCSVButton } from '@/components/admin/ExportCSVButton';
-import { ShieldCheck, Users, IndianRupee, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Users, IndianRupee, RefreshCw, QrCode } from 'lucide-react';
 import type { Registration } from '@/types';
+import Link from 'next/link';
 
 function AdminDashboardInner() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -79,6 +80,13 @@ function AdminDashboardInner() {
             <h3 className="text-2xl font-bold text-white">₹{totalRevenue.toLocaleString('en-IN')}</h3>
           </div>
         </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Link href="/admin/scanners" className="btn-secondary flex items-center gap-2">
+          <QrCode className="w-4 h-4" />
+          Manage Scanners
+        </Link>
       </div>
 
       {/* Main content */}
