@@ -11,6 +11,7 @@ import {
   User,
   onAuthStateChanged,
   signOut as firebaseSignOut,
+  getRedirectResult,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -35,6 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || '';
 
   useEffect(() => {
+    // Process any pending redirect results (from signInWithRedirect)
+    getRedirectResult(auth).catch(console.error);
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
