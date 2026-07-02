@@ -3,12 +3,28 @@ import { razorpay, REGISTRATION_FEE_PAISE } from '@/lib/razorpay';
 import { getAdminAuth } from '@/lib/firebaseAdmin';
 
 export async function POST(request: NextRequest) {
+  const requiredEnvVars = [
+    'RAZORPAY_KEY_ID',
+    'RAZORPAY_KEY_SECRET',
+    'FIREBASE_PROJECT_ID',
+    'FIREBASE_CLIENT_EMAIL',
+    'FIREBASE_PRIVATE_KEY'
+  ];
+
+  const missingVars = requiredEnvVars.filter(key => !process.env[key]);
+  if (missingVars.length > 0) {
+    return Response.json({ 
+      error: `Missing environment variables in Vercel: ${missingVars.join(', ')}` 
+    }, { status: 500 });
+  }
+
   let adminAuth;
   try {
     adminAuth = getAdminAuth();
   } catch (err) {
     console.error('Firebase Admin init error:', err);
-    return Response.json({ error: 'Server configuration error: Firebase Admin not initialized' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    return Response.json({ error: `Server configuration error: ${msg}` }, { status: 500 });
   }
 
   // 1. Verify Firebase ID token
@@ -44,10 +60,11 @@ export async function POST(request: NextRequest) {
       amount: order.amount,
       currency: order.currency,
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Razorpay create-order]', err);
+    const msg = err?.error?.description || err?.message || String(err);
     return Response.json(
-      { error: 'Failed to create order. Please try again.' },
+      { error: `Failed to create order: ${msg}` },
       { status: 500 }
     );
   }
