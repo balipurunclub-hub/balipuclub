@@ -4,7 +4,7 @@ import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager
 
 const firebaseConfig = {
   apiKey: "AIzaSyDmXvd8cMgrmaTjTrQISdFbvs2qnxvPPxw",
-  authDomain: "balipu.firebaseapp.com",
+  authDomain: typeof window !== 'undefined' ? window.location.hostname : "balipu.firebaseapp.com",
   projectId: "balipu",
   storageBucket: "balipu.firebasestorage.app",
   messagingSenderId: "283632424868",
