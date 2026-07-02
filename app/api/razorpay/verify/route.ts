@@ -5,8 +5,15 @@ import { getAdminAuth, getAdminDb } from '@/lib/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request: NextRequest) {
-  const adminAuth = getAdminAuth();
-  const adminDb = getAdminDb();
+  let adminAuth;
+  let adminDb;
+  try {
+    adminAuth = getAdminAuth();
+    adminDb = getAdminDb();
+  } catch (err) {
+    console.error('Firebase Admin init error:', err);
+    return Response.json({ error: 'Server configuration error: Firebase Admin not initialized' }, { status: 500 });
+  }
   // 1. Verify Firebase ID token
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {

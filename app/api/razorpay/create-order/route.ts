@@ -3,7 +3,13 @@ import { razorpay, REGISTRATION_FEE_PAISE } from '@/lib/razorpay';
 import { getAdminAuth } from '@/lib/firebaseAdmin';
 
 export async function POST(request: NextRequest) {
-  const adminAuth = getAdminAuth();
+  let adminAuth;
+  try {
+    adminAuth = getAdminAuth();
+  } catch (err) {
+    console.error('Firebase Admin init error:', err);
+    return Response.json({ error: 'Server configuration error: Firebase Admin not initialized' }, { status: 500 });
+  }
 
   // 1. Verify Firebase ID token
   const authHeader = request.headers.get('Authorization');
