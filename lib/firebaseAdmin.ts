@@ -7,7 +7,9 @@ function getAdminApp(): App | null {
     return getApps()[0];
   }
 
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
+  const privateKey = rawKey.replace(/^"|"$/g, '').replace(/\\n/g, '\n');
+
   if (!privateKey) {
     console.warn('FIREBASE_PRIVATE_KEY is missing. Firebase Admin SDK will not be initialized.');
     return null;
