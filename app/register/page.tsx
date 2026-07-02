@@ -336,10 +336,12 @@ function RegistrationFormInner() {
 export default function RegisterPage() {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen flex items-center justify-center px-4 pt-28 pb-12">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#F5841F]/10 blur-[120px] -z-10" />
+      <div className="min-h-screen flex items-center justify-center px-4 pt-28 pb-12 relative">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#F5841F]/10 blur-[120px]" />
+        </div>
 
-        <div className="w-full max-w-2xl animate-fade-in">
+        <div className="w-full max-w-2xl animate-fade-in relative z-10">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#F5841F]/20 border border-[#F5841F]/30 mb-4">
               <ClipboardList className="w-7 h-7 text-[#F5841F]" />

@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${poppins.variable} ${anton.variable} font-sans antialiased min-h-screen flex flex-col`}>
+      <body className={`${poppins.variable} ${anton.variable} font-sans antialiased min-h-screen flex flex-col overflow-x-hidden`}>
         <AuthProvider>
           <Navbar />
           <main className="flex-1">
