@@ -211,6 +211,11 @@ export default function EventPage() {
           </div>
           <div className="w-full md:w-px h-px md:h-16 bg-slate-200"></div>
           <div className="text-center">
+            <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Supporting Sponsor</span>
+            <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">Canara Bank</h3>
+          </div>
+          <div className="w-full md:w-px h-px md:h-16 bg-slate-200"></div>
+          <div className="text-center">
             <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Health Partner</span>
             <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">KMC Hospital</h3>
           </div>
