@@ -262,6 +262,39 @@ export default function EventPage() {
             </div>
           </motion.div>
         )}
+
+        {/* Support Contacts */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeInUp}
+          className="bg-white rounded-3xl p-8 md:p-12 mb-12 shadow-sm border border-slate-200 text-center"
+        >
+          <h3 className="text-2xl font-heading font-bold text-[#1B1B4D] uppercase italic -skew-x-3 mb-6">Need Help?</h3>
+          <p className="text-slate-600 mb-6">If you have any questions or need support regarding the event, feel free to contact us:</p>
+          <div className="flex flex-col md:flex-row justify-center items-center gap-6">
+            <div className="flex items-center gap-4 bg-slate-50 px-6 py-4 rounded-xl border border-slate-100 w-full md:w-auto">
+              <div className="w-10 h-10 rounded-full bg-[#F5841F]/10 flex items-center justify-center text-[#F5841F] shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div className="text-left">
+                <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Phone</span>
+                <span className="text-slate-700 font-semibold">+91 8317380741<br/>+91 7349791297</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4 bg-slate-50 px-6 py-4 rounded-xl border border-slate-100 w-full md:w-auto">
+              <div className="w-10 h-10 rounded-full bg-[#F5841F]/10 flex items-center justify-center text-[#F5841F] shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              </div>
+              <div className="text-left">
+                <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Email</span>
+                <a href="mailto:Balipurunclub@gmail.com" className="text-slate-700 font-semibold hover:text-[#F5841F] transition-colors break-all sm:break-normal">Balipurunclub@gmail.com</a>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
