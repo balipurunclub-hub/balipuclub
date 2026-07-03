@@ -75,8 +75,11 @@ export default function EventPage() {
           initial="hidden"
           animate="visible"
           variants={fadeInUp}
-          className="w-full overflow-hidden bg-white py-8 mb-12 rounded-2xl border border-slate-200 shadow-sm relative"
+          className="w-full overflow-hidden bg-white pt-6 pb-8 mb-12 rounded-2xl border border-slate-200 shadow-sm relative"
         >
+          <div className="text-center mb-6 relative z-20">
+            <span className="text-slate-400 font-bold tracking-widest text-xs uppercase">Our Sponsors</span>
+          </div>
           <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10"></div>
           <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10"></div>
           <div className="flex whitespace-nowrap animate-marquee w-max">
