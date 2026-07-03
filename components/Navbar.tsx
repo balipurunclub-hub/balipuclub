@@ -83,18 +83,7 @@ export function Navbar() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <Link
-                        href="/login"
-                        className="text-sm font-semibold text-slate-300 hover:text-white transition-colors tracking-wide"
-                      >
-                        Login
-                      </Link>
-                      <Link
-                        href="/register"
-                        className="btn-primary text-sm py-2 px-5 shadow-lg shadow-[#F5841F]/20 hover:shadow-[#F5841F]/40"
-                      >
-                        Register
-                      </Link>
+                      {/* Register button temporarily removed */}
                     </div>
                   )}
                 </>

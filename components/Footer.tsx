@@ -31,9 +31,6 @@ export function Footer() {
               <li>
                 <Link href="/#upcoming-events" className="hover:text-[#F5841F] transition-colors">Upcoming Events</Link>
               </li>
-              <li>
-                <Link href="/dashboard" className="hover:text-[#F5841F] transition-colors">Member Dashboard</Link>
-              </li>
             </ul>
           </div>
 
