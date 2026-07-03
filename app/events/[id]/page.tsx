@@ -86,20 +86,8 @@ export default function EventPage() {
                 <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">JCI MANGALORE</span>
               </div>
               <div className="flex items-center gap-6">
-                <img src="https://ui-avatars.com/api/?name=CB&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
-                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">CANARA BANK</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <img src="https://ui-avatars.com/api/?name=DC&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
-                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DECATHLON</span>
-              </div>
-              <div className="flex items-center gap-6">
                 <img src="/kmc.png" alt="KMC Hospital" className="h-20 sm:h-28 w-auto object-contain" />
                 <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">KMC HOSPITAL</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <img src="https://ui-avatars.com/api/?name=D1&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
-                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DUMMY SPONSOR</span>
               </div>
             </div>
             <div className="flex items-center px-8 gap-16 md:gap-24 pr-16 md:pr-24">
@@ -108,20 +96,8 @@ export default function EventPage() {
                 <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">JCI MANGALORE</span>
               </div>
               <div className="flex items-center gap-6">
-                <img src="https://ui-avatars.com/api/?name=CB&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
-                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">CANARA BANK</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <img src="https://ui-avatars.com/api/?name=DC&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
-                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DECATHLON</span>
-              </div>
-              <div className="flex items-center gap-6">
                 <img src="/kmc.png" alt="KMC Hospital" className="h-20 sm:h-28 w-auto object-contain" />
                 <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">KMC HOSPITAL</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <img src="https://ui-avatars.com/api/?name=D1&background=f1f5f9&color=94a3b8" alt="Logo" className="h-20 w-20 sm:h-28 sm:w-28 rounded-full" />
-                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DUMMY SPONSOR</span>
               </div>
             </div>
           </div>
@@ -219,11 +195,6 @@ export default function EventPage() {
           <div className="text-center">
             <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Supported By</span>
             <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">JCI Mangalore</h3>
-          </div>
-          <div className="w-full md:w-px h-px md:h-16 bg-slate-200"></div>
-          <div className="text-center">
-            <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Banking Partner</span>
-            <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">Canara Bank</h3>
           </div>
           <div className="w-full md:w-px h-px md:h-16 bg-slate-200"></div>
           <div className="text-center">
