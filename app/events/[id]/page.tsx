@@ -166,24 +166,24 @@ export default function EventPage() {
 
             <h4 className="text-white font-heading text-2xl uppercase italic -skew-x-3 mb-6 relative z-10">Secure Your Spot</h4>
 
-            {/* Phase 1 */}
+            {/* Early Bird */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 relative overflow-hidden">
               <div className="absolute top-3 right-3 bg-white/20 text-white/50 text-[10px] font-bold px-2 py-1 rounded-full">{event.pricing.phase1.status}</div>
-              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Phase 1</p>
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Early Bird</p>
               <div className="text-2xl font-bold text-white/40 line-through">₹{event.pricing.phase1.price}</div>
             </div>
 
-            {/* Phase 2 */}
+            {/* Phase 1 */}
             <div className="bg-linear-to-br from-[#F5841F] to-[#ff9b44] rounded-2xl p-6 relative shadow-[0_0_30px_rgba(245,132,31,0.3)] z-10">
               <div className="absolute top-4 right-4 bg-white text-[#F5841F] text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">{event.pricing.phase2.status}</div>
-              <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-1">Phase 2</p>
+              <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-1">Phase 1</p>
               <div className="flex items-end gap-2 mb-2">
                 <span className="text-4xl font-bold text-white">₹{event.pricing.phase2.price}</span>
               </div>
 
               <div className="bg-white/20 rounded-lg p-2.5 mb-5 border border-white/30 shadow-sm animate-fade-in">
-                <p className="text-xs font-bold text-white">⚠️ Only 100 Phase 2 slots available!</p>
-                <p className="text-[10px] text-white/90 mt-0.5">Price will increase in Phase 3. Secure your spot now!</p>
+                <p className="text-xs font-bold text-white">⚠️ Only 100 Phase 1 slots available!</p>
+                <p className="text-[10px] text-white/90 mt-0.5">Price will increase in Phase 2. Secure your spot now!</p>
               </div>
 
               <ul className="space-y-2 text-sm text-white/90 mb-6">
