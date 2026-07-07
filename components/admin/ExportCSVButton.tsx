@@ -9,6 +9,8 @@ export function ExportCSVButton({ data }: { data: Registration[] }) {
 
     // Headers
     const headers = [
+      'Ticket ID',
+      'BIB Number',
       'Name',
       'Email',
       'Phone',
@@ -20,13 +22,17 @@ export function ExportCSVButton({ data }: { data: Registration[] }) {
       'ID Proof Number',
       'Source',
       'Jersey Size',
+      'Entry Type',
       'Payment Status',
       'Payment ID',
+      'Checked In',
       'Date Registered',
     ];
 
     // Rows
     const rows = data.map((reg) => [
+      `"${reg.ticketId || ''}"`,
+      `"${reg.bibNumber || ''}"`,
       `"${reg.name || ''}"`,
       `"${reg.email || ''}"`,
       `"${reg.phone || ''}"`,
@@ -38,8 +44,10 @@ export function ExportCSVButton({ data }: { data: Registration[] }) {
       `"${reg.idProofNumber || ''}"`,
       `"${reg.source || ''}"`,
       `"${reg.jerseySize || ''}"`,
+      `"${reg.entryType || 'paid'}"`,
       `"${reg.paymentStatus || ''}"`,
       `"${reg.paymentId || ''}"`,
+      `"${reg.attended ? 'Yes' : 'No'}"`,
       `"${reg.createdAt?.toDate().toLocaleString() || ''}"`,
     ]);
 
@@ -51,7 +59,7 @@ export function ExportCSVButton({ data }: { data: Registration[] }) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `techfest-registrations-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `balipu-run-club-registrations-${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

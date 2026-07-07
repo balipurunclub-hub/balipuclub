@@ -12,12 +12,12 @@ export function ScannerRoute({ children }: { children: React.ReactNode }) {
     if (!loading) {
       if (!user) {
         router.replace('/login');
-      } else if (!isScanner && !isAdmin) {
-        // Admins can also scan
+      } else if (!isAdmin) {
+        // Only Admins can access manual route entry
         router.replace('/');
       }
     }
-  }, [user, loading, isScanner, isAdmin, router]);
+  }, [user, loading, isAdmin, router]);
 
   if (loading) {
     return (
@@ -30,7 +30,7 @@ export function ScannerRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user || (!isScanner && !isAdmin)) {
+  if (!user || !isAdmin) {
     return null; // Will redirect in useEffect
   }
 

@@ -29,8 +29,9 @@ export default function EventPage() {
         { name: "RPP BHARATH N ACHARYA", title: "Inaugural Guest", info: "National President JCI India", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIjOmqeOGOJa3kuXNydo-cUuNmnRbBHl-rhQ&s" }
       ],
       pricing: {
-        phase1: { price: 200, status: 'SOLD OUT' },
-        phase2: { price: 300, status: 'ONLY 100 SLOTS LEFT', originalPrice: 200 }
+        earlyBird: { price: 200, status: 'SOLD OUT' },
+        phase1: { price: 299, status: 'SOLD OUT' },
+        phase2: { price: 350, status: 'ONLY 50 SLOTS LEFT', originalPrice: 299 }
       }
     }
   };
@@ -168,22 +169,29 @@ export default function EventPage() {
 
             {/* Early Bird */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 relative overflow-hidden">
-              <div className="absolute top-3 right-3 bg-white/20 text-white/50 text-[10px] font-bold px-2 py-1 rounded-full">{event.pricing.phase1.status}</div>
+              <div className="absolute top-3 right-3 bg-white/20 text-white/50 text-[10px] font-bold px-2 py-1 rounded-full">{event.pricing.earlyBird.status}</div>
               <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Early Bird</p>
-              <div className="text-2xl font-bold text-white/40 line-through">₹{event.pricing.phase1.price}</div>
+              <div className="text-2xl font-bold text-white/40 line-through">₹{event.pricing.earlyBird.price}</div>
             </div>
 
             {/* Phase 1 */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 relative overflow-hidden">
+              <div className="absolute top-3 right-3 bg-white/20 text-white/50 text-[10px] font-bold px-2 py-1 rounded-full">{event.pricing.phase1.status}</div>
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Phase 1</p>
+              <div className="text-2xl font-bold text-white/40 line-through">₹{event.pricing.phase1.price}</div>
+            </div>
+
+            {/* Phase 2 */}
             <div className="bg-linear-to-br from-[#F5841F] to-[#ff9b44] rounded-2xl p-6 relative shadow-[0_0_30px_rgba(245,132,31,0.3)] z-10">
               <div className="absolute top-4 right-4 bg-white text-[#F5841F] text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">{event.pricing.phase2.status}</div>
-              <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-1">Phase 1</p>
+              <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-1">Phase 2 (Last Phase)</p>
               <div className="flex items-end gap-2 mb-2">
                 <span className="text-4xl font-bold text-white">₹{event.pricing.phase2.price}</span>
               </div>
 
               <div className="bg-white/20 rounded-lg p-2.5 mb-5 border border-white/30 shadow-sm animate-fade-in">
-                <p className="text-xs font-bold text-white">⚠️ Only 100 Phase 1 slots available!</p>
-                <p className="text-[10px] text-white/90 mt-0.5">Price will increase in Phase 2. Secure your spot now!</p>
+                <p className="text-xs font-bold text-white">⚠️ Only 50 Last Phase slots available!</p>
+                <p className="text-[10px] text-white/90 mt-0.5">This is the last phase. Secure your spot now before it sells out!</p>
               </div>
 
               <ul className="space-y-2 text-sm text-white/90 mb-6">
@@ -192,7 +200,7 @@ export default function EventPage() {
                 <li className="flex items-center gap-2"><span className="font-bold">✓</span> Finisher Certificate</li>
               </ul>
 
-              <a href="https://forms.gle/29dUdvAq7Co4w4AEA" target="_blank" rel="noopener noreferrer" className="w-full text-center py-4 bg-white text-[#F5841F] hover:bg-slate-50 shadow-xl rounded-xl font-semibold flex items-center justify-center gap-2 transition-all">
+              <a href="https://forms.gle/FqMjYtDnunoH3sJx8" target="_blank" rel="noopener noreferrer" className="w-full text-center py-4 bg-white text-[#F5841F] hover:bg-slate-50 shadow-xl rounded-xl font-semibold flex items-center justify-center gap-2 transition-all">
                 Register Now
                 <ArrowRight className="w-4 h-4" />
               </a>

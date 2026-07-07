@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { ScannerRoute } from '@/components/ScannerRoute';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, serverTimestamp, onSnapshot, doc } from 'firebase/firestore';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import { CheckCircle2, AlertCircle, RefreshCw, Users, QrCode } from 'lucide-react';
+import { CheckCircle2, AlertCircle, RefreshCw, Users, QrCode, X } from 'lucide-react';
 import type { Registration } from '@/types';
 
 type ScanStatus = 'idle' | 'scanning' | 'processing' | 'success' | 'error' | 'already_scanned';
@@ -17,6 +17,10 @@ export default function ScanPage() {
   const [attendeeName, setAttendeeName] = useState('');
   const [liveCount, setLiveCount] = useState(0);
   const [scannedUsers, setScannedUsers] = useState<Registration[]>([]);
+  
+  // New states for the dialog
+  const [scannedUser, setScannedUser] = useState<{data: Registration, docId: string} | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Listen to live attendance count
   useEffect(() => {
@@ -48,6 +52,7 @@ export default function ScanPage() {
     setStatus('processing');
     setMessage('Verifying ticket...');
     setAttendeeName('');
+    setScannedUser(null);
 
     try {
       const formattedId = ticketId.trim().toUpperCase();
@@ -75,30 +80,48 @@ export default function ScanPage() {
         return;
       }
 
+      // Prepare user data for dialog
+      setScannedUser({ data, docId: docRef.id });
+
       if (data.attended) {
         setStatus('already_scanned');
         setMessage(`Already Checked In!`);
         return;
       }
 
-      // Mark as attended
-      await updateDoc(docRef.ref, {
-        attended: true,
-        attendedAt: serverTimestamp()
-      });
-
       setStatus('success');
-      setMessage('Successfully Checked In!');
-      
-      // Auto-reset after 3 seconds on success
-      setTimeout(() => {
-        resetScanner();
-      }, 3000);
+      setMessage('Ticket Valid!');
       
     } catch (err) {
       console.error("Scan error:", err);
       setStatus('error');
       setMessage('A network error occurred. Please try again.');
+    }
+  };
+
+  const handleDone = async () => {
+    if (!scannedUser) return;
+    
+    setIsUpdating(true);
+    try {
+      const docRef = doc(db, 'registrations', scannedUser.docId);
+      
+      const updateData: any = {
+        attended: true,
+      };
+      
+      if (!scannedUser.data.attended) {
+         updateData.attendedAt = serverTimestamp();
+      }
+
+      await updateDoc(docRef, updateData);
+      
+      resetScanner();
+    } catch (err) {
+      console.error("Update error:", err);
+      alert("Failed to update record. Please try again.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -112,11 +135,12 @@ export default function ScanPage() {
     setMessage('');
     setManualId('');
     setAttendeeName('');
+    setScannedUser(null);
   };
 
   return (
     <ScannerRoute>
-      <div className="min-h-screen bg-slate-50 pt-20 pb-12 px-4 flex flex-col items-center">
+      <div className="min-h-screen bg-slate-50 pt-20 pb-12 px-4 flex flex-col items-center relative">
         
         {/* Live Count Header */}
         <div className="bg-white shadow-sm border border-slate-200 rounded-2xl px-6 py-4 flex items-center gap-4 mb-8 w-full max-w-md">
@@ -163,29 +187,6 @@ export default function ScanPage() {
                   </div>
                 )}
                 
-                {status === 'success' && (
-                  <div className="flex flex-col items-center animate-fade-in-up">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                      <CheckCircle2 className="w-12 h-12 text-green-500" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-green-600 mb-1">Approved!</h2>
-                    <p className="text-lg font-medium text-slate-800">{attendeeName}</p>
-                    <p className="text-slate-500 mb-6">{message}</p>
-                  </div>
-                )}
-
-                {status === 'already_scanned' && (
-                  <div className="flex flex-col items-center animate-fade-in-up">
-                    <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
-                      <AlertCircle className="w-12 h-12 text-yellow-600" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-yellow-600 mb-1">Warning</h2>
-                    <p className="text-lg font-medium text-slate-800">{attendeeName}</p>
-                    <p className="text-slate-600 mb-6">{message}</p>
-                    <button onClick={resetScanner} className="btn-primary w-full max-w-[200px]">Scan Next</button>
-                  </div>
-                )}
-
                 {status === 'error' && (
                   <div className="flex flex-col items-center animate-fade-in-up w-full">
                     <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
@@ -194,6 +195,13 @@ export default function ScanPage() {
                     <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
                     <p className="text-slate-600 mb-6 px-4">{message}</p>
                     <button onClick={resetScanner} className="btn-primary w-full max-w-[200px]">Try Again</button>
+                  </div>
+                )}
+
+                {/* Floating Dialog logic handled via an overlay below, so here we just show a placeholder if we are holding state */}
+                {(status === 'success' || status === 'already_scanned') && (
+                  <div className="flex flex-col items-center text-center">
+                    <p className="text-slate-500">Please complete the dialog...</p>
                   </div>
                 )}
               </div>
@@ -236,7 +244,7 @@ export default function ScanPage() {
                   <li key={user.uid} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                     <div>
                       <p className="font-medium text-slate-800">{user.name}</p>
-                      <p className="text-xs text-slate-500 font-mono mt-0.5">{user.ticketId}</p>
+                      <p className="text-xs text-slate-500 font-mono mt-0.5">{user.ticketId} {user.bibNumber ? `• BIB: ${user.bibNumber}` : ''}</p>
                     </div>
                   </li>
                 ))}
@@ -244,6 +252,73 @@ export default function ScanPage() {
             )}
           </div>
         </div>
+
+        {/* Floating Dialog Modal */}
+        {(status === 'success' || status === 'already_scanned') && scannedUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in-up">
+              <div className="relative p-6 text-center border-b border-slate-100">
+                {status === 'success' ? (
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-8 h-8 text-green-500" />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="w-8 h-8 text-yellow-600" />
+                  </div>
+                )}
+                
+                <h2 className="text-2xl font-bold text-[#1B1B4D] mb-1">
+                  {status === 'success' ? 'Valid Ticket!' : 'Already Checked In'}
+                </h2>
+                <p className="text-slate-500 font-mono text-sm">{scannedUser.data.ticketId}</p>
+                
+                <button 
+                  onClick={resetScanner}
+                  className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 bg-slate-50">
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 col-span-2 sm:col-span-1">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Name</p>
+                    <p className="font-semibold text-slate-800 break-words">{scannedUser.data.name}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Jersey Size</p>
+                    <p className="font-semibold text-slate-800">{scannedUser.data.jerseySize || 'N/A'}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Age / Gender</p>
+                    <p className="font-semibold text-slate-800">{scannedUser.data.age} • {scannedUser.data.gender}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 col-span-2 sm:col-span-1">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">City</p>
+                    <p className="font-semibold text-slate-800 break-words">{scannedUser.data.city}</p>
+                  </div>
+                </div>
+
+                <div className="mb-6 bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-center">
+                  <label className="block text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Assigned BIB Number</label>
+                  <p className="text-4xl font-black text-[#1B1B4D]">
+                    {scannedUser.data.bibNumber || 'None'}
+                  </p>
+                </div>
+
+                <button 
+                  onClick={handleDone} 
+                  disabled={isUpdating}
+                  className="btn-primary w-full py-4 text-lg"
+                >
+                  {isUpdating ? 'Saving...' : 'Done'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </ScannerRoute>

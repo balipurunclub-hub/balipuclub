@@ -65,14 +65,7 @@ export function Navbar() {
                           Admin
                         </Link>
                       )}
-                      {pathname !== '/dashboard' && (
-                        <Link
-                          href="/dashboard"
-                          className="text-sm font-semibold tracking-wide text-slate-300 hover:text-white transition-colors"
-                        >
-                          Dashboard
-                        </Link>
-                      )}
+
                       <button
                         onClick={handleLogout}
                         className="flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-red-400 transition-colors ml-2 pl-3 border-l border-white/10"

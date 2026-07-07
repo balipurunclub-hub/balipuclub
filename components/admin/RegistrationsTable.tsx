@@ -11,18 +11,50 @@ interface Props {
 export function RegistrationsTable({ data }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
+  const [emailFilter, setEmailFilter] = useState<'all' | 'sent' | 'not-sent'>('all');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'bib-asc' | 'bib-desc'>('newest');
   const [currentPage, setCurrentPage] = useState(1);
   const ROWS_PER_PAGE = 20;
 
   const filteredData = useMemo(() => {
-    return data.filter((reg) => {
+    let result = data.filter((reg) => {
       const matchesSearch =
         reg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || reg.paymentStatus === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesEmail = 
+        emailFilter === 'all' || 
+        (emailFilter === 'sent' && reg.emailSent) || 
+        (emailFilter === 'not-sent' && !reg.emailSent);
+        
+      return matchesSearch && matchesStatus && matchesEmail;
     });
-  }, [data, searchTerm, statusFilter]);
+
+    result.sort((a, b) => {
+      if (sortOrder === 'bib-asc') {
+        const bibA = typeof a.bibNumber === 'number' ? a.bibNumber : 999999;
+        const bibB = typeof b.bibNumber === 'number' ? b.bibNumber : 999999;
+        return bibA - bibB;
+      }
+      if (sortOrder === 'bib-desc') {
+        const bibA = typeof a.bibNumber === 'number' ? a.bibNumber : -1;
+        const bibB = typeof b.bibNumber === 'number' ? b.bibNumber : -1;
+        return bibB - bibA;
+      }
+      
+      const getTime = (val: any) => val?.seconds ? val.seconds * 1000 : new Date(val || 0).getTime();
+      const timeA = getTime(a.createdAt);
+      const timeB = getTime(b.createdAt);
+
+      if (sortOrder === 'oldest') {
+        return timeA - timeB;
+      }
+      // default newest
+      return timeB - timeA;
+    });
+
+    return result;
+  }, [data, searchTerm, statusFilter, emailFilter, sortOrder]);
 
   const totalPages = Math.ceil(filteredData.length / ROWS_PER_PAGE);
   const currentTableData = useMemo(() => {
@@ -39,6 +71,16 @@ export function RegistrationsTable({ data }: Props) {
 
   const handleStatusChange = (val: string) => {
     setStatusFilter(val as PaymentStatus | 'all');
+    setCurrentPage(1);
+  };
+
+  const handleEmailFilterChange = (val: string) => {
+    setEmailFilter(val as 'all' | 'sent' | 'not-sent');
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (val: string) => {
+    setSortOrder(val as 'newest' | 'oldest' | 'bib-asc' | 'bib-desc');
     setCurrentPage(1);
   };
 
@@ -70,6 +112,29 @@ export function RegistrationsTable({ data }: Props) {
             <option value="pending" className="bg-[#1B1B4D] text-white">Pending</option>
             <option value="failed" className="bg-[#1B1B4D] text-white">Failed</option>
           </select>
+
+          <select
+            value={emailFilter}
+            onChange={(e) => handleEmailFilterChange(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-xl py-2 px-3 pr-8 text-white focus:outline-none focus:border-[#F5841F]/50 focus:ring-1 focus:ring-[#F5841F]/50 transition-colors text-sm appearance-none"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em' }}
+          >
+            <option value="all" className="bg-[#1B1B4D] text-white">All Emails</option>
+            <option value="sent" className="bg-[#1B1B4D] text-white">Email Sent</option>
+            <option value="not-sent" className="bg-[#1B1B4D] text-white">Email Pending</option>
+          </select>
+
+          <select
+            value={sortOrder}
+            onChange={(e) => handleSortChange(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-xl py-2 px-3 pr-8 text-white focus:outline-none focus:border-[#F5841F]/50 focus:ring-1 focus:ring-[#F5841F]/50 transition-colors text-sm appearance-none"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em' }}
+          >
+            <option value="newest" className="bg-[#1B1B4D] text-white">Newest First</option>
+            <option value="oldest" className="bg-[#1B1B4D] text-white">Oldest First</option>
+            <option value="bib-asc" className="bg-[#1B1B4D] text-white">BIB (Low to High)</option>
+            <option value="bib-desc" className="bg-[#1B1B4D] text-white">BIB (High to Low)</option>
+          </select>
         </div>
       </div>
 
@@ -98,11 +163,30 @@ export function RegistrationsTable({ data }: Props) {
                 currentTableData.map((reg) => (
                   <tr key={reg.uid} className="hover:bg-white/5 transition-colors divide-x divide-white/5">
                     <td className="px-6 py-4 font-medium text-white font-mono">
-                      {reg.ticketId || reg.bibNumber || '-'}
+                      <div>{reg.ticketId || '-'}</div>
+                      {reg.bibNumber && (
+                        <div className="text-xs text-[#F5841F] font-bold mt-1 bg-[#F5841F]/10 inline-block px-2 py-0.5 rounded">
+                          BIB: {reg.bibNumber}
+                        </div>
+                      )}
+                      {reg.attended && (
+                        <div className="text-[10px] text-green-400 font-bold uppercase tracking-wider mt-1">
+                          ✓ Checked In
+                        </div>
+                      )}
+                      {reg.emailSent ? (
+                        <div className="text-[10px] text-blue-400 font-bold uppercase tracking-wider mt-1">
+                          📧 Email Sent
+                        </div>
+                      ) : (
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
+                          ✉️ Pending Email
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-white">{reg.name}</div>
-                      <div className="text-xs text-slate-400 font-mono mt-0.5">UID: {reg.uid.slice(0, 8)}...</div>
+                      <div className="text-xs text-slate-400 font-mono mt-0.5">UID: {(reg.uid || '').slice(0, 8)}...</div>
                     </td>
                     <td className="px-6 py-4 space-y-1">
                       <div className="flex items-center gap-1.5 text-slate-300">
@@ -131,6 +215,11 @@ export function RegistrationsTable({ data }: Props) {
                         <span className={`badge-${reg.paymentStatus}`}>
                           {reg.paymentStatus.charAt(0).toUpperCase() + reg.paymentStatus.slice(1)}
                         </span>
+                        {reg.entryType && (
+                          <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded ${reg.entryType === 'free' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-[#F5841F]/10 text-[#F5841F]'}`}>
+                            {reg.entryType} Entry
+                          </span>
+                        )}
                         {reg.paymentId && (
                           <span className="text-[10px] text-slate-400 font-mono">{reg.paymentId}</span>
                         )}

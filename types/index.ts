@@ -25,6 +25,8 @@ export interface Registration {
   updatedAt?: Timestamp;
   attended?: boolean;
   attendedAt?: Timestamp;
+  entryType?: 'paid' | 'free';
+  emailSent?: boolean;
 }
 
 export interface RegistrationFormData {
