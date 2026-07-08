@@ -271,7 +271,12 @@ export default function ScanPage() {
                 <h2 className="text-2xl font-bold text-[#1B1B4D] mb-1">
                   {status === 'success' ? 'Valid Ticket!' : 'Already Checked In'}
                 </h2>
-                <p className="text-slate-500 font-mono text-sm">{scannedUser.data.ticketId}</p>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <p className="text-slate-500 font-mono text-sm">{scannedUser.data.ticketId}</p>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${scannedUser.data.entryType === 'free' ? 'bg-slate-100 text-slate-500' : 'bg-green-100 text-green-600'}`}>
+                    {scannedUser.data.entryType === 'free' ? 'FREE ENTRY' : 'PAID ENTRY'}
+                  </span>
+                </div>
                 
                 <button 
                   onClick={resetScanner}
@@ -287,11 +292,13 @@ export default function ScanPage() {
                     <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Name</p>
                     <p className="font-semibold text-slate-800 break-words">{scannedUser.data.name}</p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Jersey Size</p>
-                    <p className="font-semibold text-slate-800">{scannedUser.data.jerseySize || 'N/A'}</p>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                  {scannedUser.data.entryType !== 'free' && (
+                    <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Jersey Size</p>
+                      <p className="font-semibold text-slate-800">{scannedUser.data.jerseySize || 'N/A'}</p>
+                    </div>
+                  )}
+                  <div className={`bg-white p-3 rounded-xl shadow-sm border border-slate-100 ${scannedUser.data.entryType === 'free' ? 'col-span-2 sm:col-span-1' : ''}`}>
                     <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Age / Gender</p>
                     <p className="font-semibold text-slate-800">{scannedUser.data.age} • {scannedUser.data.gender}</p>
                   </div>

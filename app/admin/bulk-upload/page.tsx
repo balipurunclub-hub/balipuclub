@@ -75,17 +75,31 @@ export default function BulkUploadPage() {
               errors.push(`Row ${index + 2}: Missing ${missing.join(', ')}`);
             }
 
+            // Auto-fill missing values
+            entry.name = entry.name || 'Yet to be submitted';
+            entry.email = entry.email || 'Yet to be submitted';
+            entry.phone = entry.phone || 'Yet to be submitted';
+            entry.age = entry.age || 'Yet to be submitted';
+            entry.gender = entry.gender || 'Yet to be submitted';
+            entry.city = entry.city || 'Yet to be submitted';
+            entry.emergencyContact = entry.emergencyContact || 'Yet to be submitted';
+            entry.idProofType = entry.idProofType || 'Yet to be submitted';
+            entry.idProofNumber = entry.idProofNumber || 'Yet to be submitted';
+            entry.jerseySize = entry.jerseySize || 'Yet to be submitted';
+
             return entry;
           });
 
           if (errors.length > 0) {
-            alert(`Validation Failed! Missing values found:\n\n${errors.slice(0, 10).join('\n')}${errors.length > 10 ? '\n...and more' : ''}\n\nPlease fix your CSV and try again.`);
-            setFile(null);
-            setIsParsing(false);
-            // Reset input file element
-            const fileInput = document.getElementById('csv-upload') as HTMLInputElement;
-            if (fileInput) fileInput.value = '';
-            return;
+            const proceed = confirm(`Validation Warning! Missing values found:\n\n${errors.slice(0, 10).join('\n')}${errors.length > 10 ? '\n...and more' : ''}\n\nDo you want to proceed and auto-fill these missing fields with placeholders?`);
+            if (!proceed) {
+              setFile(null);
+              setIsParsing(false);
+              // Reset input file element
+              const fileInput = document.getElementById('csv-upload') as HTMLInputElement;
+              if (fileInput) fileInput.value = '';
+              return;
+            }
           }
 
           setParsedData(mappedData);

@@ -107,7 +107,31 @@ export default function Home() {
                   <h3 className="font-heading text-3xl text-[#1B1B4D] uppercase italic -skew-x-3 mb-2">
                     The Monsoon Run
                   </h3>
-                  <p className="text-slate-500 font-medium mb-6">12th July 2026<br/>Fiza by Nexus Mall</p>
+                  <p className="text-slate-500 font-medium mb-6">12th July 2026<br/>Fiza by nexus</p>
+                  
+                  <div className="mt-auto flex items-center justify-center gap-2 text-[#F5841F] font-semibold text-lg group-hover:translate-x-2 transition-transform">
+                    Event Details <ArrowRight className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Event Summary Card - Dance Battle */}
+            <Link href="/events/monsoon-dancebattle" className="block group">
+              <div className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 hover:shadow-2xl hover:shadow-[#F5841F]/20 transition-all duration-300 transform group-hover:-translate-y-2 flex flex-col h-full animate-fade-in delay-100">
+                <div className="w-full h-48 sm:h-56 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10"></div>
+                  <img src="/dancePoster.png" alt="Monsoon Dance Battle" className="w-full h-full object-cover object-top transform group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                
+                <div className="p-8 flex flex-col flex-1 text-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-95">
+                  <div className="inline-block bg-[#F5841F]/10 text-[#F5841F] font-bold px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-4 mx-auto">
+                    Solo Registrations Open
+                  </div>
+                  <h3 className="font-heading text-3xl text-[#1B1B4D] uppercase italic -skew-x-3 mb-2 tracking-tight">
+                    Monsoon Dance Battle
+                  </h3>
+                  <p className="text-slate-500 font-medium mb-6">12th July 2026<br/>Fiza by nexus</p>
                   
                   <div className="mt-auto flex items-center justify-center gap-2 text-[#F5841F] font-semibold text-lg group-hover:translate-x-2 transition-transform">
                     Event Details <ArrowRight className="w-5 h-5" />

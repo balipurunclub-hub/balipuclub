@@ -21,7 +21,9 @@ export default function EventPage() {
       sponsors: ["JCI Mangalore"],
       date: "12th July 2026",
       time: "6:30 AM",
-      venue: "Pandeshwar, Mangaluru",
+      venue: "Fiza by nexus",
+      mapImage: "/map.jpeg",
+      mapUrl: "https://maps.app.goo.gl/WuC7oC5PWhyZ5n9o9",
       guests: [
         { name: "Captain Brijesh Chowta", title: "Chief Guest", info: "Member of Parliament, Dakshina Kannada Lok Sabha Constituency", img: "https://imgs.etvbharat.com/etvbharat/prod-images/14-03-2024/1200-675-20984062-thumbnail-16x9-etvbharat.JPG" },
         { name: "Dr Bharath Shetty", title: "Guest of honour", info: "MLA, Mangaluru City North", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAJ8BijrOP9Giay3tfBTX2gnboPFUl5BG5FQ&s" },
@@ -31,8 +33,30 @@ export default function EventPage() {
       pricing: {
         earlyBird: { price: 200, status: 'SOLD OUT' },
         phase1: { price: 299, status: 'SOLD OUT' },
-        phase2: { price: 350, status: 'ONLY 50 SLOTS LEFT', originalPrice: 299 }
-      }
+        phase2: { price: 350, status: 'ONLY 50 SLOTS LEFT', title: 'Phase 2 (Last Phase)' },
+        benefits: ["Race BIB", "Event T-Shirt", "Finisher Certificate"]
+      },
+      registrationLink: "https://forms.gle/FqMjYtDnunoH3sJx8"
+    },
+    'monsoon-dancebattle': {
+      title: "Monsoon Dance Battle",
+      isDance: true,
+      sponsors: ["JCI Mangalore"],
+      date: "12th July 2026",
+      time: "After fitness event (Around 9:45 AM)",
+      venue: "Fiza by nexus",
+      description: "Get ready to witness the ultimate street dance showdown! This is a SOLO battle event. Cash prizes for the winners will be revealed at the venue.",
+      guests: [
+        { name: "Captain Brijesh Chowta", title: "Chief Guest", info: "Member of Parliament, Dakshina Kannada Lok Sabha Constituency", img: "https://imgs.etvbharat.com/etvbharat/prod-images/14-03-2024/1200-675-20984062-thumbnail-16x9-etvbharat.JPG" },
+        { name: "Dr Bharath Shetty", title: "Guest of honour", info: "MLA, Mangaluru City North", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAJ8BijrOP9Giay3tfBTX2gnboPFUl5BG5FQ&s" },
+        { name: "Shri D. Vedavyas Kamath", title: "Guest of honour", info: "MLA, Mangaluru City South", img: "https://pbs.twimg.com/media/FwATVHxX0AMu82x.jpg" },
+        { name: "RPP BHARATH N ACHARYA", title: "Inaugural Guest", info: "National President JCI India", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIjOmqeOGOJa3kuXNydo-cUuNmnRbBHl-rhQ&s" }
+      ],
+      pricing: {
+        phase2: { price: 200, status: 'SOLO REGISTRATIONS OPEN', title: 'Solo Entry' },
+        benefits: ["Entry to Dance Battle", "Experience the Vibe", "Cash Prizes for Winners!"]
+      },
+      registrationLink: "https://forms.gle/XvYjr1jmaTqSTxB68"
     }
   };
 
@@ -50,11 +74,11 @@ export default function EventPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 overflow-hidden pt-24 pb-20">
+    <div className={`flex flex-col min-h-screen overflow-hidden pt-24 pb-20 ${event.isDance ? 'bg-zinc-950 text-slate-200 bg-[url("https://www.transparenttextures.com/patterns/carbon-fibre.png")]' : 'bg-slate-50'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative w-full z-10">
 
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-600 bg-white border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50 hover:text-[#F5841F] hover:shadow-md transition-all shadow-sm text-sm font-semibold w-fit">
+          <Link href="/" className={`inline-flex items-center gap-2 border px-4 py-2 rounded-full transition-all shadow-sm text-sm font-semibold w-fit ${event.isDance ? 'bg-zinc-900 border-zinc-800 text-slate-300 hover:bg-zinc-800 hover:text-purple-400' : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50 hover:text-[#F5841F]'}`}>
             <ArrowLeft className="w-4 h-4" /> Back to Club
           </Link>
         </div>
@@ -66,23 +90,23 @@ export default function EventPage() {
           variants={fadeInUp}
           className="text-center mb-8"
         >
-          <h1 className="font-heading text-5xl sm:text-7xl text-[#1B1B4D] uppercase italic -skew-x-6 mt-8">
+          <h1 className={`font-heading text-5xl sm:text-7xl uppercase italic -skew-x-6 mt-8 ${event.isDance ? 'text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-pink-600 drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]' : 'text-[#1B1B4D]'}`}>
             {event.title}
           </h1>
-          <div className="w-24 h-1.5 bg-[#F5841F] mx-auto mt-6 rounded-full"></div>
+          <div className={`w-24 h-1.5 mx-auto mt-6 rounded-full ${event.isDance ? 'bg-purple-600' : 'bg-[#F5841F]'}`}></div>
         </motion.div>
 
         <motion.div
           initial="hidden"
           animate="visible"
           variants={fadeInUp}
-          className="w-full overflow-hidden bg-white pt-6 pb-8 mb-12 rounded-2xl border border-slate-200 shadow-sm relative"
+          className={`w-full overflow-hidden pt-6 pb-8 mb-12 rounded-2xl border shadow-sm relative ${event.isDance ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
         >
           <div className="text-center mb-6 relative z-20">
             <span className="text-slate-400 font-bold tracking-widest text-xs uppercase">Our Sponsors</span>
           </div>
-          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10"></div>
+          <div className={`absolute left-0 top-0 bottom-0 w-24 z-10 ${event.isDance ? 'bg-gradient-to-r from-zinc-900 to-transparent' : 'bg-gradient-to-r from-white to-transparent'}`}></div>
+          <div className={`absolute right-0 top-0 bottom-0 w-24 z-10 ${event.isDance ? 'bg-gradient-to-l from-zinc-900 to-transparent' : 'bg-gradient-to-l from-white to-transparent'}`}></div>
           <div className="flex whitespace-nowrap animate-marquee w-max">
             <div className="flex items-center px-8 gap-16 md:gap-24 pr-16 md:pr-24">
               <div className="flex items-center gap-6">
@@ -119,88 +143,110 @@ export default function EventPage() {
           initial="hidden"
           animate="visible"
           variants={fadeInUp}
-          className="bg-white rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-slate-200 flex flex-col lg:flex-row relative z-20"
+          className={`rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.06)] border flex flex-col lg:flex-row relative z-20 ${event.isDance ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
         >
           {/* Event Details Left */}
-          <div className="p-8 md:p-12 lg:w-3/5 bg-linear-to-br from-white to-slate-50">
-            <div className="inline-block bg-green-100 text-green-700 font-bold px-4 py-1.5 rounded-full text-xs tracking-widest uppercase mb-8 animate-pulse">
-              Registrations Open
+          <div className={`p-8 md:p-12 lg:w-3/5 ${event.isDance ? 'bg-zinc-900' : 'bg-linear-to-br from-white to-slate-50'}`}>
+            <div className={`inline-block font-bold px-4 py-1.5 rounded-full text-xs tracking-widest uppercase mb-8 animate-pulse ${event.isDance ? 'bg-purple-500/20 text-purple-400' : 'bg-green-100 text-green-700'}`}>
+              {event.isDance ? 'Solo Registrations Open' : 'Registrations Open'}
             </div>
 
             <div className="space-y-4 mb-10">
-              <div className="flex items-center gap-5 p-5 rounded-2xl bg-slate-50 border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
-                <div className="w-14 h-14 rounded-2xl bg-[#F5841F]/10 flex items-center justify-center shrink-0">
-                  <Calendar className="w-7 h-7 text-[#F5841F]" />
+              <div className={`flex items-center gap-5 p-5 rounded-2xl border shadow-xs hover:shadow-md transition-shadow ${event.isDance ? 'bg-zinc-800/50 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${event.isDance ? 'bg-purple-500/20' : 'bg-[#F5841F]/10'}`}>
+                  <Calendar className={`w-7 h-7 ${event.isDance ? 'text-purple-400' : 'text-[#F5841F]'}`} />
                 </div>
                 <div>
                   <span className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Date</span>
-                  <strong className="text-xl text-[#1B1B4D] font-bold">{event.date}</strong>
+                  <strong className={`text-xl font-bold ${event.isDance ? 'text-white' : 'text-[#1B1B4D]'}`}>{event.date}</strong>
                 </div>
               </div>
 
-              <div className="flex items-center gap-5 p-5 rounded-2xl bg-slate-50 border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
-                <div className="w-14 h-14 rounded-2xl bg-[#F5841F]/10 flex items-center justify-center shrink-0">
-                  <Clock className="w-7 h-7 text-[#F5841F]" />
+              <div className={`flex items-center gap-5 p-5 rounded-2xl border shadow-xs hover:shadow-md transition-shadow ${event.isDance ? 'bg-zinc-800/50 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${event.isDance ? 'bg-purple-500/20' : 'bg-[#F5841F]/10'}`}>
+                  <Clock className={`w-7 h-7 ${event.isDance ? 'text-purple-400' : 'text-[#F5841F]'}`} />
                 </div>
                 <div>
                   <span className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Time</span>
-                  <strong className="text-xl text-[#1B1B4D] font-bold">{event.time}</strong>
+                  <strong className={`text-xl font-bold ${event.isDance ? 'text-white' : 'text-[#1B1B4D]'}`}>{event.time}</strong>
                 </div>
               </div>
 
-              <div className="flex items-center gap-5 p-5 rounded-2xl bg-slate-50 border border-slate-100 shadow-xs hover:shadow-md transition-shadow">
-                <div className="w-14 h-14 rounded-2xl bg-[#F5841F]/10 flex items-center justify-center shrink-0">
-                  <MapPin className="w-7 h-7 text-[#F5841F]" />
+              <div className={`flex items-center gap-5 p-5 rounded-2xl border shadow-xs hover:shadow-md transition-shadow ${event.isDance ? 'bg-zinc-800/50 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${event.isDance ? 'bg-purple-500/20' : 'bg-[#F5841F]/10'}`}>
+                  <MapPin className={`w-7 h-7 ${event.isDance ? 'text-purple-400' : 'text-[#F5841F]'}`} />
                 </div>
-                <div>
+                <div className="flex-1">
                   <span className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Venue</span>
-                  <strong className="text-xl text-[#1B1B4D] font-bold">{event.venue}</strong>
+                  <strong className={`text-xl font-bold block ${event.isDance ? 'text-white' : 'text-[#1B1B4D]'}`}>{event.venue}</strong>
+                  {event.mapImage && (
+                    <a href="#route-map" className={`inline-block mt-1 text-xs font-semibold hover:underline ${event.isDance ? 'text-purple-400' : 'text-[#F5841F]'}`}>
+                      View Route Map &darr;
+                    </a>
+                  )}
                 </div>
               </div>
+              {event.description && (
+                <div className="bg-indigo-50 border border-indigo-100 p-5 rounded-2xl mb-4">
+                  <p className="text-indigo-900 font-medium">{event.description}</p>
+                </div>
+              )}
+
+
             </div>
 
           </div>
 
           {/* Pricing Right side */}
-          <div className="p-8 md:p-12 lg:w-2/5 bg-[#1B1B4D] relative overflow-hidden flex flex-col justify-center">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#F5841F] rounded-full blur-[100px] opacity-20"></div>
+          <div className={`p-8 md:p-12 lg:w-2/5 relative overflow-hidden flex flex-col justify-center ${event.isDance ? 'bg-black' : 'bg-[#1B1B4D]'}`}>
+            <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-[100px] opacity-20 ${event.isDance ? 'bg-purple-600' : 'bg-[#F5841F]'}`}></div>
 
-            <h4 className="text-white font-heading text-2xl uppercase italic -skew-x-3 mb-6 relative z-10">Secure Your Spot</h4>
+            <h4 className="text-white font-heading text-2xl uppercase italic -skew-x-3 mb-6 relative z-10">
+              {event.isDance ? 'Join the Battle' : 'Secure Your Spot'}
+            </h4>
 
             {/* Early Bird */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 relative overflow-hidden">
-              <div className="absolute top-3 right-3 bg-white/20 text-white/50 text-[10px] font-bold px-2 py-1 rounded-full">{event.pricing.earlyBird.status}</div>
-              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Early Bird</p>
-              <div className="text-2xl font-bold text-white/40 line-through">₹{event.pricing.earlyBird.price}</div>
-            </div>
+            {event.pricing.earlyBird && (
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 relative overflow-hidden">
+                <div className="absolute top-3 right-3 bg-white/20 text-white/50 text-[10px] font-bold px-2 py-1 rounded-full">{event.pricing.earlyBird.status}</div>
+                <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Early Bird</p>
+                <div className="text-2xl font-bold text-white/40 line-through">₹{event.pricing.earlyBird.price}</div>
+              </div>
+            )}
 
             {/* Phase 1 */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 relative overflow-hidden">
-              <div className="absolute top-3 right-3 bg-white/20 text-white/50 text-[10px] font-bold px-2 py-1 rounded-full">{event.pricing.phase1.status}</div>
-              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Phase 1</p>
-              <div className="text-2xl font-bold text-white/40 line-through">₹{event.pricing.phase1.price}</div>
-            </div>
+            {event.pricing.phase1 && (
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 relative overflow-hidden">
+                <div className="absolute top-3 right-3 bg-white/20 text-white/50 text-[10px] font-bold px-2 py-1 rounded-full">{event.pricing.phase1.status}</div>
+                <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Phase 1</p>
+                <div className="text-2xl font-bold text-white/40 line-through">₹{event.pricing.phase1.price}</div>
+              </div>
+            )}
 
-            {/* Phase 2 */}
-            <div className="bg-linear-to-br from-[#F5841F] to-[#ff9b44] rounded-2xl p-6 relative shadow-[0_0_30px_rgba(245,132,31,0.3)] z-10">
-              <div className="absolute top-4 right-4 bg-white text-[#F5841F] text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">{event.pricing.phase2.status}</div>
-              <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-1">Phase 2 (Last Phase)</p>
+            {/* Phase 2 / Active Phase */}
+            <div className={`rounded-2xl p-6 relative z-10 ${event.isDance ? 'bg-linear-to-br from-purple-600 to-indigo-600 shadow-[0_0_30px_rgba(147,51,234,0.3)] border border-purple-400' : 'bg-linear-to-br from-[#F5841F] to-[#ff9b44] shadow-[0_0_30px_rgba(245,132,31,0.3)]'}`}>
+              <div className={`absolute top-4 right-4 bg-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse ${event.isDance ? 'text-purple-600' : 'text-[#F5841F]'}`}>
+                {event.pricing.phase2.status}
+              </div>
+              <p className="text-white/90 text-xs font-bold uppercase tracking-widest mb-1">{event.pricing.phase2.title}</p>
               <div className="flex items-end gap-2 mb-2">
                 <span className="text-4xl font-bold text-white">₹{event.pricing.phase2.price}</span>
               </div>
 
-              <div className="bg-white/20 rounded-lg p-2.5 mb-5 border border-white/30 shadow-sm animate-fade-in">
-                <p className="text-xs font-bold text-white">⚠️ Only 50 Last Phase slots available!</p>
-                <p className="text-[10px] text-white/90 mt-0.5">This is the last phase. Secure your spot now before it sells out!</p>
-              </div>
+              {!event.isDance && (
+                <div className="bg-white/20 rounded-lg p-2.5 mb-5 border border-white/30 shadow-sm animate-fade-in">
+                  <p className="text-xs font-bold text-white">⚠️ Only 50 Last Phase slots available!</p>
+                  <p className="text-[10px] text-white/90 mt-0.5">This is the last phase. Secure your spot now before it sells out!</p>
+                </div>
+              )}
 
-              <ul className="space-y-2 text-sm text-white/90 mb-6">
-                <li className="flex items-center gap-2"><span className="font-bold">✓</span> Race BIB</li>
-                <li className="flex items-center gap-2"><span className="font-bold">✓</span> Event T-Shirt</li>
-                <li className="flex items-center gap-2"><span className="font-bold">✓</span> Finisher Certificate</li>
+              <ul className="space-y-2 text-sm text-white/90 mb-6 mt-4">
+                {event.pricing.benefits?.map((benefit: string, idx: number) => (
+                  <li key={idx} className="flex items-center gap-2"><span className="font-bold">✓</span> {benefit}</li>
+                ))}
               </ul>
 
-              <a href="https://forms.gle/FqMjYtDnunoH3sJx8" target="_blank" rel="noopener noreferrer" className="w-full text-center py-4 bg-white text-[#F5841F] hover:bg-slate-50 shadow-xl rounded-xl font-semibold flex items-center justify-center gap-2 transition-all">
+              <a href={event.registrationLink} target="_blank" rel="noopener noreferrer" className={`w-full text-center py-4 bg-white hover:bg-slate-50 shadow-xl rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${event.isDance ? 'text-purple-600' : 'text-[#F5841F]'}`}>
                 Register Now
                 <ArrowRight className="w-4 h-4" />
               </a>
@@ -208,24 +254,25 @@ export default function EventPage() {
           </div>
         </motion.div>
 
-        {/* Primary Sponsors (Moved below registration card) */}
+
+        {/* Primary Sponsors */}
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeInUp}
-          className="bg-white rounded-3xl p-8 md:p-12 mt-12 mb-8 shadow-sm border border-slate-200 flex flex-col md:flex-row flex-wrap justify-center items-center gap-10 md:gap-16 text-[#1B1B4D]"
+          className={`rounded-3xl p-8 md:p-12 mt-12 mb-8 shadow-sm border flex flex-col md:flex-row flex-wrap justify-center items-center gap-10 md:gap-16 ${event.isDance ? 'bg-zinc-900 border-zinc-800 text-slate-200' : 'bg-white border-slate-200 text-[#1B1B4D]'}`}
         >
           <div className="text-center">
             <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Supported By</span>
             <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">JCI Mangalore</h3>
           </div>
-          <div className="w-full md:w-px h-px md:h-16 bg-slate-200"></div>
+          <div className={`w-full md:w-px h-px md:h-16 ${event.isDance ? 'bg-zinc-800' : 'bg-slate-200'}`}></div>
           <div className="text-center">
             <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Supporting Sponsor</span>
             <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">Canara Bank</h3>
           </div>
-          <div className="w-full md:w-px h-px md:h-16 bg-slate-200"></div>
+          <div className={`w-full md:w-px h-px md:h-16 ${event.isDance ? 'bg-zinc-800' : 'bg-slate-200'}`}></div>
           <div className="text-center">
             <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Health Partner</span>
             <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">KMC Hospital</h3>
@@ -242,23 +289,45 @@ export default function EventPage() {
             className="mt-20 mb-8"
           >
             <div className="text-center mb-12">
-              <h2 className="font-heading text-4xl sm:text-5xl text-[#1B1B4D] uppercase italic -skew-x-6">Honorable Guests</h2>
-              <div className="w-16 h-1.5 bg-[#F5841F] mx-auto mt-4 rounded-full"></div>
+              <h2 className={`font-heading text-4xl sm:text-5xl uppercase italic -skew-x-6 ${event.isDance ? 'text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-pink-600' : 'text-[#1B1B4D]'}`}>Honorable Guests</h2>
+              <div className={`w-16 h-1.5 mx-auto mt-4 rounded-full ${event.isDance ? 'bg-purple-600' : 'bg-[#F5841F]'}`}></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {event.guests.map((g: any, i: number) => (
-                <div key={i} className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center text-center hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#F5841F]/10 transition-all duration-300">
+                <div key={i} className={`rounded-2xl p-6 flex flex-col items-center text-center shadow-sm border hover:-translate-y-1 transition-transform ${event.isDance ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100 hover:shadow-lg hover:shadow-slate-200/50'}`}>
                   <div className="w-40 h-40 rounded-full p-1.5 bg-linear-to-tr from-[#F5841F] to-[#ff9b44] mb-6 shadow-lg shadow-[#F5841F]/30">
                     <img src={g.img} className="w-full h-full rounded-full object-cover border-4 border-white bg-slate-100" alt={g.name} />
                   </div>
-                  <div className="inline-block bg-[#1B1B4D]/5 text-[#1B1B4D] font-bold px-4 py-1.5 rounded-full text-xs tracking-widest uppercase mb-4">
+                  <div className={`inline-block font-bold px-4 py-1.5 rounded-full text-xs tracking-widest uppercase mb-4 ${event.isDance ? 'bg-purple-500/20 text-purple-300' : 'bg-[#1B1B4D]/5 text-[#1B1B4D]'}`}>
                     {g.title}
                   </div>
-                  <h4 className="text-xl font-bold text-[#1B1B4D] mb-3">{g.name}</h4>
+                  <h3 className={`font-bold text-lg mb-1 ${event.isDance ? 'text-white' : 'text-slate-800'}`}>{g.name}</h3>
                   <p className="text-sm text-slate-500 font-medium leading-relaxed">{g.info}</p>
                 </div>
               ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Map Section */}
+        {event.mapImage && (
+          <motion.div
+            id="route-map"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeInUp}
+            className={`mt-8 mb-8 rounded-3xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.06)] border relative z-20 ${event.isDance ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
+          >
+            <span className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 text-center">Route Map</span>
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative group bg-slate-100 flex justify-center">
+              <img src={event.mapImage} alt="Route Map" className="w-full h-auto object-contain max-h-[500px]" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <a href={event.mapUrl} target="_blank" rel="noopener noreferrer" className="bg-white text-[#1B1B4D] px-6 py-2 rounded-full font-bold text-sm shadow-xl flex items-center gap-2 transform transition hover:scale-105">
+                  <MapPin className="w-4 h-4" /> View Full Map
+                </a>
+              </div>
             </div>
           </motion.div>
         )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Mail, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Mail, Phone, ChevronLeft, ChevronRight, MessageCircle, FileDown } from 'lucide-react';
 import type { Registration, PaymentStatus } from '@/types';
 
 interface Props {
@@ -196,6 +196,31 @@ export function RegistrationsTable({ data }: Props) {
                       <div className="flex items-center gap-1.5 text-slate-300">
                         <Phone className="w-3.5 h-3.5 text-slate-400" />
                         {reg.phone}
+                        {reg.phone && reg.phone !== 'Yet to be submitted' && (
+                          <div className="flex items-center gap-2 ml-2">
+                            <a
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                const baseUrl = window.location.origin;
+                                const waText = `Hi ${reg.name},\n\nYour registration for The Monsoon Run (Balipu Run Club) is confirmed!\n\nTicket ID: ${reg.ticketId || reg.uid.slice(0, 8).toUpperCase()}\n${reg.bibNumber ? `BIB Number: ${reg.bibNumber}\n` : ''}\nEvent Details:\n📅 Date: 12th July 2026\n⏰ Time: 6:30 AM\n📍 Venue: Decathlon, Bharath Mall\n👕 Jersey: ${reg.jerseySize || 'N/A'}\n\nPlease bring your E-Ticket (QR code) on the day of the event. We look forward to seeing you at the starting line!`;
+                                window.open(`https://wa.me/${reg.phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`, '_blank');
+                              }}
+                              className="text-green-400 hover:text-green-300 transition-colors"
+                              title="Send WhatsApp Message"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </a>
+                            <a
+                              href={`/api/admin/ticket-pdf/${reg.uid}`}
+                              target="_blank"
+                              className="text-blue-400 hover:text-blue-300 transition-colors"
+                              title="Download PDF Ticket"
+                            >
+                              <FileDown className="w-4 h-4" />
+                            </a>
+                          </div>
+                        )}
                       </div>
                       <div className="text-xs text-slate-400 mt-1">
                         Emg: {reg.emergencyContact || 'N/A'}

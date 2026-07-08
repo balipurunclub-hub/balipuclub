@@ -23,7 +23,7 @@ function AdminDashboardInner() {
       const querySnapshot = await getDocs(q);
       const data: Registration[] = [];
       querySnapshot.forEach((doc) => {
-        data.push(doc.data() as Registration);
+        data.push({ ...doc.data(), uid: doc.id } as Registration);
       });
       setRegistrations(data);
     } catch (err) {
