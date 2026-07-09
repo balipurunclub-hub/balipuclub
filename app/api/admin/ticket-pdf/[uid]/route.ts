@@ -19,7 +19,7 @@ export async function GET(
     }
 
     const reg = docRef.data() as any;
-    const qrBuffer = await QRCode.toBuffer(uid, {
+    const qrBuffer = await QRCode.toBuffer(reg.ticketId || uid, {
       width: 250,
       margin: 2,
       color: { dark: '#1B1B4D', light: '#FFFFFF' }

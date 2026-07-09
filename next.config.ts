@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['firebase-admin', 'jwks-rsa', 'jose', 'pdfkit'],
-  allowedDevOrigins: ['balipu.vercel.app', 'b865-103-178-182-178.ngrok-free.app'],
+  allowedDevOrigins: ['balipu.vercel.app'],
   async rewrites() {
     return [
       {
