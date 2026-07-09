@@ -33,7 +33,7 @@ export default function EventPage() {
       pricing: {
         earlyBird: { price: 200, status: 'SOLD OUT' },
         phase1: { price: 299, status: 'SOLD OUT' },
-        phase2: { price: 350, status: 'ONLY 50 SLOTS LEFT', title: 'Phase 2 (Last Phase)' },
+        phase2: { price: 350, status: 'SOLD OUT', title: 'Phase 2 (Last Phase)' },
         benefits: ["Race BIB", "Event T-Shirt", "Finisher Certificate"]
       },
       registrationLink: "https://forms.gle/FqMjYtDnunoH3sJx8"
@@ -246,10 +246,16 @@ export default function EventPage() {
                 ))}
               </ul>
 
-              <a href={event.registrationLink} target="_blank" rel="noopener noreferrer" className={`w-full text-center py-4 bg-white hover:bg-slate-50 shadow-xl rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${event.isDance ? 'text-purple-600' : 'text-[#F5841F]'}`}>
-                Register Now
-                <ArrowRight className="w-4 h-4" />
-              </a>
+              {event.pricing.phase2.status === 'SOLD OUT' ? (
+                <button disabled className="w-full text-center py-4 bg-slate-200 text-slate-500 rounded-xl font-semibold flex items-center justify-center gap-2 cursor-not-allowed">
+                  Registrations Closed
+                </button>
+              ) : (
+                <a href={event.registrationLink} target="_blank" rel="noopener noreferrer" className={`w-full text-center py-4 bg-white hover:bg-slate-50 shadow-xl rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${event.isDance ? 'text-purple-600' : 'text-[#F5841F]'}`}>
+                  Register Now
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+              )}
             </div>
           </div>
         </motion.div>

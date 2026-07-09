@@ -65,6 +65,9 @@ export async function POST(req: Request) {
       try {
         const qrBuffer = await QRCode.toBuffer(user.ticketId);
 
+        const finalMailDate = user.entryType === 'free' ? '11th July 2026' : mailDate;
+        const finalMailTime = user.entryType === 'free' ? '11:00 AM - 6:00 PM' : mailTime;
+
         const mailOptions = {
           from: `"Balipu Run Club" <${process.env.EMAIL_USER}>`,
           to: user.email,
@@ -101,8 +104,8 @@ export async function POST(req: Request) {
                     <p style="font-size: 14px; color: #555; margin-top: 0;">Please collect your BIB and T-Shirt from the venue below:</p>
                     <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px; line-height: 1.8;">
                     ${mailLocation ? `<li><strong>📍 Location:</strong> ${mailLocation} <br><a href="${mailMapsLink}" target="_blank" style="color: #25D366; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 4px;">(View on Maps)</a></li>` : ''}
-                    ${mailDate ? `<li><strong>📅 Date:</strong> ${mailDate}</li>` : ''}
-                    ${mailTime ? `<li><strong>⏰ Time:</strong> ${mailTime}</li>` : ''}
+                    ${finalMailDate ? `<li><strong>📅 Date:</strong> ${finalMailDate}</li>` : ''}
+                    ${finalMailTime ? `<li><strong>⏰ Time:</strong> ${finalMailTime}</li>` : ''}
                   </ul>
                     ${mailRouteLink || routeImageCidUrl ? `
                     <div style="margin-top: 15px; background-color: #f0f4f8; padding: 15px; border-radius: 4px; border-left: 4px solid #6B2FA0;">

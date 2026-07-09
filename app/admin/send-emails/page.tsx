@@ -19,10 +19,11 @@ export default function SendEmailsPage() {
   const [mailSuccess, setMailSuccess] = useState(false);
   const [testEmailAddress, setTestEmailAddress] = useState('jeetheshkarate@gmail.com');
   const [sendToAll, setSendToAll] = useState(false);
+  const [filterEntryType, setFilterEntryType] = useState('all');
   
   // Mail template fields
   const [mailDate, setMailDate] = useState('10th July 2026');
-  const [mailTime, setMailTime] = useState('');
+  const [mailTime, setMailTime] = useState('2:00 PM - 7:30PM');
   const [mailLocation, setMailLocation] = useState('Decathlon Sports - 1st floor, Bharath Mall, Bejai Kavoor Rd, opposite KSRTC, Lalbagh, Mangaluru, Karnataka 575004');
   const [mailMapsLink, setMailMapsLink] = useState('https://maps.app.goo.gl/hacfPsQE4KWpT3re6');
   const [mailRouteLink, setMailRouteLink] = useState('https://maps.app.goo.gl/WuC7oC5PWhyZ5n9o9');
@@ -51,7 +52,15 @@ export default function SendEmailsPage() {
     fetchRegistrations();
   }, [fetchRegistrations]);
 
-  const targetUsers = registrations.filter(r => sendToAll ? true : !r.emailSent);
+  const targetUsers = registrations.filter(r => {
+    const meetsEmailSentCriteria = sendToAll ? true : !r.emailSent;
+    const meetsEntryTypeCriteria = filterEntryType === 'all' 
+      ? true 
+      : filterEntryType === 'paid' 
+        ? r.entryType !== 'free' 
+        : r.entryType === 'free';
+    return meetsEmailSentCriteria && meetsEntryTypeCriteria;
+  });
 
   const handleSendTestMail = async () => {
     setIsTesting(true);
@@ -194,6 +203,19 @@ export default function SendEmailsPage() {
                       <label htmlFor="sendToAll" className="cursor-pointer">
                         Include users who already received the email
                       </label>
+                    </div>
+
+                    <div className="mt-4 bg-white/5 p-3 rounded-lg border border-white/10">
+                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Filter by Entry Type</label>
+                      <select 
+                        value={filterEntryType} 
+                        onChange={(e) => setFilterEntryType(e.target.value)}
+                        className="w-full bg-[#0D0D2B] border border-white/20 rounded-lg p-2.5 text-white text-sm focus:ring-[#F5841F] focus:border-[#F5841F] outline-none"
+                      >
+                        <option value="all">All Entries</option>
+                        <option value="paid">Paid Entries Only</option>
+                        <option value="free">Free Entries Only</option>
+                      </select>
                     </div>
                   </div>
                 )}

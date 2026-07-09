@@ -9,7 +9,7 @@ import Link from 'next/link';
 export default function BulkUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
-  const [entryType, setEntryType] = useState('free');
+  const [entryType, setEntryType] = useState('paid');
   const [startBib, setStartBib] = useState('001');
   const [isParsing, setIsParsing] = useState(false);
   
@@ -26,7 +26,7 @@ export default function BulkUploadPage() {
   
   // Mail template fields
   const [mailDate, setMailDate] = useState('10th July 2026');
-  const [mailTime, setMailTime] = useState('');
+  const [mailTime, setMailTime] = useState('2:00 PM - 7:30PM');
   const [mailLocation, setMailLocation] = useState('Decathlon Sports - 1st floor, Bharath Mall, Bejai Kavoor Rd, opposite KSRTC, Lalbagh, Mangaluru, Karnataka 575004');
   const [mailMapsLink, setMailMapsLink] = useState('https://maps.app.goo.gl/hacfPsQE4KWpT3re6');
   const [mailRouteLink, setMailRouteLink] = useState('https://maps.app.goo.gl/WuC7oC5PWhyZ5n9o9');

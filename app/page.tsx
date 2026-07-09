@@ -101,8 +101,8 @@ export default function Home() {
                 </div>
                 
                 <div className="p-8 flex flex-col flex-1 text-center">
-                  <div className="inline-block bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-4 mx-auto">
-                    Registrations Open
+                  <div className="inline-block bg-red-100 text-red-700 font-bold px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-4 mx-auto">
+                    Registrations Closed
                   </div>
                   <h3 className="font-heading text-3xl text-[#1B1B4D] uppercase italic -skew-x-3 mb-2">
                     The Monsoon Run

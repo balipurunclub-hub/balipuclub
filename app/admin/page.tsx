@@ -39,31 +39,47 @@ function AdminDashboardInner() {
   }, [fetchRegistrations]);
 
 
-  const paidCount = registrations.filter((reg) => reg.paymentStatus === 'paid').length;
+  const totalCount = registrations.length;
+  const freeCount = registrations.filter(r => r.entryType === 'free').length;
+  const paidEntryCount = registrations.filter(r => r.entryType !== 'free').length;
 
   return (
     <div className="space-y-6">
       {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Total Registrations */}
         <div className="relative overflow-hidden rounded-2xl bg-[#1B1B4D]/80 border border-white/10 p-5 flex items-center gap-4 shadow-lg">
           <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-violet-500/20 blur-2xl" />
           <div className="w-12 h-12 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-slate-400 text-sm font-medium">Total Registrations</p>
-            <h3 className="text-2xl font-bold text-white">{registrations.length}</h3>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">Total Registrations</p>
+            <h3 className="text-2xl font-bold text-white">{totalCount}</h3>
           </div>
         </div>
 
+        {/* Paid Entries */}
+        <div className="relative overflow-hidden rounded-2xl bg-[#1B1B4D]/80 border border-white/10 p-5 flex items-center gap-4 shadow-lg">
+          <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-[#F5841F]/20 blur-2xl" />
+          <div className="w-12 h-12 rounded-full bg-[#F5841F]/20 border border-[#F5841F]/30 flex items-center justify-center text-[#F5841F] shrink-0">
+            <IndianRupee className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">Paid Entries</p>
+            <h3 className="text-2xl font-bold text-white">{paidEntryCount}</h3>
+          </div>
+        </div>
+
+        {/* Free Entries */}
         <div className="relative overflow-hidden rounded-2xl bg-[#1B1B4D]/80 border border-white/10 p-5 flex items-center gap-4 shadow-lg">
           <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-green-500/20 blur-2xl" />
           <div className="w-12 h-12 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 shrink-0">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-slate-400 text-sm font-medium">Successful Payments</p>
-            <h3 className="text-2xl font-bold text-white">{paidCount}</h3>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">Free Entries</p>
+            <h3 className="text-2xl font-bold text-white">{freeCount}</h3>
           </div>
         </div>
 
