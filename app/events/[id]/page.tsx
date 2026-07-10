@@ -33,7 +33,7 @@ export default function EventPage() {
       pricing: {
         earlyBird: { price: 200, status: 'SOLD OUT' },
         phase1: { price: 299, status: 'SOLD OUT' },
-        phase2: { price: 350, status: 'SOLD OUT', title: 'Phase 2 (Last Phase)' },
+        phase2: { price: 350, status: 'OPEN', title: 'Phase 2 (Last Phase)' },
         benefits: ["Race BIB", "Event T-Shirt", "Finisher Certificate"]
       },
       registrationLink: "https://forms.gle/FqMjYtDnunoH3sJx8"
@@ -235,8 +235,8 @@ export default function EventPage() {
 
               {!event.isDance && (
                 <div className="bg-white/20 rounded-lg p-2.5 mb-5 border border-white/30 shadow-sm animate-fade-in">
-                  <p className="text-xs font-bold text-white">⚠️ Only 50 Last Phase slots available!</p>
-                  <p className="text-[10px] text-white/90 mt-0.5">This is the last phase. Secure your spot now before it sells out!</p>
+                  <p className="text-xs font-bold text-white">🎉 20 more spots just opened!</p>
+                  <p className="text-[10px] text-white/90 mt-0.5">Limited slots available — register before they sell out!</p>
                 </div>
               )}
 
