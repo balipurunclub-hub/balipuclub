@@ -14,6 +14,7 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
   const [entryFilter, setEntryFilter] = useState<'all' | 'paid' | 'free'>('all');
   const [emailFilter, setEmailFilter] = useState<'all' | 'sent' | 'not-sent'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'bib-asc' | 'bib-desc'>('newest');
+  const [checkinFilter, setCheckinFilter] = useState<'all' | 'checked-in' | 'not-checked-in'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const ROWS_PER_PAGE = 20;
 
@@ -32,7 +33,12 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
         (emailFilter === 'sent' && reg.emailSent) || 
         (emailFilter === 'not-sent' && !reg.emailSent);
         
-      return matchesSearch && matchesEntry && matchesEmail;
+      const matchesCheckin =
+        checkinFilter === 'all' ||
+        (checkinFilter === 'checked-in' && reg.attended) ||
+        (checkinFilter === 'not-checked-in' && !reg.attended);
+        
+      return matchesSearch && matchesEntry && matchesEmail && matchesCheckin;
     });
 
     result.sort((a, b) => {
@@ -59,7 +65,7 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
     });
 
     return result;
-  }, [data, searchTerm, entryFilter, emailFilter, sortOrder]);
+  }, [data, searchTerm, entryFilter, emailFilter, sortOrder, checkinFilter]);
 
   const totalPages = Math.ceil(filteredData.length / ROWS_PER_PAGE);
   const currentTableData = useMemo(() => {
@@ -89,8 +95,41 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
     setCurrentPage(1);
   };
 
+  const handleCheckinFilterChange = (val: 'all' | 'checked-in' | 'not-checked-in') => {
+    setCheckinFilter(val);
+    setCurrentPage(1);
+  };
+
+  const checkedInCount = data.filter(r => r.attended).length;
+  const notCheckedInCount = data.length - checkedInCount;
+
   return (
     <div className="space-y-4">
+      {/* Check-in filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {([
+          { val: 'all', label: `All (${data.length})` },
+          { val: 'checked-in', label: `✓ Checked In (${checkedInCount})` },
+          { val: 'not-checked-in', label: `⏳ Not Yet (${notCheckedInCount})` },
+        ] as const).map(tab => (
+          <button
+            key={tab.val}
+            onClick={() => handleCheckinFilterChange(tab.val)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+              checkinFilter === tab.val
+                ? tab.val === 'checked-in'
+                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-md'
+                  : tab.val === 'not-checked-in'
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-md'
+                  : 'bg-white text-[#1B1B4D] border-white shadow-md'
+                : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Controls */}
       <div className="flex flex-col gap-3">
         {/* Search - full width */}

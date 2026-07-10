@@ -1,15 +1,14 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { AdminRoute } from '@/components/AdminRoute';
 import { RegistrationsTable } from '@/components/admin/RegistrationsTable';
 import { ExportCSVButton } from '@/components/admin/ExportCSVButton';
-import { ShieldCheck, Users, IndianRupee, RefreshCw, QrCode, Lock, Mail, CheckSquare, X, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Users, IndianRupee, RefreshCw, QrCode, Lock, Mail, CheckSquare, X, CheckCircle2, UserCheck } from 'lucide-react';
 import type { Registration } from '@/types';
 import Link from 'next/link';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 function AdminDashboardInner() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -20,33 +19,39 @@ function AdminDashboardInner() {
   const [checkinTarget, setCheckinTarget] = useState<Registration | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
 
-  const fetchRegistrations = useCallback(async () => {
+  const fetchRegistrations = useCallback(() => {
     setLoading(true);
     setError('');
-    try {
-      const q = query(collection(db, 'registrations'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const data: Registration[] = [];
-      querySnapshot.forEach((doc) => {
-        data.push({ ...doc.data(), uid: doc.id } as Registration);
-      });
-      setRegistrations(data);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to fetch registrations. Check Firestore rules or permissions.');
-    } finally {
-      setLoading(false);
-    }
+    const q = query(collection(db, 'registrations'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data: Registration[] = [];
+        snapshot.forEach((docSnap) => {
+          data.push({ ...docSnap.data(), uid: docSnap.id } as Registration);
+        });
+        setRegistrations(data);
+        setLoading(false);
+      },
+      (err) => {
+        console.error(err);
+        setError('Failed to fetch registrations. Check Firestore rules or permissions.');
+        setLoading(false);
+      }
+    );
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
-    fetchRegistrations();
+    const unsubscribe = fetchRegistrations();
+    return () => unsubscribe?.();
   }, [fetchRegistrations]);
 
 
   const totalCount = registrations.length;
   const freeCount = registrations.filter(r => r.entryType === 'free').length;
   const paidEntryCount = registrations.filter(r => r.entryType !== 'free').length;
+  const checkedInCount = registrations.filter(r => r.attended).length;
 
   const handleManualCheckIn = (reg: Registration) => {
     setCheckinTarget(reg);
@@ -75,7 +80,7 @@ function AdminDashboardInner() {
   return (
     <div className="space-y-6">
       {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {/* Total Registrations */}
         <div className="relative overflow-hidden rounded-2xl bg-[#1B1B4D]/80 border border-white/10 p-5 flex items-center gap-4 shadow-lg">
           <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-violet-500/20 blur-2xl" />
@@ -112,6 +117,18 @@ function AdminDashboardInner() {
           </div>
         </div>
 
+        {/* Checked In */}
+        <div className="relative overflow-hidden rounded-2xl bg-[#1B1B4D]/80 border border-white/10 p-5 flex items-center gap-4 shadow-lg">
+          <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-emerald-500/20 blur-2xl" />
+          <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+            <UserCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">Checked In</p>
+            <h3 className="text-2xl font-bold text-white">{checkedInCount} <span className="text-sm text-slate-400 font-normal">/ {totalCount}</span></h3>
+          </div>
+        </div>
+
       </div>
 
       <div className="flex flex-wrap justify-end gap-3">
@@ -127,7 +144,10 @@ function AdminDashboardInner() {
 
       {/* Main content */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <h2 className="text-lg font-bold text-white">Registration Data</h2>
+        <div>
+          <h2 className="text-lg font-bold text-white">Registration Data</h2>
+          <p className="text-xs text-emerald-400 font-medium mt-0.5">🔴 Live — updates automatically</p>
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchRegistrations}
