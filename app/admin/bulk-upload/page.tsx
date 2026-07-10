@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { AdminRoute } from '@/components/AdminRoute';
 import { UploadCloud, CheckCircle2, AlertCircle, Mail, MapPin, Calendar, Clock, Link as LinkIcon, RefreshCw } from 'lucide-react';
@@ -10,7 +10,9 @@ export default function BulkUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [entryType, setEntryType] = useState('paid');
-  const [startBib, setStartBib] = useState('001');
+  const [startBib, setStartBib] = useState('');
+  const [bibLoading, setBibLoading] = useState(true);
+  const [bibAutoFetched, setBibAutoFetched] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   
   const [isUploading, setIsUploading] = useState(false);
@@ -31,6 +33,20 @@ export default function BulkUploadPage() {
   const [mailMapsLink, setMailMapsLink] = useState('https://maps.app.goo.gl/hacfPsQE4KWpT3re6');
   const [mailRouteLink, setMailRouteLink] = useState('https://maps.app.goo.gl/WuC7oC5PWhyZ5n9o9');
   const [mailRouteImage, setMailRouteImage] = useState('map.jpeg');
+
+  // Auto-fetch next BIB on mount
+  useEffect(() => {
+    fetch('/api/admin/bulk-upload')
+      .then(r => r.json())
+      .then(data => {
+        if (data.nextBib) {
+          setStartBib(String(data.nextBib));
+          setBibAutoFetched(true);
+        }
+      })
+      .catch(() => setStartBib('1'))
+      .finally(() => setBibLoading(false));
+  }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -296,14 +312,25 @@ export default function BulkUploadPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-300 mb-2">Starting BIB Number</label>
+                      <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center justify-between">
+                        <span>Starting BIB Number</span>
+                        {bibLoading ? (
+                          <span className="text-xs text-slate-500 font-normal animate-pulse">Fetching...</span>
+                        ) : bibAutoFetched ? (
+                          <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full">&#10003; Auto-fetched</span>
+                        ) : null}
+                      </label>
                       <input 
                         type="number" 
                         value={startBib} 
                         onChange={(e) => setStartBib(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-[#F5841F]/50 outline-none font-mono"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-[#F5841F]/50 outline-none font-mono disabled:opacity-60"
                         placeholder="e.g. 1"
+                        disabled={bibLoading}
                       />
+                      {!bibLoading && (
+                        <p className="text-xs text-slate-500 mt-1">Next after highest existing BIB in the database. You can still edit it.</p>
+                      )}
                     </div>
 
                     <div>
