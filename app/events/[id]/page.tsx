@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
-import { Calendar, Clock, MapPin, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, MapPin, ArrowRight, ArrowLeft, Shirt } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
 const fadeInUp: Variants = {
@@ -186,6 +186,36 @@ export default function EventPage() {
                   )}
                 </div>
               </div>
+
+              {/* BIB Collection Details */}
+              {!event.isDance && (
+                <div className="flex flex-col gap-4 p-5 rounded-2xl border shadow-xs bg-blue-50/50 border-blue-100/50">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-500/10">
+                      <Shirt className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <h4 className="font-bold text-[#1B1B4D] text-lg">BIB Collection</h4>
+                  </div>
+                  
+                  <div className="space-y-3 pl-[3.25rem] text-sm">
+                    <div>
+                      <span className="font-bold text-slate-800 block mb-0.5">Paid Entries:</span>
+                      <span className="text-slate-600 font-medium">10th July • 2:00 PM - 7:30 PM</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-800 block mb-0.5">Free Entries:</span>
+                      <span className="text-slate-600 font-medium">11th July • 11:00 AM - 6:00 PM</span>
+                    </div>
+                    <div className="pt-3 border-t border-blue-200/50">
+                      <a href="https://maps.app.goo.gl/hacfPsQE4KWpT3re6" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline flex items-start gap-1.5 transition-colors">
+                        <MapPin className="w-4 h-4 mt-0.5 shrink-0"/>
+                        <span className="leading-snug">Decathlon Sports - 1st floor, Bharath Mall, Bejai Kavoor Rd, opposite KSRTC, Lalbagh, Mangaluru</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {event.description && (
                 <div className="bg-indigo-50 border border-indigo-100 p-5 rounded-2xl mb-4">
                   <p className="text-indigo-900 font-medium">{event.description}</p>
