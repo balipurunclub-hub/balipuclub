@@ -312,7 +312,7 @@ export default function BulkUploadPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-300 mb-2 flex items-center justify-between">
+                      <label className="flex text-sm font-semibold text-slate-300 mb-2 items-center justify-between">
                         <span>Starting BIB Number</span>
                         {bibLoading ? (
                           <span className="text-xs text-slate-500 font-normal animate-pulse">Fetching...</span>

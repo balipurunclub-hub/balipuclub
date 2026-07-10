@@ -165,7 +165,18 @@ export default function ScanPage() {
       // Prepare user data for dialog
       setScannedUser({ data, docId: actualDocId });
 
-      if (data.attended) {
+      // Check if this doc OR its linked duplicate is already checked in
+      let alreadyIn = data.attended;
+      if (!alreadyIn && (data as any).linkedDocId) {
+        try {
+          const linkedSnap = await getDoc(doc(db, 'registrations', (data as any).linkedDocId));
+          if (linkedSnap.exists() && linkedSnap.data()?.attended) {
+            alreadyIn = true;
+          }
+        } catch (_) {}
+      }
+
+      if (alreadyIn) {
         setStatus('already_scanned');
         setMessage(`Already Checked In!`);
         return;
@@ -197,6 +208,17 @@ export default function ScanPage() {
       }
 
       await updateDoc(docRef, updateData);
+
+      // Also mark the linked duplicate as attended (if any)
+      const linkedId = (scannedUser.data as any).linkedDocId;
+      if (linkedId) {
+        try {
+          const linkedRef = doc(db, 'registrations', linkedId);
+          await updateDoc(linkedRef, { attended: true, attendedAt: serverTimestamp() });
+        } catch (e) {
+          console.warn('Failed to update linked doc:', e);
+        }
+      }
       
       resetScanner();
     } catch (err) {
