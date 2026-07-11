@@ -26,8 +26,8 @@ export default function SendEmailsPage() {
   const [mailTime, setMailTime] = useState('2:00 PM - 7:30PM');
   const [mailLocation, setMailLocation] = useState('Decathlon Sports - 1st floor, Bharath Mall, Bejai Kavoor Rd, opposite KSRTC, Lalbagh, Mangaluru, Karnataka 575004');
   const [mailMapsLink, setMailMapsLink] = useState('https://maps.app.goo.gl/hacfPsQE4KWpT3re6');
-  const [mailRouteLink, setMailRouteLink] = useState('https://maps.app.goo.gl/WuC7oC5PWhyZ5n9o9');
-  const [mailRouteImage, setMailRouteImage] = useState('map.jpeg');
+  const [mailRouteLink, setMailRouteLink] = useState('https://maps.app.goo.gl/sqSHqAcyAWqnFgvs8');
+  const [mailRouteImage, setMailRouteImage] = useState('map.png');
 
   const fetchRegistrations = useCallback(async () => {
     setLoading(true);
@@ -254,7 +254,7 @@ export default function SendEmailsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1"><LinkIcon className="w-3 h-3"/> Route Image URL (or file path)</label>
-                  <input type="text" value={mailRouteImage} onChange={e=>setMailRouteImage(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" placeholder="e.g. map.jpeg" />
+                  <input type="text" value={mailRouteImage} onChange={e=>setMailRouteImage(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" placeholder="e.g. map.png" />
                 </div>
               </div>
 

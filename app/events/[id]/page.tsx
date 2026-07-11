@@ -22,8 +22,8 @@ export default function EventPage() {
       date: "12th July 2026",
       time: "6:30 AM",
       venue: "Fiza by nexus",
-      mapImage: "/map.jpeg",
-      mapUrl: "https://maps.app.goo.gl/WuC7oC5PWhyZ5n9o9",
+      mapImage: "/map.png",
+      mapUrl: "https://maps.app.goo.gl/sqSHqAcyAWqnFgvs8",
       guests: [
         { name: "Captain Brijesh Chowta", title: "Chief Guest", info: "Member of Parliament, Dakshina Kannada Lok Sabha Constituency", img: "https://imgs.etvbharat.com/etvbharat/prod-images/14-03-2024/1200-675-20984062-thumbnail-16x9-etvbharat.JPG" },
         { name: "Dr Bharath Shetty", title: "Guest of honour", info: "MLA, Mangaluru City North", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAJ8BijrOP9Giay3tfBTX2gnboPFUl5BG5FQ&s" },
