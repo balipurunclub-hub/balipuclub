@@ -6,15 +6,17 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const adminDb = getAdminDb();
-    const snapshot = await adminDb.collection('registrations').select('bibNumber').get();
+    // Optimize read by ordering descending and taking only the highest one
+    const snapshot = await adminDb.collection('registrations')
+      .orderBy('bibNumber', 'desc')
+      .limit(1)
+      .get();
     
     let maxBib = 0;
-    snapshot.forEach((doc) => {
-      const bib = doc.data().bibNumber;
-      if (typeof bib === 'number' && bib > maxBib) {
-        maxBib = bib;
-      }
-    });
+    if (!snapshot.empty) {
+      const data = snapshot.docs[0].data();
+      maxBib = typeof data.bibNumber === 'number' ? data.bibNumber : parseInt(data.bibNumber) || 0;
+    }
 
     return NextResponse.json({ nextBib: maxBib + 1 });
   } catch (error: any) {

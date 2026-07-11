@@ -110,6 +110,10 @@ export default function EventPage() {
           <div className="flex whitespace-nowrap animate-marquee w-max">
             <div className="flex items-center px-8 gap-16 md:gap-24 pr-16 md:pr-24">
               <div className="flex items-center gap-6">
+                <img src="/decathlon.png" alt="Decathlon" className="h-20 sm:h-28 w-auto rounded-2xl object-contain bg-white shadow-sm border border-slate-100 p-2" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DECATHLON</span>
+              </div>
+              <div className="flex items-center gap-6">
                 <img src="/jci.jpeg" alt="JCI Mangalore" className="h-20 sm:h-28 w-auto rounded-2xl object-contain bg-white shadow-sm border border-slate-100 p-2" />
                 <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">JCI MANGALORE</span>
               </div>
@@ -123,6 +127,10 @@ export default function EventPage() {
               </div>
             </div>
             <div className="flex items-center px-8 gap-16 md:gap-24 pr-16 md:pr-24">
+              <div className="flex items-center gap-6">
+                <img src="/decathlon.png" alt="Decathlon" className="h-20 sm:h-28 w-auto rounded-2xl object-contain bg-white shadow-sm border border-slate-100 p-2" />
+                <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">DECATHLON</span>
+              </div>
               <div className="flex items-center gap-6">
                 <img src="/jci.jpeg" alt="JCI Mangalore" className="h-20 sm:h-28 w-auto rounded-2xl object-contain bg-white shadow-sm border border-slate-100 p-2" />
                 <span className="text-4xl sm:text-6xl font-heading italic text-slate-300">JCI MANGALORE</span>
@@ -299,6 +307,11 @@ export default function EventPage() {
           variants={fadeInUp}
           className={`rounded-3xl p-8 md:p-12 mt-12 mb-8 shadow-sm border flex flex-col md:flex-row flex-wrap justify-center items-center gap-10 md:gap-16 ${event.isDance ? 'bg-zinc-900 border-zinc-800 text-slate-200' : 'bg-white border-slate-200 text-[#1B1B4D]'}`}
         >
+          <div className="text-center">
+            <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Title Sponsor</span>
+            <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3 text-[#0082C3]">Decathlon</h3>
+          </div>
+          <div className={`w-full md:w-px h-px md:h-16 ${event.isDance ? 'bg-zinc-800' : 'bg-slate-200'}`}></div>
           <div className="text-center">
             <span className="block text-slate-400 font-bold tracking-widest text-[10px] sm:text-xs uppercase mb-2">Supported By</span>
             <h3 className="text-3xl sm:text-4xl font-heading font-bold tracking-tight italic -skew-x-3">JCI Mangalore</h3>
