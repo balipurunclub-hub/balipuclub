@@ -33,7 +33,7 @@ export default function EventPage() {
       pricing: {
         earlyBird: { price: 200, status: 'SOLD OUT' },
         phase1: { price: 299, status: 'SOLD OUT' },
-        phase2: { price: 350, status: 'OPEN', title: 'Phase 2 (Last Phase)' },
+        phase2: { price: 350, status: 'SOLD OUT', title: 'Phase 2 (Last Phase)' },
         benefits: ["Race BIB", "Event T-Shirt", "Finisher Certificate"]
       },
       registrationLink: "https://forms.gle/FqMjYtDnunoH3sJx8"
@@ -53,7 +53,7 @@ export default function EventPage() {
         { name: "RPP BHARATH N ACHARYA", title: "Inaugural Guest", info: "National President JCI India", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIjOmqeOGOJa3kuXNydo-cUuNmnRbBHl-rhQ&s" }
       ],
       pricing: {
-        phase2: { price: 200, status: 'SOLO REGISTRATIONS OPEN', title: 'Solo Entry' },
+        phase2: { price: 200, status: 'SOLD OUT', title: 'Solo Entry' },
         benefits: ["Entry to Dance Battle", "Experience the Vibe", "Cash Prizes for Winners!"]
       },
       registrationLink: "https://forms.gle/XvYjr1jmaTqSTxB68"

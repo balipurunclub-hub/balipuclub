@@ -87,54 +87,50 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
           
           <div className="text-center mb-16 animate-fade-in">
-            <h2 className="font-heading text-4xl sm:text-5xl text-[#1B1B4D] uppercase italic -skew-x-6">Upcoming Events</h2>
+            <h2 className="font-heading text-4xl sm:text-5xl text-[#1B1B4D] uppercase italic -skew-x-6">Recent Events</h2>
             <div className="w-24 h-1.5 bg-[#F5841F] mx-auto mt-6 rounded-full"></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Event Summary Card */}
             <Link href="/events/monsoon-run" className="block group">
-              <div className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 hover:shadow-2xl hover:shadow-[#F5841F]/20 transition-all duration-300 transform group-hover:-translate-y-2 flex flex-col h-full animate-fade-in">
+              <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 flex flex-col h-full grayscale-50 hover:grayscale-0 opacity-90 transition-all duration-300">
                 <div className="w-full h-48 sm:h-56 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10"></div>
-                  <img src="/poster.png" alt="The Monsoon Run" className="w-full h-full object-cover object-top transform group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10 flex items-center justify-center">
+                    <span className="bg-black/60 text-white font-bold px-4 py-2 rounded-lg tracking-widest uppercase border border-white/20 backdrop-blur-sm">Completed</span>
+                  </div>
+                  <img src="/poster.png" alt="The Monsoon Run" className="w-full h-full object-cover object-top" />
                 </div>
                 
                 <div className="p-8 flex flex-col flex-1 text-center">
-                  <div className="inline-block bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-4 mx-auto">
-                    🎉 20 Spots Available</div>
-                  <h3 className="font-heading text-3xl text-[#1B1B4D] uppercase italic -skew-x-3 mb-2">
+                  <div className="inline-block bg-slate-100 text-slate-500 font-bold px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-4 mx-auto border border-slate-200">
+                    ✅ Event Concluded</div>
+                  <h3 className="font-heading text-3xl text-slate-500 uppercase italic -skew-x-3 mb-2">
                     The Monsoon Run
                   </h3>
-                  <p className="text-slate-500 font-medium mb-6">12th July 2026<br/>Fiza by nexus</p>
-                  
-                  <div className="mt-auto flex items-center justify-center gap-2 text-[#F5841F] font-semibold text-lg group-hover:translate-x-2 transition-transform">
-                    Event Details <ArrowRight className="w-5 h-5" />
-                  </div>
+                  <p className="text-slate-400 font-medium mb-6">12th July 2026<br/>Fiza by nexus</p>
                 </div>
               </div>
             </Link>
 
             {/* Event Summary Card - Dance Battle */}
             <Link href="/events/monsoon-dancebattle" className="block group">
-              <div className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 hover:shadow-2xl hover:shadow-[#F5841F]/20 transition-all duration-300 transform group-hover:-translate-y-2 flex flex-col h-full animate-fade-in delay-100">
+              <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 flex flex-col h-full grayscale-50 hover:grayscale-0 opacity-90 transition-all duration-300">
                 <div className="w-full h-48 sm:h-56 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10"></div>
-                  <img src="/dancePoster.png" alt="Monsoon Dance Battle" className="w-full h-full object-cover object-top transform group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors z-10 flex items-center justify-center">
+                    <span className="bg-black/60 text-white font-bold px-4 py-2 rounded-lg tracking-widest uppercase border border-white/20 backdrop-blur-sm">Completed</span>
+                  </div>
+                  <img src="/dancePoster.png" alt="Monsoon Dance Battle" className="w-full h-full object-cover object-top" />
                 </div>
                 
-                <div className="p-8 flex flex-col flex-1 text-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-95">
-                  <div className="inline-block bg-[#F5841F]/10 text-[#F5841F] font-bold px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-4 mx-auto">
-                    Solo Registrations Open
+                <div className="p-8 flex flex-col flex-1 text-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+                  <div className="inline-block bg-slate-100 text-slate-500 font-bold px-3 py-1 rounded-full text-[10px] tracking-widest uppercase mb-4 mx-auto border border-slate-200">
+                    ✅ Event Concluded
                   </div>
-                  <h3 className="font-heading text-3xl text-[#1B1B4D] uppercase italic -skew-x-3 mb-2 tracking-tight">
+                  <h3 className="font-heading text-3xl text-slate-500 uppercase italic -skew-x-3 mb-2 tracking-tight">
                     Monsoon Dance Battle
                   </h3>
-                  <p className="text-slate-500 font-medium mb-6">12th July 2026<br/>Fiza by nexus</p>
-                  
-                  <div className="mt-auto flex items-center justify-center gap-2 text-[#F5841F] font-semibold text-lg group-hover:translate-x-2 transition-transform">
-                    Event Details <ArrowRight className="w-5 h-5" />
-                  </div>
+                  <p className="text-slate-400 font-medium mb-6">12th July 2026<br/>Fiza by nexus</p>
                 </div>
               </div>
             </Link>
