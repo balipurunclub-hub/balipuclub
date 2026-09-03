@@ -1,20 +1,9 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
-import {
-  User,
-  onAuthStateChanged,
-  signOut as firebaseSignOut,
-  getRedirectResult,
-} from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { User, onAuthStateChanged, signOut as firebaseSignOut, getRedirectResult } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -43,52 +32,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let redirectFinished = false;
     let authStateFired = false;
 
-    // Process any pending redirect results (from signInWithRedirect)
-    getRedirectResult(auth)
-      .catch(console.error)
-      .finally(() => {
-        redirectFinished = true;
-        if (authStateFired) {
-          setLoading(false);
-        }
-      });
+    getRedirectResult(auth).catch(console.error).finally(() => {
+      redirectFinished = true;
+      if (authStateFired) setLoading(false);
+    });
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-      
-      if (firebaseUser && firebaseUser.email) {
+
+      if (firebaseUser?.email) {
         try {
           const roleDoc = await getDoc(doc(db, 'roles', firebaseUser.email.toLowerCase()));
-          if (roleDoc.exists() && roleDoc.data().role === 'scanner') {
-            setIsScanner(true);
-          } else {
-            setIsScanner(false);
-          }
+          setIsScanner(roleDoc.exists() && roleDoc.data().role === 'scanner');
         } catch (error) {
-          console.error("Error fetching user role:", error);
+          console.error('Role fetch failed:', error);
           setIsScanner(false);
         }
       } else {
         setIsScanner(false);
       }
-      
+
       authStateFired = true;
-      if (redirectFinished) {
-        setLoading(false);
-      }
+      if (redirectFinished) setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const signOut = async () => {
-    await firebaseSignOut(auth);
-  };
-
-  const isAdmin = !!user && !!user.email && user.email.toLowerCase() === adminEmail.toLowerCase();
+  const isAdmin = !!user?.email && user.email.toLowerCase() === adminEmail.toLowerCase();
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, isAdmin, isScanner }}>
+    <AuthContext.Provider value={{ user, loading, signOut: () => firebaseSignOut(auth), isAdmin, isScanner }}>
       {children}
     </AuthContext.Provider>
   );
