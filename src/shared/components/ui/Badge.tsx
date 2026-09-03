@@ -25,7 +25,7 @@ export const Badge = ({ className, variant = 'default', children, ...props }: Ba
 };
 
 export const StatusBadge = ({ status }: { status: string }) => {
-  const variants: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
+  const variants: Record<string, 'success' | 'warning' | 'error' | 'default' | 'info'> = {
     paid: 'success',
     pending: 'warning',
     failed: 'error',
