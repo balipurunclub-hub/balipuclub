@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { ScannerRoute } from '@/components/ScannerRoute';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, updateDoc, serverTimestamp, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { CheckCircle2, AlertCircle, RefreshCw, Users, QrCode, X } from 'lucide-react';
 import type { Registration } from '@/types';
@@ -11,7 +9,7 @@ import type { Registration } from '@/types';
 type ScanStatus = 'idle' | 'scanning' | 'processing' | 'success' | 'error' | 'already_scanned';
 
 export default function ScanPage() {
-  const [manualId, setManualId] = useState('BRC-MR-');
+  const [manualId, setManualId] = useState('BRC-');
   const [status, setStatus] = useState<ScanStatus>('scanning');
   const [message, setMessage] = useState('');
   const [attendeeName, setAttendeeName] = useState('');
@@ -47,28 +45,24 @@ export default function ScanPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Listen to live attendance count
+  // Poll live attendance count
   useEffect(() => {
-    const q = query(
-      collection(db, 'registrations'),
-      where('paymentStatus', '==', 'paid'),
-      where('attended', '==', true)
-    );
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setLiveCount(snapshot.size);
-      
-      const users = snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as Registration));
-      // Sort by most recently attended
-      users.sort((a, b) => {
-        const timeA = a.attendedAt?.toMillis() || 0;
-        const timeB = b.attendedAt?.toMillis() || 0;
-        return timeB - timeA;
-      });
-      setScannedUsers(users);
-    });
-    
-    return () => unsubscribe();
+    const fetchAttended = async () => {
+      try {
+        const res = await fetch(`/api/scan?attended=true&t=${Date.now()}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const users: Registration[] = data.registrations || [];
+        setLiveCount(typeof data.count === 'number' ? data.count : users.length);
+        setScannedUsers(users);
+      } catch (e) {
+        console.error('Failed to fetch attended list', e);
+      }
+    };
+
+    fetchAttended();
+    const interval = setInterval(fetchAttended, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Prevent accidental back-swipe or reload
@@ -107,28 +101,30 @@ export default function ScanPage() {
       const trimmedId = ticketId.trim();
       const formattedId = trimmedId.toUpperCase();
       
-      const q = query(
-        collection(db, 'registrations'),
-        where('ticketId', '==', formattedId)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      
       let data: Registration | null = null;
       let actualDocId = '';
 
-      if (!querySnapshot.empty) {
-        const docRef = querySnapshot.docs[0];
-        data = docRef.data() as Registration;
-        actualDocId = docRef.id;
+      const byTicketRes = await fetch(`/api/scan?ticketId=${encodeURIComponent(formattedId)}`);
+      const byTicketData = await byTicketRes.json();
+      if (!byTicketRes.ok) {
+        throw new Error(byTicketData.error || 'Lookup failed');
+      }
+
+      const ticketMatches: Registration[] = byTicketData.registrations || [];
+      if (ticketMatches.length > 0) {
+        data = ticketMatches[0];
+        actualDocId = data.uid;
       } else {
         // Fallback: Check if the scanned string is a document UID (for older PDF QR codes)
         try {
-          const fallbackDocRef = doc(db, 'registrations', trimmedId);
-          const fallbackSnap = await getDoc(fallbackDocRef);
-          if (fallbackSnap.exists()) {
-            data = fallbackSnap.data() as Registration;
-            actualDocId = fallbackSnap.id;
+          const byIdRes = await fetch(`/api/scan?id=${encodeURIComponent(trimmedId)}`);
+          const byIdData = await byIdRes.json();
+          if (byIdRes.ok) {
+            const idMatches: Registration[] = byIdData.registrations || [];
+            if (idMatches.length > 0) {
+              data = idMatches[0];
+              actualDocId = data.uid;
+            }
           }
         } catch (e) {
           console.log("Fallback check failed", e);
@@ -166,12 +162,17 @@ export default function ScanPage() {
       setScannedUser({ data, docId: actualDocId });
 
       // Check if this doc OR its linked duplicate is already checked in
-      let alreadyIn = data.attended;
-      if (!alreadyIn && (data as any).linkedDocId) {
+      let alreadyIn = !!data.attended;
+      const linkedDocId = (data as Registration & { linkedDocId?: string }).linkedDocId;
+      if (!alreadyIn && linkedDocId) {
         try {
-          const linkedSnap = await getDoc(doc(db, 'registrations', (data as any).linkedDocId));
-          if (linkedSnap.exists() && linkedSnap.data()?.attended) {
-            alreadyIn = true;
+          const linkedRes = await fetch(`/api/scan?id=${encodeURIComponent(linkedDocId)}`);
+          const linkedData = await linkedRes.json();
+          if (linkedRes.ok) {
+            const linked: Registration | undefined = (linkedData.registrations || [])[0];
+            if (linked?.attended) {
+              alreadyIn = true;
+            }
           }
         } catch (_) {}
       }
@@ -197,28 +198,17 @@ export default function ScanPage() {
 
     setIsUpdating(true);
     try {
-      const docRef = doc(db, 'registrations', scannedUser.docId);
-      
-      const updateData: any = {
-        attended: true,
-      };
-      
-      if (!scannedUser.data.attended) {
-         updateData.attendedAt = serverTimestamp();
-      }
-
-      await updateDoc(docRef, updateData);
-
-      // Also mark the linked duplicate as attended (if any)
-      const linkedId = (scannedUser.data as any).linkedDocId;
-      if (linkedId) {
-        try {
-          const linkedRef = doc(db, 'registrations', linkedId);
-          await updateDoc(linkedRef, { attended: true, attendedAt: serverTimestamp() });
-        } catch (e) {
-          console.warn('Failed to update linked doc:', e);
-        }
-      }
+      const linkedDocId = (scannedUser.data as Registration & { linkedDocId?: string }).linkedDocId;
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: scannedUser.docId,
+          ...(linkedDocId ? { linkedDocId } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update record');
       
       resetScanner();
     } catch (err) {
@@ -231,44 +221,58 @@ export default function ScanPage() {
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (manualId.trim().toUpperCase() === 'BRC-MR-') return;
+    const id = manualId.trim().toUpperCase();
+    if (!id || id === 'BRC-' || id === 'BRC-MR-') return;
     processTicket(manualId);
   };
 
   const resetScanner = () => {
     setStatus('scanning');
     setMessage('');
-    setManualId('BRC-MR-');
+    setManualId('BRC-');
     setAttendeeName('');
     setScannedUser(null);
   };
 
   return (
     <ScannerRoute>
-      <div className="min-h-screen bg-slate-50 pt-20 pb-12 px-4 flex flex-col items-center relative">
-        
-        {/* Live Count Header */}
-        <div className="bg-white shadow-sm border border-slate-200 rounded-2xl px-6 py-4 flex items-center justify-between gap-4 mb-8 w-full max-w-md">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
-              <Users className="w-6 h-6 text-indigo-600" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Live Check-ins</h2>
-              <p className="text-3xl font-heading text-[#1B1B4D]">{liveCount}</p>
+      <div className="min-h-screen bg-black pt-24 pb-12 px-3 sm:px-4 flex flex-col items-center relative overflow-x-clip">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,45,135,0.12),_transparent_55%)]"
+          aria-hidden
+        />
+
+        <div className="relative w-full max-w-md mb-6 min-w-0">
+          <p className="text-[#FF2D87] text-[0.65rem] font-semibold tracking-[0.25em] uppercase mb-2 text-center">
+            Balipu Run Club
+          </p>
+          <h1 className="font-heading text-white uppercase tracking-wide text-2xl text-center mb-4">
+            Ticket Scanner
+          </h1>
+          <div className="bg-[#0a0a0a] border border-[#FF2D87]/25 rounded-2xl px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3 min-w-0">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 bg-[#FF2D87]/15 border border-[#FF2D87]/30 rounded-full flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-[#FF2D87]" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-[10px] font-bold text-white/45 uppercase tracking-[0.2em] break-words">
+                  Live Check-ins
+                </h2>
+                <p className="font-heading text-[#FF2D87] text-3xl tracking-wide">{liveCount}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden flex flex-col">
-          
-          <div className="p-4 sm:p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <h1 className="text-xl font-bold text-[#1B1B4D] flex items-center gap-2">
-              <QrCode className="w-5 h-5" /> Ticket Scanner
-            </h1>
-            <button 
-              onClick={() => setScannerKey(prev => prev + 1)}
-              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-full hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm active:scale-95"
+        <div className="relative w-full max-w-md bg-[#0a0a0a] border border-[#FF2D87]/25 rounded-3xl overflow-hidden flex flex-col min-w-0">
+          <div className="p-4 sm:p-5 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 min-w-0">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2 min-w-0">
+              <QrCode className="w-5 h-5 text-[#FF2D87] shrink-0" />
+              <span className="break-words">Camera</span>
+            </h2>
+            <button
+              onClick={() => setScannerKey((prev) => prev + 1)}
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60 border border-white/15 min-h-11 px-3 py-1.5 rounded-full hover:border-[#FF2D87]/40 hover:text-white transition-colors"
               title="Click this if the camera freezes"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Wake
@@ -281,7 +285,7 @@ export default function ScanPage() {
                 key={scannerKey}
                 onScan={(result) => {
                   if (result && result.length > 0) {
-                     processTicket(result[0].rawValue);
+                    processTicket(result[0].rawValue);
                   }
                 }}
                 onError={(error) => {
@@ -294,61 +298,82 @@ export default function ScanPage() {
             )}
 
             {status !== 'scanning' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-white">
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-[#0a0a0a]">
                 {status === 'processing' && (
                   <div className="flex flex-col items-center">
-                    <RefreshCw className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
-                    <p className="text-lg font-medium text-slate-700">{message}</p>
+                    <RefreshCw className="w-12 h-12 text-[#FF2D87] animate-spin mb-4" />
+                    <p className="text-lg font-medium text-white/80">{message}</p>
                   </div>
                 )}
-                
+
                 {status === 'error' && (
                   <div className="flex flex-col items-center animate-fade-in-up w-full">
-                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                      <AlertCircle className="w-12 h-12 text-red-500" />
+                    <div className="w-20 h-20 bg-red-500/15 border border-red-500/30 rounded-full flex items-center justify-center mb-4">
+                      <AlertCircle className="w-12 h-12 text-red-400" />
                     </div>
-                    <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
-                    <p className="text-slate-600 mb-6 px-4">{message}</p>
-                    <button onClick={resetScanner} className="btn-primary w-full max-w-[200px]">Try Again</button>
+                    <h2 className="font-heading text-red-400 uppercase tracking-wide text-2xl mb-2">
+                      Access Denied
+                    </h2>
+                    <p className="text-white/55 mb-6 px-4">{message}</p>
+                    <button
+                      onClick={resetScanner}
+                      className="w-full max-w-[200px] min-h-11 rounded-full bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-semibold transition-colors"
+                    >
+                      Try Again
+                    </button>
                   </div>
                 )}
 
                 {status === 'already_scanned' && (
                   <div className="flex flex-col items-center animate-fade-in-up w-full">
-                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                      <AlertCircle className="w-12 h-12 text-red-500" />
+                    <div className="w-20 h-20 bg-red-500/15 border border-red-500/30 rounded-full flex items-center justify-center mb-4">
+                      <AlertCircle className="w-12 h-12 text-red-400" />
                     </div>
-                    <h2 className="text-3xl font-black text-red-600 uppercase mb-2">Already<br/>Checked In!</h2>
-                    <p className="text-slate-600 mb-6 px-4 font-mono">{scannedUser?.data?.ticketId}</p>
-                    <button onClick={resetScanner} className="btn-primary w-full max-w-[200px] bg-red-500 hover:bg-red-600">Scan Next</button>
+                    <h2 className="font-heading text-red-400 uppercase tracking-wide text-2xl mb-2">
+                      Already Checked In
+                    </h2>
+                    <p className="text-white/55 mb-6 px-4 font-mono break-all">
+                      {scannedUser?.data?.ticketId}
+                    </p>
+                    <button
+                      onClick={resetScanner}
+                      className="w-full max-w-[200px] min-h-11 rounded-full bg-red-500 hover:bg-red-400 text-white font-semibold transition-colors"
+                    >
+                      Scan Next
+                    </button>
                   </div>
                 )}
 
-                {/* Floating Dialog logic handled via an overlay below, so here we just show a placeholder if we are holding state */}
                 {status === 'success' && (
                   <div className="flex flex-col items-center text-center">
-                    <p className="text-slate-500">Please complete the dialog...</p>
+                    <p className="text-white/45">Complete the dialog…</p>
                   </div>
                 )}
               </div>
             )}
           </div>
 
-          <div className="p-6 bg-white border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 text-center">Manual Entry Fallback</p>
-            <form onSubmit={handleManualSubmit} className="flex gap-2">
+          <div className="p-4 sm:p-6 border-t border-white/10">
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-3 text-center">
+              Manual Entry Fallback
+            </p>
+            <form onSubmit={handleManualSubmit} className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
-                placeholder="BRC-MR-XXXX"
+                placeholder="BRC-001"
                 value={manualId}
                 onChange={(e) => setManualId(e.target.value)}
-                className="flex-1 form-input text-center font-mono uppercase tracking-wider"
+                className="flex-1 w-full min-w-0 text-center font-mono uppercase tracking-wider min-h-11 bg-black/50 border border-white/15 rounded-full px-4 text-white placeholder:text-white/30 focus:outline-none focus:border-[#FF2D87]/60"
                 disabled={status === 'processing'}
               />
-              <button 
-                type="submit" 
-                disabled={!manualId.trim() || manualId.trim().toUpperCase() === 'BRC-MR-' || status === 'processing'}
-                className="btn-secondary px-6 disabled:opacity-50"
+              <button
+                type="submit"
+                disabled={
+                  !manualId.trim() ||
+                  ['BRC-', 'BRC-MR-'].includes(manualId.trim().toUpperCase()) ||
+                  status === 'processing'
+                }
+                className="min-h-11 px-6 rounded-full border border-[#FF2D87] text-white font-semibold hover:bg-[#FF2D87]/10 transition-colors disabled:opacity-50"
               >
                 Verify
               </button>
@@ -356,21 +381,25 @@ export default function ScanPage() {
           </div>
         </div>
 
-        {/* Recently Scanned List */}
-        <div className="w-full max-w-md mt-6 bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden">
-          <div className="p-4 bg-slate-50 border-b border-slate-100">
-            <h3 className="font-semibold text-slate-700">Recently Scanned</h3>
+        <div className="relative w-full max-w-md mt-6 bg-[#0a0a0a] border border-[#FF2D87]/25 rounded-3xl overflow-hidden min-w-0">
+          <div className="p-4 border-b border-white/10">
+            <h3 className="font-heading text-white uppercase tracking-wide text-sm">Recently Scanned</h3>
           </div>
           <div className="max-h-[300px] overflow-y-auto">
             {scannedUsers.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 text-sm">No one checked in yet.</div>
+              <div className="p-6 text-center text-white/40 text-sm">No one checked in yet.</div>
             ) : (
-              <ul className="divide-y divide-slate-50">
-                {scannedUsers.map(user => (
-                  <li key={user.uid} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                    <div>
-                      <p className="font-medium text-slate-800">{user.name}</p>
-                      <p className="text-xs text-slate-500 font-mono mt-0.5">{user.ticketId} {user.bibNumber ? `• BIB: ${user.bibNumber}` : ''}</p>
+              <ul className="divide-y divide-white/5">
+                {scannedUsers.map((user) => (
+                  <li
+                    key={user.uid}
+                    className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors min-w-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-white break-words">{user.name}</p>
+                      <p className="text-xs text-[#FF2D87]/80 font-mono mt-0.5 break-all">
+                        {user.ticketId} {user.bibNumber ? `• BIB: ${user.bibNumber}` : ''}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -379,64 +408,81 @@ export default function ScanPage() {
           </div>
         </div>
 
-        {/* Floating Dialog Modal */}
         {status === 'success' && scannedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in-up mx-2">
-              <div className="relative p-4 sm:p-6 text-center border-b border-slate-100">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
+            <div className="bg-[#0a0a0a] border border-[#FF2D87]/30 rounded-3xl w-full max-w-md max-h-[min(100dvh-2rem,900px)] overflow-y-auto shadow-2xl animate-fade-in-up mx-auto my-auto min-w-0">
+              <div className="relative p-4 sm:p-6 text-center border-b border-white/10">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
                 </div>
-                
-                <h2 className="text-xl sm:text-2xl font-bold text-[#1B1B4D] mb-1">Valid Ticket!</h2>
+
+                <h2 className="font-heading text-white uppercase tracking-wide text-xl sm:text-2xl mb-1">
+                  Valid Ticket
+                </h2>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-2">
-                  <p className="text-slate-500 font-mono text-xs sm:text-sm break-all px-4">{scannedUser.data.ticketId}</p>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${scannedUser.data.entryType === 'free' ? 'bg-slate-100 text-slate-500' : 'bg-green-100 text-green-600'}`}>
-                    {scannedUser.data.entryType === 'free' ? 'FREE ENTRY' : 'PAID ENTRY'}
+                  <p className="text-[#FF2D87] font-mono text-xs sm:text-sm break-all px-4">
+                    {scannedUser.data.ticketId}
+                  </p>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      scannedUser.data.entryType === 'free'
+                        ? 'bg-white/10 text-white/50'
+                        : 'bg-[#FF2D87]/15 text-[#FF2D87]'
+                    }`}
+                  >
+                    {scannedUser.data.entryType === 'free' ? 'Free entry' : 'Paid entry'}
                   </span>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={resetScanner}
-                  className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors"
+                  className="absolute top-4 right-4 inline-flex items-center justify-center min-h-11 min-w-11 p-2 text-white/40 hover:bg-white/10 rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-4 sm:p-6 bg-slate-50">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
-                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Name</p>
-                    <p className="font-semibold text-slate-800 break-words">{scannedUser.data.name}</p>
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
+                  <div className="bg-black/50 p-3 rounded-xl border border-white/10 min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/40 mb-1">Name</p>
+                    <p className="font-semibold text-white break-words">{scannedUser.data.name}</p>
                   </div>
                   {scannedUser.data.entryType !== 'free' && (
-                    <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                      <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Jersey Size</p>
-                      <p className="font-semibold text-slate-800">{scannedUser.data.jerseySize || 'N/A'}</p>
+                    <div className="bg-black/50 p-3 rounded-xl border border-white/10 min-w-0">
+                      <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/40 mb-1">
+                        Jersey Size
+                      </p>
+                      <p className="font-semibold text-white">{scannedUser.data.jerseySize || 'N/A'}</p>
                     </div>
                   )}
-                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">Age / Gender</p>
-                    <p className="font-semibold text-slate-800">{scannedUser.data.age} • {scannedUser.data.gender}</p>
+                  <div className="bg-black/50 p-3 rounded-xl border border-white/10 min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/40 mb-1">
+                      Age / Gender
+                    </p>
+                    <p className="font-semibold text-white">
+                      {scannedUser.data.age} • {scannedUser.data.gender}
+                    </p>
                   </div>
-                  <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 col-span-2 sm:col-span-1">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400 mb-1">City</p>
-                    <p className="font-semibold text-slate-800 break-words">{scannedUser.data.city}</p>
+                  <div className="bg-black/50 p-3 rounded-xl border border-white/10 col-span-2 sm:col-span-1 min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/40 mb-1">City</p>
+                    <p className="font-semibold text-white break-words">{scannedUser.data.city}</p>
                   </div>
                 </div>
 
-                <div className="mb-6 bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-center">
-                  <label className="block text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Assigned BIB Number</label>
-                  <p className="text-4xl font-black text-[#1B1B4D]">
+                <div className="mb-6 bg-[#FF2D87]/10 border border-[#FF2D87]/25 rounded-xl p-4 text-center">
+                  <label className="block text-[10px] font-bold text-[#FF2D87]/80 uppercase tracking-[0.2em] mb-1">
+                    Assigned BIB Number
+                  </label>
+                  <p className="font-heading text-[#FF2D87] text-4xl tracking-wide">
                     {scannedUser.data.bibNumber || 'None'}
                   </p>
                 </div>
 
-                <button 
-                  onClick={handleDone} 
+                <button
+                  onClick={handleDone}
                   disabled={isUpdating}
-                  className="btn-primary w-full py-4 text-lg"
+                  className="w-full min-h-11 py-4 rounded-full bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-semibold text-lg transition-colors disabled:opacity-50"
                 >
                   {isUpdating ? 'Saving...' : 'Done'}
                 </button>
@@ -444,8 +490,8 @@ export default function ScanPage() {
             </div>
           </div>
         )}
-
       </div>
     </ScannerRoute>
   );
 }
+

@@ -3,8 +3,9 @@ import nodemailer from 'nodemailer';
 import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
-import { getAdminDb } from '@/lib/firebaseAdmin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { registrations } from '@/lib/db/schema';
 
 export async function POST(req: Request) {
   try {
@@ -164,14 +165,12 @@ export async function POST(req: Request) {
 
         await transporter.sendMail(mailOptions);
         
-        // Update Firestore if we have a real user UID
         if (user.uid) {
           try {
-            const adminDb = getAdminDb();
-            await adminDb.collection('registrations').doc(user.uid).update({
-              emailSent: true,
-              updatedAt: FieldValue.serverTimestamp()
-            });
+            await db
+              .update(registrations)
+              .set({ emailSent: true, updatedAt: new Date() })
+              .where(eq(registrations.id, user.uid));
           } catch (dbErr) {
             console.error(`Failed to update emailSent status for ${user.uid}:`, dbErr);
           }

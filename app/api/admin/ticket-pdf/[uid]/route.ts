@@ -1,106 +1,108 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminDb } from '@/lib/firebaseAdmin';
+import { eq } from 'drizzle-orm';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import { db } from '@/lib/db';
+import { registrations } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
     const { uid } = await params;
-    const db = getAdminDb();
-
-    const docRef = await db.collection('registrations').doc(uid).get();
-    if (!docRef.exists) {
+    const rows = await db.select().from(registrations).where(eq(registrations.id, uid)).limit(1);
+    if (!rows[0]) {
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
     }
 
-    const reg = docRef.data() as any;
-    const qrBuffer = await QRCode.toBuffer(reg.ticketId || uid, {
-      width: 250,
+    const reg = rows[0];
+    const ticketCode = reg.ticketId || uid;
+    const isAloysius = reg.eventId === 'balipu-x-aloysius';
+    const eventLabel = isAloysius ? 'BALIPU X ALOYSIUS' : 'THE MONSOON RUN';
+    const eventDate = isAloysius ? '11th October 2026' : '12th July 2026';
+    const venue = isAloysius ? 'Mangaluru' : 'Fiza by nexus';
+    const accent = '#FF2D87';
+    const navy = '#1B1B4D';
+
+    const qrBuffer = await QRCode.toBuffer(ticketCode, {
+      width: 280,
       margin: 2,
-      color: { dark: '#1B1B4D', light: '#FFFFFF' }
+      errorCorrectionLevel: 'M',
+      color: { dark: navy, light: '#FFFFFF' },
     });
 
-    // Create a Promise to build the PDF buffer
     const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
       try {
         const doc = new PDFDocument({ size: 'A4', margin: 50 });
         const buffers: Buffer[] = [];
-        
-        doc.on('data', buffers.push.bind(buffers));
-        doc.on('end', () => {
-          resolve(Buffer.concat(buffers));
-        });
 
-        // Background / Header
-        doc.rect(0, 0, 595.28, 120).fill('#F5841F');
-        doc.fillColor('#FFFFFF')
-           .font('Helvetica-Bold')
-           .fontSize(32)
-           .text('BALIPU RUN CLUB', 0, 45, { align: 'center' });
-        doc.fontSize(16)
-           .text('THE MONSOON RUN - E-TICKET', 0, 85, { align: 'center' });
+        doc.on('data', (chunk: Buffer) => buffers.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(buffers)));
+        doc.on('error', reject);
 
-        // QR Code
-        doc.image(qrBuffer, 172.64, 150, { width: 250 });
+        doc.rect(0, 0, 595.28, 120).fill(accent);
+        doc
+          .fillColor('#FFFFFF')
+          .font('Helvetica-Bold')
+          .fontSize(28)
+          .text('BALIPU RUN CLUB', 0, 40, { align: 'center' });
+        doc.fontSize(14).text(`${eventLabel} — E-TICKET`, 0, 80, { align: 'center' });
 
-        // Participant Info
-        doc.fillColor('#1B1B4D')
-           .fontSize(24)
-           .font('Helvetica-Bold')
-           .text(reg.name, 0, 420, { align: 'center' });
+        doc.image(qrBuffer, 157.64, 150, { width: 280 });
 
-        doc.fillColor('#64748b')
-           .fontSize(14)
-           .font('Courier')
-           .text(`Ticket ID: ${reg.ticketId || uid.slice(0, 8).toUpperCase()}`, 0, 455, { align: 'center' });
+        doc
+          .fillColor(navy)
+          .fontSize(22)
+          .font('Helvetica-Bold')
+          .text(reg.name, 0, 450, { align: 'center' });
 
-        if (reg.bibNumber) {
-          doc.fillColor('#F5841F')
-             .font('Helvetica-Bold')
-             .fontSize(18)
-             .text(`BIB: ${reg.bibNumber}`, 0, 490, { align: 'center' });
+        doc
+          .fillColor(accent)
+          .fontSize(18)
+          .font('Courier-Bold')
+          .text(ticketCode, 0, 485, { align: 'center' });
+
+        if (reg.bibNumber != null) {
+          doc
+            .fillColor(navy)
+            .font('Helvetica-Bold')
+            .fontSize(16)
+            .text(`BIB: ${reg.bibNumber}`, 0, 515, { align: 'center' });
         }
 
         const isFree = reg.entryType === 'free';
+        doc
+          .fillColor(isFree ? '#10b981' : accent)
+          .font('Helvetica-Bold')
+          .fontSize(12)
+          .text(isFree ? 'FREE ENTRY' : 'PAID ENTRY', 0, 540, { align: 'center' });
 
-        // Ticket Type Label
-        doc.fillColor(isFree ? '#10b981' : '#F5841F')
-           .font('Helvetica-Bold')
-           .fontSize(14)
-           .text(isFree ? 'FREE TIER' : 'PAID TIER', 0, 510, { align: 'center' });
+        doc.rect(147.64, 565, 300, 120).lineWidth(1).stroke('#e2e8f0');
 
-        // Details block
-        doc.rect(147.64, 530, 300, 150).lineWidth(1).stroke('#e2e8f0');
-        doc.fillColor('#1B1B4D').font('Helvetica-Bold').fontSize(12);
-        
-        let y = 550;
+        let y = 580;
+        doc.fillColor(navy).font('Helvetica-Bold').fontSize(12);
         doc.text('Date:', 170, y);
-        doc.font('Helvetica').text(isFree ? '11th July 2026' : '12th July 2026', 280, y);
-        y += 25;
-        
+        doc.font('Helvetica').text(eventDate, 280, y);
+        y += 24;
         doc.font('Helvetica-Bold').text('Time:', 170, y);
         doc.font('Helvetica').text('6:30 AM', 280, y);
-        y += 25;
-        
+        y += 24;
         doc.font('Helvetica-Bold').text('Venue:', 170, y);
-        doc.font('Helvetica').text('Fiza by nexus', 280, y);
-        y += 25;
-        
+        doc.font('Helvetica').text(venue, 280, y);
+        y += 24;
         if (!isFree) {
-          doc.font('Helvetica-Bold').text('Jersey Size:', 170, y);
+          doc.font('Helvetica-Bold').text('Jersey:', 170, y);
           doc.font('Helvetica').text(reg.jerseySize || 'N/A', 280, y);
         }
 
-        // Footer
-        doc.fillColor('#94a3b8')
-           .fontSize(10)
-           .font('Helvetica')
-           .text('Please present this QR code at the registration desk on event day.', 0, 720, { align: 'center' });
+        doc
+          .fillColor('#94a3b8')
+          .fontSize(10)
+          .font('Helvetica')
+          .text('Present this QR code at check-in on event day.', 0, 720, { align: 'center' });
 
         doc.end();
       } catch (err) {
@@ -108,14 +110,17 @@ export async function GET(
       }
     });
 
-    return new NextResponse(pdfBuffer as unknown as BodyInit, {
+    const safeName = (reg.name || 'ticket').replace(/[^\w\-]+/g, '_');
+    const safeCode = ticketCode.replace(/[^\w\-]+/g, '_');
+
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Balipu_Ticket_${reg.name.replace(/\s+/g, '_')}.pdf"`,
+        'Content-Disposition': `attachment; filename="Balipu_Ticket_${safeCode}_${safeName}.pdf"`,
+        'Cache-Control': 'no-store',
       },
     });
-
   } catch (error) {
     console.error('Error generating PDF:', error);
     return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });

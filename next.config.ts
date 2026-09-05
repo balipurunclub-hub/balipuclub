@@ -1,13 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['firebase-admin', 'jwks-rsa', 'jose', 'pdfkit'],
+  serverExternalPackages: ['pdfkit', '@neondatabase/serverless'],
   allowedDevOrigins: ['balipu.vercel.app'],
-  async rewrites() {
+  async redirects() {
     return [
       {
-        source: '/__/auth/:path*',
-        destination: 'https://balipu.firebaseapp.com/__/auth/:path*',
+        source: '/events/next-run',
+        destination: '/events/balipu-x-aloysius',
+        permanent: false,
       },
     ];
   },

@@ -227,24 +227,27 @@ export default function BulkUploadPage() {
 
   return (
     <AdminRoute>
-      <div className="min-h-screen bg-[#0D0D2B] pt-24 pb-20 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <div className="min-h-screen bg-black pt-24 pb-20 px-3 sm:px-6">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 min-w-0">
           
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-heading font-bold text-white mb-2">Bulk CSV Importer</h1>
-              <p className="text-slate-400">Hidden route: Upload form entries directly into the database.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 min-w-0">
+            <div className="min-w-0">
+              <h1 className="font-heading text-white uppercase tracking-wide text-[clamp(1.75rem,4vw,2.5rem)] mb-2 break-words">
+                Bulk CSV Importer
+              </h1>
+              <div className="w-14 h-1 bg-[#FF2D87] mb-3" />
+              <p className="text-white/55 break-words">Hidden route: Upload form entries directly into the database.</p>
             </div>
-            <Link href="/admin" className="text-[#F5841F] hover:underline font-semibold">
+            <Link href="/admin" className="text-[#FF2D87] hover:text-[#ff4d9a] font-semibold shrink-0 min-h-11 inline-flex items-center">
               &larr; Back to Admin
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 min-w-0">
             
             {/* Left Column: DB Upload */}
-            <div className="space-y-6">
-              <div className="bg-[#1B1B4D] border border-white/10 rounded-2xl p-6 shadow-xl">
+            <div className="space-y-6 min-w-0">
+              <div className="bg-[#0a0a0a] border border-[#FF2D87]/25 rounded-2xl p-4 sm:p-6 shadow-xl min-w-0">
                 <h2 className="text-lg font-bold text-white mb-4">1. Database Import</h2>
                 
                 {uploadResult ? (
@@ -276,7 +279,7 @@ export default function BulkUploadPage() {
                     <div className="mt-8">
                       <Link 
                         href="/admin/send-emails"
-                        className="inline-flex items-center justify-center gap-2 w-full bg-[#F5841F] hover:bg-[#F5841F]/90 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(245,132,31,0.3)]"
+                        className="inline-flex items-center justify-center gap-2 w-full bg-[#FF2D87] hover:bg-[#FF2D87]/90 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(245,132,31,0.3)]"
                       >
                         <Mail className="w-5 h-5" />
                         Go to Send Emails Page
@@ -290,7 +293,7 @@ export default function BulkUploadPage() {
                       <select 
                         value={entryType} 
                         onChange={(e) => setEntryType(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-[#F5841F]/50 outline-none"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-[#FF2D87]/50 outline-none"
                       >
                         <option value="free" className="text-slate-900">Free Entry</option>
                         <option value="paid" className="text-slate-900">Paid Entry</option>
@@ -303,14 +306,14 @@ export default function BulkUploadPage() {
                         type="number" 
                         value={startBib} 
                         onChange={(e) => setStartBib(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-[#F5841F]/50 outline-none font-mono"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-[#FF2D87]/50 outline-none font-mono"
                         placeholder="e.g. 1"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-semibold text-slate-300 mb-2">CSV File</label>
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-[#F5841F]/50 hover:bg-white/5 transition-colors">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-[#FF2D87]/50 hover:bg-white/5 transition-colors">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
                           <p className="text-sm text-slate-400 font-semibold text-center px-4">{file ? file.name : "Click to upload CSV"}</p>
@@ -322,7 +325,7 @@ export default function BulkUploadPage() {
                     <button 
                       onClick={handleUploadToDb}
                       disabled={parsedData.length === 0 || isUploading}
-                      className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full min-h-11 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isUploading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
                       {isUploading ? 'Uploading to DB...' : 'Upload to Database'}
@@ -335,15 +338,15 @@ export default function BulkUploadPage() {
               </div>
               
               {!uploadResult && (
-                <div className="bg-[#1B1B4D] border border-white/10 rounded-2xl p-6 shadow-xl">
-                  <div className="flex justify-between items-center mb-4">
+                <div className="bg-[#0a0a0a] border border-[#FF2D87]/25 rounded-2xl p-4 sm:p-6 shadow-xl min-w-0">
+                  <div className="flex flex-wrap justify-between items-center gap-2 mb-4 min-w-0">
                     <h2 className="text-lg font-bold text-white">Preview Data</h2>
                     <span className="text-sm text-slate-400 bg-white/5 px-3 py-1 rounded-full font-mono">
                       {parsedData.length} rows
                     </span>
                   </div>
                   
-                  <div className="overflow-x-auto rounded-xl border border-white/5">
+                  <div className="overflow-x-auto rounded-xl border border-white/5 min-w-0">
                     <table className="w-full text-left text-sm whitespace-nowrap">
                       <thead className="bg-white/5 text-slate-400">
                         <tr>
@@ -383,9 +386,9 @@ export default function BulkUploadPage() {
             </div>
 
             {/* Right Column: Email Config */}
-            <div className="bg-[#1B1B4D] border border-white/10 rounded-2xl p-6 shadow-xl h-fit">
-              <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <Mail className="w-5 h-5 text-[#F5841F]" />
+            <div className="bg-[#0a0a0a] border border-[#FF2D87]/25 rounded-2xl p-4 sm:p-6 shadow-xl h-fit min-w-0">
+              <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2 break-words">
+                <Mail className="w-5 h-5 text-[#FF2D87] shrink-0" />
                 2. Send Emails to Uploaded List
               </h2>
               
@@ -427,16 +430,16 @@ export default function BulkUploadPage() {
                 <div className="bg-white/5 p-6 rounded-xl border border-white/10 mt-8 space-y-4">
                   <div className="flex justify-between items-end">
                     <div className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                      <RefreshCw className="w-4 h-4 animate-spin text-[#F5841F]" />
+                      <RefreshCw className="w-4 h-4 animate-spin text-[#FF2D87]" />
                       Sending Emails...
                     </div>
                     <div className="text-xs font-mono text-slate-400">
                       {progress.current} / {progress.total}
                     </div>
                   </div>
-                  <div className="w-full bg-[#0D0D2B] rounded-full h-3 border border-white/10 overflow-hidden">
+                  <div className="w-full bg-black rounded-full h-3 border border-white/10 overflow-hidden">
                     <div 
-                      className="bg-[#F5841F] h-3 rounded-full transition-all duration-300"
+                      className="bg-[#FF2D87] h-3 rounded-full transition-all duration-300"
                       style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
                     />
                   </div>
@@ -446,12 +449,12 @@ export default function BulkUploadPage() {
                 <div className="flex flex-col gap-4 mt-8">
                   <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
                     <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1"><Mail className="w-3 h-3"/> Test Email Recipient</label>
-                    <input type="email" value={testEmailAddress} onChange={e=>setTestEmailAddress(e.target.value)} className="w-full bg-[#1B1B4D] border border-white/10 rounded-lg p-2 text-white text-sm" />
+                    <input type="email" value={testEmailAddress} onChange={e=>setTestEmailAddress(e.target.value)} className="w-full bg-[#0a0a0a] border border-[#FF2D87]/25 rounded-lg p-2 text-white text-sm" />
                     
                     <button 
                       onClick={handleSendTestMail}
                       disabled={isTesting}
-                      className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 border border-white/20"
+                      className="w-full min-h-11 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2 border border-white/20"
                     >
                       {isTesting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
                       {isTesting ? 'Sending...' : 'Send Test Mail'}
@@ -461,7 +464,7 @@ export default function BulkUploadPage() {
                   <button 
                     onClick={handleSendBulkMail}
                     disabled={isTesting || !uploadResult || uploadResult.length === 0}
-                    className="w-full bg-[#F5841F] hover:bg-[#F5841F]/90 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(245,132,31,0.3)] disabled:opacity-50 flex justify-center items-center gap-2"
+                    className="w-full min-h-11 bg-[#FF2D87] hover:bg-[#FF2D87]/90 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(245,132,31,0.3)] disabled:opacity-50 flex justify-center items-center gap-2"
                   >
                     <CheckCircle2 className="w-5 h-5" />
                     {`Send Bulk Mail ${uploadResult ? `(${uploadResult.length})` : '(Requires DB Upload)'}`}

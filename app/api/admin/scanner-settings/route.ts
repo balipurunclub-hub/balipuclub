@@ -1,33 +1,65 @@
 import { NextResponse } from 'next/server';
-import { getAdminDb } from '@/lib/firebaseAdmin';
+import { eq } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { scannerSettings } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic';
 
+async function ensureSettings() {
+  const rows = await db
+    .select()
+    .from(scannerSettings)
+    .where(eq(scannerSettings.id, 'default'))
+    .limit(1);
+  if (rows[0]) return rows[0];
+
+  const [created] = await db
+    .insert(scannerSettings)
+    .values({ id: 'default' })
+    .onConflictDoNothing()
+    .returning();
+
+  if (created) return created;
+  return (
+    await db.select().from(scannerSettings).where(eq(scannerSettings.id, 'default')).limit(1)
+  )[0];
+}
+
 export async function GET() {
   try {
-    const adminDb = getAdminDb();
-    const docRef = adminDb.collection('metadata').doc('scannerSettings');
-    const snap = await docRef.get();
-    
-    if (!snap.exists) {
-      return NextResponse.json({ allowFreeTierScan: true, allowPaidTierScan: true });
-    }
-    
-    return NextResponse.json(snap.data());
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const settings = await ensureSettings();
+    return NextResponse.json({
+      allowFreeTierScan: settings?.allowFreeTierScan ?? true,
+      allowPaidTierScan: settings?.allowPaidTierScan ?? true,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const adminDb = getAdminDb();
-    const docRef = adminDb.collection('metadata').doc('scannerSettings');
-    await docRef.set(body, { merge: true });
-    
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const current = await ensureSettings();
+
+    const next = {
+      allowFreeTierScan:
+        typeof body.allowFreeTierScan === 'boolean'
+          ? body.allowFreeTierScan
+          : (current?.allowFreeTierScan ?? true),
+      allowPaidTierScan:
+        typeof body.allowPaidTierScan === 'boolean'
+          ? body.allowPaidTierScan
+          : (current?.allowPaidTierScan ?? true),
+      updatedAt: new Date(),
+    };
+
+    await db.update(scannerSettings).set(next).where(eq(scannerSettings.id, 'default'));
+
+    return NextResponse.json({ success: true, ...next });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

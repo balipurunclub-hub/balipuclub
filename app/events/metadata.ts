@@ -1,6 +1,24 @@
 import { Metadata } from 'next';
 
 const eventMetadata = {
+  'balipu-x-aloysius': {
+    title: 'Balipu x Aloysius | Mangalore’s First Ever Super Car Run',
+    description:
+      'More than a run. A full community experience: supercars, a 5K, DJ on wheels, Zumba, fitness challenges, a dance battle, and a Baila to close it all out.',
+    keywords: [
+      'Balipu x Aloysius',
+      'super car run Mangaluru',
+      'Mangalore supercar',
+      '5K community run',
+      'Balipu Run Club',
+    ],
+  },
+  'next-run': {
+    title: 'Balipu x Aloysius | Balipu Run Club',
+    description:
+      'More than a run. A full community experience: supercars, a 5K, DJ on wheels, Zumba, fitness challenges, a dance battle, and a Baila.',
+    keywords: ['Balipu x Aloysius', 'community run Mangaluru', 'super car run'],
+  },
   'monsoon-run': {
     title: 'The Monsoon Run 2026 | Balipu Run Club',
     description: 'Join The Monsoon Run 2026 in Mangaluru. Register now for this premium running event organized by Balipu Run Club with Decathlon, JCI, and Canara Bank.',
@@ -35,7 +53,12 @@ export function getEventMetadata(eventId: string): Metadata {
       siteName: 'Balipu Run Club',
       images: [
         {
-          url: eventId === 'monsoon-run' ? '/poster.png' : '/dancePoster.png',
+          url:
+            eventId === 'monsoon-run'
+              ? '/poster.png'
+              : eventId === 'balipu-x-aloysius' || eventId === 'next-run'
+                ? '/poster2.png'
+                : '/dancePoster.png',
           width: 1200,
           height: 630,
           alt: event.title,

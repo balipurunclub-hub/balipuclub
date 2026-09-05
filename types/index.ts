@@ -1,7 +1,10 @@
-// src/types/index.ts
-import { Timestamp } from 'firebase/firestore';
-
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
+
+/** Lightweight timestamp shape (compatible with prior Firestore Timestamp usage). */
+export type AppTimestamp = {
+  seconds: number;
+  nanoseconds: number;
+};
 
 export interface Registration {
   uid: string;
@@ -14,19 +17,23 @@ export interface Registration {
   gender: 'Male' | 'Female' | 'Prefer not to say';
   city: string;
   emergencyContact: string;
-  idProofType: string;
-  idProofNumber: string;
+  idProofType?: string;
+  idProofNumber?: string;
   source: string;
-  jerseySize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  jerseySize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'N/A' | string;
   paymentStatus: PaymentStatus;
   orderId?: string;
   paymentId?: string;
-  createdAt: Timestamp;
-  updatedAt?: Timestamp;
+  createdAt: AppTimestamp | Date | string;
+  updatedAt?: AppTimestamp | Date | string;
   attended?: boolean;
-  attendedAt?: Timestamp;
+  attendedAt?: AppTimestamp | Date | string;
   entryType?: 'paid' | 'free';
   emailSent?: boolean;
+  eventId?: string;
+  eventName?: string;
+  feeRupees?: number;
+  pricingPhase?: number;
 }
 
 export interface RegistrationFormData {
@@ -37,8 +44,6 @@ export interface RegistrationFormData {
   gender: 'Male' | 'Female' | 'Prefer not to say';
   city: string;
   emergencyContact: string;
-  idProofType: string;
-  idProofNumber: string;
   source: string;
   jerseySize: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
   declarationAgreed: boolean;

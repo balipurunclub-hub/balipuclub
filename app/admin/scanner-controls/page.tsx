@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShieldCheck, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { AdminRoute } from '@/components/AdminRoute';
+import { AdminShell } from '@/components/admin/AdminShell';
 
 export default function ScannerControlsPage() {
   const [allowFree, setAllowFree] = useState(true);
@@ -24,7 +25,7 @@ export default function ScannerControlsPage() {
         setLoading(false);
       }
     };
-    
+
     fetchSettings();
   }, []);
 
@@ -34,7 +35,7 @@ export default function ScannerControlsPage() {
     await fetch('/api/admin/scanner-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ allowFreeTierScan: newVal })
+      body: JSON.stringify({ allowFreeTierScan: newVal }),
     });
   };
 
@@ -44,69 +45,85 @@ export default function ScannerControlsPage() {
     await fetch('/api/admin/scanner-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ allowPaidTierScan: newVal })
+      body: JSON.stringify({ allowPaidTierScan: newVal }),
     });
   };
 
-  if (loading) return (
-    <AdminRoute>
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-500">Loading controls...</p>
-      </div>
-    </AdminRoute>
-  );
+  if (loading) {
+    return (
+      <AdminRoute>
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <p className="text-white/50">Loading controls...</p>
+        </div>
+      </AdminRoute>
+    );
+  }
 
   return (
     <AdminRoute>
-      <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto space-y-8">
-          
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4 text-indigo-600">
-                <ShieldCheck className="w-8 h-8" />
-              </div>
-              <h1 className="text-2xl font-bold text-[#1B1B4D]">Scanner Access Controls</h1>
-              <p className="text-slate-500 text-sm mt-2 max-w-md mx-auto">
-                Instantly enable or disable ticket scanning for specific tiers. Changes apply to all active scanners in real-time.
-              </p>
+      <AdminShell
+        title="Scanner Controls"
+        description="Enable or disable ticket scanning for free and paid tiers. Changes apply instantly."
+        backHref="/admin"
+        maxWidth="2xl"
+      >
+        <div className="bg-[#0a0a0a] border border-[#FF2D87]/25 rounded-2xl overflow-hidden min-w-0">
+          <div className="p-5 sm:p-6 border-b border-white/10 flex flex-col items-center text-center">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#FF2D87]/15 border border-[#FF2D87]/30 rounded-full flex items-center justify-center mb-4 text-[#FF2D87]">
+              <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
-            
-            <div className="p-8 space-y-6">
-              
-              {/* Paid Tier Toggle */}
-              <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                <div>
-                  <h3 className="font-bold text-lg text-slate-800">Paid Tier Scanning</h3>
-                  <p className="text-slate-500 text-sm mt-1">Allow Paid entry tickets to be checked in.</p>
-                </div>
-                <button 
-                  onClick={togglePaid}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${allowPaid ? 'bg-green-500' : 'bg-slate-300'}`}
-                >
-                  <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${allowPaid ? 'translate-x-7' : 'translate-x-1'}`} />
-                </button>
-              </div>
-
-              {/* Free Tier Toggle */}
-              <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                <div>
-                  <h3 className="font-bold text-lg text-slate-800">Free Tier Scanning</h3>
-                  <p className="text-slate-500 text-sm mt-1">Allow Free entry tickets to be checked in.</p>
-                </div>
-                <button 
-                  onClick={toggleFree}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${allowFree ? 'bg-green-500' : 'bg-slate-300'}`}
-                >
-                  <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${allowFree ? 'translate-x-7' : 'translate-x-1'}`} />
-                </button>
-              </div>
-
-            </div>
+            <p className="text-white/55 text-sm max-w-md">
+              Toggle access for check-in devices in real time.
+            </p>
           </div>
 
+          <div className="p-4 sm:p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-black/40 rounded-2xl border border-white/10 min-w-0">
+              <div className="min-w-0">
+                <h3 className="font-heading text-white uppercase tracking-wide text-base sm:text-lg">
+                  Paid Tier Scanning
+                </h3>
+                <p className="text-white/45 text-sm mt-1">Allow paid entry tickets to be checked in.</p>
+              </div>
+              <button
+                onClick={togglePaid}
+                className={`relative inline-flex h-8 w-14 shrink-0 self-end sm:self-auto items-center rounded-full transition-colors ${
+                  allowPaid ? 'bg-[#FF2D87]' : 'bg-white/20'
+                }`}
+                aria-pressed={allowPaid}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    allowPaid ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-black/40 rounded-2xl border border-white/10 min-w-0">
+              <div className="min-w-0">
+                <h3 className="font-heading text-white uppercase tracking-wide text-base sm:text-lg">
+                  Free Tier Scanning
+                </h3>
+                <p className="text-white/45 text-sm mt-1">Allow free entry tickets to be checked in.</p>
+              </div>
+              <button
+                onClick={toggleFree}
+                className={`relative inline-flex h-8 w-14 shrink-0 self-end sm:self-auto items-center rounded-full transition-colors ${
+                  allowFree ? 'bg-[#FF2D87]' : 'bg-white/20'
+                }`}
+                aria-pressed={allowFree}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    allowFree ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </AdminShell>
     </AdminRoute>
   );
 }

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Poppins, Anton } from "next/font/google";
+import { Poppins, Anton, Great_Vibes } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/components/AuthProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ToastProvider } from "@/components/Toast";
 
 export const viewport = {
-  themeColor: '#1B1B4D',
+  themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -18,6 +18,7 @@ const poppins = Poppins({
   variable: "--font-inter" 
 });
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
+const greatVibes = Great_Vibes({ weight: "400", subsets: ["latin"], variable: "--font-script" });
 
 export const metadata: Metadata = {
   title: {
@@ -84,14 +85,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${poppins.variable} ${anton.variable} font-sans antialiased min-h-screen flex flex-col overflow-x-hidden`}>
-        <AuthProvider>
-          <Navbar />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </AuthProvider>
+      <body className={`${poppins.variable} ${anton.variable} ${greatVibes.variable} font-sans antialiased min-h-screen flex flex-col overflow-x-hidden`}>
+          <ToastProvider>
+            <Navbar />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </ToastProvider>
       </body>
     </html>
   );

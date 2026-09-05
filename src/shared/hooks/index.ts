@@ -1,41 +1,39 @@
 import { useEffect, useState } from 'react';
-import { query, collection, onSnapshot, QueryConstraint } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import type { Registration } from '@/types';
 
-export function useRegistrations(constraints: QueryConstraint[] = []) {
+export function useRegistrations() {
   const [data, setData] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    setLoading(true);
-    setError('');
+    let cancelled = false;
 
-    try {
-      const q = query(collection(db, 'registrations'), ...constraints);
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const docs = snapshot.docs.map(doc => ({
-            ...doc.data(),
-            uid: doc.id
-          } as Registration));
-          setData(docs);
+    const load = async () => {
+      try {
+        setError('');
+        const res = await fetch('/api/admin/registrations', { cache: 'no-store' });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Failed to fetch data');
+        if (!cancelled) {
+          setData(json.registrations || []);
           setLoading(false);
-        },
-        (err) => {
-          console.error('Query error:', err);
+        }
+      } catch (err) {
+        console.error('Query error:', err);
+        if (!cancelled) {
           setError('Failed to fetch data');
           setLoading(false);
         }
-      );
-      return () => unsubscribe();
-    } catch (err) {
-      console.error('Hook error:', err);
-      setError('Setup failed');
-      setLoading(false);
-    }
+      }
+    };
+
+    load();
+    const interval = setInterval(load, 8000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   return { data, loading, error };
