@@ -36,28 +36,31 @@ export function getEventMetadata(eventId: string): Metadata {
 
   if (!event) {
     return {
-      title: 'Event Not Found | Balipu Run Club',
+      title: { absolute: 'Event Not Found | Balipu Run Club' },
       description: 'The event you are looking for does not exist.',
+      robots: { index: false, follow: false },
     };
   }
 
   return {
-    title: event.title,
+    title: { absolute: event.title },
     description: event.description,
     keywords: event.keywords,
+    alternates: { canonical: `/events/${eventId}` },
     openGraph: {
       title: event.title,
       description: event.description,
       type: 'website',
-      url: `https://balipu.vercel.app/events/${eventId}`,
+      url: `https://balipuclub.in/events/${eventId}`,
       siteName: 'Balipu Run Club',
+      locale: 'en_IN',
       images: [
         {
           url:
             eventId === 'monsoon-run'
               ? '/poster.png'
               : eventId === 'balipu-x-aloysius' || eventId === 'next-run'
-                ? '/poster2.png'
+                ? '/balipuxaloy.jpeg'
                 : '/dancePoster.png',
           width: 1200,
           height: 630,

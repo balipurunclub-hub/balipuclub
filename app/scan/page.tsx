@@ -12,7 +12,7 @@ export default function ScanPage() {
   const [manualId, setManualId] = useState('BRC-');
   const [status, setStatus] = useState<ScanStatus>('scanning');
   const [message, setMessage] = useState('');
-  const [attendeeName, setAttendeeName] = useState('');
+  const [, setAttendeeName] = useState('');
   const [liveCount, setLiveCount] = useState(0);
   const [scannedUsers, setScannedUsers] = useState<Registration[]>([]);
   
@@ -174,7 +174,9 @@ export default function ScanPage() {
               alreadyIn = true;
             }
           }
-        } catch (_) {}
+        } catch {
+          /* ignore linked lookup errors */
+        }
       }
 
       if (alreadyIn) {

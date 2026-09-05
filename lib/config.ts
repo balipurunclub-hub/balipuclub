@@ -1,7 +1,8 @@
 export const SITE_CONFIG = {
   name: 'Balipu Run Club',
-  description: 'Mangaluru\'s premier community of runners and fitness enthusiasts',
-  url: 'https://balipu.vercel.app',
+  description:
+    'Balipu Run Club is a running community in Mangaluru bringing runners together through community runs, running events, training and fitness.',
+  url: 'https://balipuclub.in',
   email: 'Balipurunclub@gmail.com',
   phone: '+91 8317380741',
   phone2: '+91 7349791297',
@@ -11,7 +12,7 @@ export const SITE_CONFIG = {
   country: 'India',
   socialLinks: {
     whatsapp: 'https://chat.whatsapp.com/Drd93iPcBwv4sXneIDuoPc',
-    instagram: 'https://www.instagram.com/balipurunclub',
+    instagram: 'https://www.instagram.com/balipuclub/',
   },
   events: {
     monsoonRun: {

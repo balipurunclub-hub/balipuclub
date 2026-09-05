@@ -35,29 +35,12 @@ type EventCountdownProps = {
 };
 
 export function EventCountdown({ className = '', compact = false }: EventCountdownProps) {
-  const [left, setLeft] = useState<TimeLeft | null>(null);
+  const [left, setLeft] = useState<TimeLeft>(() => calcLeft(Date.now()));
 
   useEffect(() => {
-    setLeft(calcLeft(Date.now()));
     const id = setInterval(() => setLeft(calcLeft(Date.now())), 1000);
     return () => clearInterval(id);
   }, []);
-
-  if (!left) {
-    return (
-      <div className={`flex gap-2 ${className}`} aria-hidden>
-        {['Days', 'Hrs', 'Min', 'Sec'].map((label) => (
-          <div
-            key={label}
-            className="min-w-[3.25rem] rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-center"
-          >
-            <div className="font-heading text-sm text-white/30">--</div>
-            <div className="text-[9px] uppercase tracking-wider text-white/30">{label}</div>
-          </div>
-        ))}
-      </div>
-    );
-  }
 
   if (left.done) {
     return (

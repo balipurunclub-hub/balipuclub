@@ -16,11 +16,15 @@ import {
   CheckCircle2,
   UserCheck,
   Gift,
+  Lock,
+  Unlock,
+  ExternalLink,
 } from 'lucide-react';
 import type { Registration } from '@/types';
 import Link from 'next/link';
 
 const POLL_INTERVAL_MS = 6000;
+const REGISTER_HREF = '/events/balipu-x-aloysius/register';
 
 function StatCard({
   label,
@@ -60,6 +64,10 @@ function AdminDashboardInner() {
   const [checkinTarget, setCheckinTarget] = useState<Registration | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const isInitialLoad = useRef(true);
+  const [registrationOpen, setRegistrationOpen] = useState<boolean | null>(null);
+  const [unlockLabel, setUnlockLabel] = useState('7 September 2026, 12:00 AM IST');
+  const [regToggleBusy, setRegToggleBusy] = useState(false);
+  const [showInitialSpinner, setShowInitialSpinner] = useState(true);
 
   const fetchRegistrations = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
@@ -75,14 +83,47 @@ function AdminDashboardInner() {
     } finally {
       setLoading(false);
       isInitialLoad.current = false;
+      setShowInitialSpinner(false);
+    }
+  }, []);
+
+  const fetchRegistrationSettings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/registration-settings', { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load registration settings');
+      setRegistrationOpen(Boolean(data.isOpen));
+      if (data.scheduledUnlockLabel) setUnlockLabel(data.scheduledUnlockLabel);
+    } catch (err) {
+      console.error(err);
     }
   }, []);
 
   useEffect(() => {
     fetchRegistrations();
+    fetchRegistrationSettings();
     const interval = setInterval(() => fetchRegistrations({ silent: true }), POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [fetchRegistrations]);
+  }, [fetchRegistrations, fetchRegistrationSettings]);
+
+  const toggleRegistration = async (isOpen: boolean) => {
+    setRegToggleBusy(true);
+    try {
+      const res = await fetch('/api/admin/registration-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOpen }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update');
+      setRegistrationOpen(Boolean(data.isOpen));
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : 'Failed to update registration lock');
+    } finally {
+      setRegToggleBusy(false);
+    }
+  };
 
   const totalCount = registrations.length;
   const freeCount = registrations.filter((r) => r.entryType === 'free').length;
@@ -124,6 +165,72 @@ function AdminDashboardInner() {
           icon={UserCheck}
           suffix={<span className="text-white/40 text-base font-sans font-normal"> / {totalCount}</span>}
         />
+      </div>
+
+      <div className="rounded-2xl border border-[#FF2D87]/25 bg-[#0a0a0a] p-4 sm:p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[#FF2D87] text-[0.65rem] font-semibold tracking-[0.2em] uppercase mb-1">
+              Balipu x Aloysius
+            </p>
+            <h2 className="font-heading text-white uppercase tracking-wide text-lg sm:text-xl">
+              Registration access
+            </h2>
+            <p className="text-white/50 text-sm mt-1">
+              Auto-unlocks on {unlockLabel}. You can lock or unlock anytime.
+            </p>
+          </div>
+          <div
+            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider shrink-0 ${
+              registrationOpen
+                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                : 'bg-white/10 text-white/60 border border-white/15'
+            }`}
+          >
+            {registrationOpen === null ? (
+              'Checking…'
+            ) : registrationOpen ? (
+              <>
+                <Unlock className="w-3.5 h-3.5" />
+                Open
+              </>
+            ) : (
+              <>
+                <Lock className="w-3.5 h-3.5" />
+                Locked
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            disabled={regToggleBusy || registrationOpen === true}
+            onClick={() => toggleRegistration(true)}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ff4d9a] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Unlock className="w-4 h-4" />
+            Unlock registration
+          </button>
+          <button
+            type="button"
+            disabled={regToggleBusy || registrationOpen === false}
+            onClick={() => toggleRegistration(false)}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white/80 hover:border-[#FF2D87]/40 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Lock className="w-4 h-4" />
+            Lock registration
+          </button>
+          <Link
+            href={REGISTER_HREF}
+            target="_blank"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#FF2D87] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#FF2D87]/10 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Go to registration page
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -169,7 +276,7 @@ function AdminDashboardInner() {
         </div>
       </div>
 
-      {loading && isInitialLoad.current ? (
+      {loading && showInitialSpinner ? (
         <div className="flex justify-center items-center py-20">
           <RefreshCw className="w-8 h-8 animate-spin text-[#FF2D87]" />
         </div>

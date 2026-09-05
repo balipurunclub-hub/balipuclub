@@ -3,97 +3,82 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ArrowRight, Menu, X } from 'lucide-react';
+import { WHATSAPP_JOIN } from '@/lib/seo';
 
-const WHATSAPP_JOIN = 'https://chat.whatsapp.com/Drd93iPcBwv4sXneIDuoPc';
-
-const scrollLinks = [
-  { hash: '#home', label: 'Home' },
-  { hash: '#about', label: 'About' },
-  { hash: '#upcoming-events', label: 'Events' },
-] as const;
+const navLinks: { href: string; label: string; badge?: string }[] = [
+  { href: '/', label: 'Home' },
+  { href: '/#about', label: 'About' },
+  { href: '/events', label: 'Events' },
+  { href: '/events/balipu-x-aloysius', label: 'Balipu × Aloysius', badge: 'NEW' },
+  { href: '/gallery', label: 'Gallery' },
+  { href: '/contact', label: 'Contact' },
+];
 
 export function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [hash, setHash] = useState('#home');
 
-  useEffect(() => {
-    const syncHash = () => setHash(window.location.hash || '#home');
-    syncHash();
-    window.addEventListener('hashchange', syncHash);
-    return () => window.removeEventListener('hashchange', syncHash);
-  }, [pathname]);
-
-  const scrollHref = (linkHash: string) => (pathname === '/' ? linkHash : `/${linkHash}`);
-
-  const isScrollActive = (linkHash: string) => pathname === '/' && hash === linkHash;
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    if (href.startsWith('/#')) return false;
+    if (href === '/events') {
+      return pathname === '/events';
+    }
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   const linkClass = (active: boolean) =>
-    `relative text-sm font-medium tracking-wide transition-colors ${
+    `relative inline-flex items-center gap-1.5 text-sm font-medium tracking-wide transition-colors whitespace-nowrap ${
       active ? 'text-white' : 'text-white/80 hover:text-[#FF2D87]'
     }`;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
-      <nav className="site-container">
+      <nav className="site-container" aria-label="Primary">
         <div className="flex items-center justify-between h-16 lg:h-20 gap-3 min-w-0">
-          <a href={scrollHref('#home')} className="relative z-10 shrink-0" onClick={() => setMobileOpen(false)}>
+          <Link href="/" className="relative z-10 shrink-0" onClick={() => setMobileOpen(false)}>
             <div className="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 relative rounded-full overflow-hidden ring-2 ring-[#FF2D87]/50">
-              <Image src="/IMG_3702.PNG" alt="Balipu Run Club" fill className="object-cover" />
+              <Image
+                src="/IMG_3702.PNG"
+                alt="Balipu Run Club logo — Mangaluru running community"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
-          </a>
+          </Link>
 
-          <div className="hidden lg:flex items-center gap-4 xl:gap-7 absolute left-1/2 -translate-x-1/2">
-            {scrollLinks.map((link) => (
-              <a
-                key={link.label}
-                href={scrollHref(link.hash)}
-                onClick={() => setHash(link.hash)}
-                className={linkClass(isScrollActive(link.hash))}
-              >
+          <div className="hidden lg:flex items-center gap-4 xl:gap-6 absolute left-1/2 -translate-x-1/2">
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href} className={linkClass(isActive(link.href))}>
                 {link.label}
-                {isScrollActive(link.hash) && (
+                {link.badge && (
+                  <span className="rounded-sm bg-[#FF2D87] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white leading-none">
+                    {link.badge}
+                  </span>
+                )}
+                {isActive(link.href) && (
                   <span className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-[#FF2D87] rounded-full" />
                 )}
-              </a>
+              </Link>
             ))}
-            <Link
-              href="/events/balipu-x-aloysius"
-              className={`${linkClass(pathname.startsWith('/events/balipu-x-aloysius'))} pt-2`}
-            >
-              <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 rounded-full bg-[#FF2D87] px-1.5 py-px text-[8px] font-bold leading-none tracking-wider text-white uppercase">
-                New
-              </span>
-              Balipu × Aloysius
-              {pathname.startsWith('/events/balipu-x-aloysius') && (
-                <span className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-[#FF2D87] rounded-full" />
-              )}
-            </Link>
-            <Link href="/gallery" className={linkClass(pathname === '/gallery')}>
-              Gallery
-              {pathname === '/gallery' && (
-                <span className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-[#FF2D87] rounded-full" />
-              )}
-            </Link>
           </div>
 
-          <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0">
-            <a
-              href={WHATSAPP_JOIN}
-              target="_blank"
-              rel="noopener noreferrer"
+          <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0 ml-auto">
+            <Link
+              href="/join"
               className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#FF2D87] px-4 xl:px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ff4d9a] transition-colors whitespace-nowrap"
             >
-              Join the Run Club
+              Join Balipu
               <ArrowRight className="w-4 h-4 shrink-0" />
-            </a>
+            </Link>
           </div>
 
           <button
             type="button"
-            className="lg:hidden relative z-10 inline-flex min-h-11 min-w-11 items-center justify-center text-white"
+            className="lg:hidden relative z-10 inline-flex min-h-11 min-w-11 items-center justify-center text-white ml-auto"
             onClick={() => setMobileOpen((o) => !o)}
             aria-expanded={mobileOpen}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
@@ -106,51 +91,39 @@ export function Navbar() {
       {mobileOpen && (
         <div className="lg:hidden border-t border-white/10 bg-black/95 backdrop-blur-xl max-h-[calc(100dvh-4rem)] overflow-y-auto">
           <div className="site-container py-4 sm:py-6 flex flex-col gap-1">
-            {scrollLinks.map((link) => (
-              <a
-                key={link.label}
-                href={scrollHref(link.hash)}
-                onClick={() => {
-                  setHash(link.hash);
-                  setMobileOpen(false);
-                }}
-                className="px-3 py-3.5 min-h-11 text-base font-medium text-white/90 hover:text-[#FF2D87] transition-colors"
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`px-3 py-3.5 min-h-11 text-base font-medium transition-colors inline-flex items-center gap-2 ${
+                  isActive(link.href) ? 'text-[#FF2D87]' : 'text-white/90 hover:text-[#FF2D87]'
+                }`}
               >
                 {link.label}
-              </a>
+                {link.badge && (
+                  <span className="rounded-sm bg-[#FF2D87] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white leading-none">
+                    {link.badge}
+                  </span>
+                )}
+              </Link>
             ))}
             <Link
-              href="/events/balipu-x-aloysius"
+              href="/join"
               onClick={() => setMobileOpen(false)}
-              className={`px-3 py-3 min-h-11 flex flex-col items-start justify-center gap-1 text-base font-medium transition-colors ${
-                pathname.startsWith('/events/balipu-x-aloysius')
-                  ? 'text-[#FF2D87]'
-                  : 'text-white/90 hover:text-[#FF2D87]'
-              }`}
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-5 py-3 text-sm font-semibold text-white"
             >
-              <span className="rounded-full bg-[#FF2D87] px-1.5 py-px text-[8px] font-bold leading-none tracking-wider text-white uppercase">
-                New
-              </span>
-              Balipu × Aloysius
-            </Link>
-            <Link
-              href="/gallery"
-              onClick={() => setMobileOpen(false)}
-              className={`px-3 py-3.5 min-h-11 text-base font-medium transition-colors ${
-                pathname === '/gallery' ? 'text-[#FF2D87]' : 'text-white/90 hover:text-[#FF2D87]'
-              }`}
-            >
-              Gallery
+              Join Balipu Run Club
+              <ArrowRight className="w-4 h-4" />
             </Link>
             <a
               href={WHATSAPP_JOIN}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMobileOpen(false)}
-              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-5 py-3 text-sm font-semibold text-white"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white/80"
             >
-              Join the Run Club
-              <ArrowRight className="w-4 h-4" />
+              WhatsApp community
             </a>
           </div>
         </div>

@@ -7,6 +7,7 @@ import {
   allocateAloysiusFreeTicket,
   getAloysiusConfirmedCount,
 } from '@/lib/aloysiusRegistration';
+import { getRegistrationAccess } from '@/lib/registrationAccess';
 import {
   ALOYSIUS_EVENT_ID,
   ALOYSIUS_EVENT_NAME,
@@ -30,6 +31,19 @@ const registrationSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const access = await getRegistrationAccess();
+    if (!access.isOpen) {
+      return NextResponse.json(
+        {
+          error: `Registration opens on ${access.scheduledUnlockLabel}.`,
+          code: 'REGISTRATION_LOCKED',
+          scheduledUnlockAt: access.scheduledUnlockAt,
+          scheduledUnlockLabel: access.scheduledUnlockLabel,
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const parsed = registrationSchema.safeParse(body);
 
@@ -82,7 +96,6 @@ export async function POST(req: Request) {
         })
         .returning();
 
-      // Fire-and-forget confirmation email (does not block registration)
       void sendRegistrationConfirmationEmail({
         registrationId: row.id,
         name: row.name,

@@ -2,9 +2,19 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { INSTAGRAM, WHATSAPP_JOIN } from '@/lib/seo';
 
-const WHATSAPP_JOIN = 'https://chat.whatsapp.com/Drd93iPcBwv4sXneIDuoPc';
-const INSTAGRAM = 'https://www.instagram.com/balipurunclub';
+const FOOTER_LINKS = [
+  { href: '/', label: 'Home' },
+  { href: '/#about', label: 'About' },
+  { href: '/runs', label: 'Upcoming Runs' },
+  { href: '/events', label: 'Events' },
+  { href: '/community', label: 'Community' },
+  { href: '/gallery', label: 'Gallery' },
+  { href: '/join', label: 'Join' },
+  { href: '/contact', label: 'Contact' },
+  { href: '/faq', label: 'FAQ' },
+];
 
 export function Footer() {
   return (
@@ -14,13 +24,12 @@ export function Footer() {
 
       <div className="site-container relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 mb-10 sm:mb-12">
-          {/* Brand */}
           <div className="space-y-4 min-w-0">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 relative rounded-full overflow-hidden ring-2 ring-[#FF2D87]/40 shrink-0">
                 <Image
                   src="/IMG_3702.PNG"
-                  alt="Balipu Logo"
+                  alt="Balipu Run Club logo"
                   width={48}
                   height={48}
                   className="object-cover w-full h-full"
@@ -30,56 +39,32 @@ export function Footer() {
                 Balipu
               </span>
             </div>
-            <p className="text-[#FF2D87] text-sm font-medium">
-              Run for a Bigger Tomorrow
-            </p>
+            <p className="text-[#FF2D87] text-sm font-medium">Run for a Bigger Tomorrow</p>
             <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-              Mangaluru&apos;s running community: events, movement, and belonging.
+              Balipu Run Club is a running community in Mangaluru (Mangalore), Karnataka — community
+              runs, events and belonging.
             </p>
           </div>
 
-          {/* Links */}
           <div className="space-y-4 min-w-0">
-            <h4 className="text-[#FF2D87] text-xs font-semibold tracking-[0.2em] sm:tracking-[0.25em] uppercase">
-              Quick Links
-            </h4>
-            <ul className="space-y-2.5 text-white/65 text-sm">
-              <li>
-                <Link href="/#home" className="hover:text-[#FF2D87] transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/#about" className="hover:text-[#FF2D87] transition-colors">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/#upcoming-events" className="hover:text-[#FF2D87] transition-colors">
-                  Events
-                </Link>
-              </li>
-              <li>
-                <Link href="/gallery" className="hover:text-[#FF2D87] transition-colors">
-                  Gallery
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/events/balipu-x-aloysius/register"
-                  className="hover:text-[#FF2D87] transition-colors"
-                >
-                  Register
-                </Link>
-              </li>
+            <h2 className="text-[#FF2D87] text-xs font-semibold tracking-[0.2em] sm:tracking-[0.25em] uppercase">
+              Explore
+            </h2>
+            <ul className="space-y-2.5 text-white/65 text-sm columns-2 gap-x-6">
+              {FOOTER_LINKS.map((link) => (
+                <li key={link.href} className="break-inside-avoid">
+                  <Link href={link.href} className="hover:text-[#FF2D87] transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact */}
           <div className="space-y-4 min-w-0">
-            <h4 className="text-[#FF2D87] text-xs font-semibold tracking-[0.2em] sm:tracking-[0.25em] uppercase">
+            <h2 className="text-[#FF2D87] text-xs font-semibold tracking-[0.2em] sm:tracking-[0.25em] uppercase">
               Contact
-            </h4>
+            </h2>
             <ul className="space-y-2.5 text-white/65 text-sm">
               <li>
                 <a
@@ -90,10 +75,15 @@ export function Footer() {
                 </a>
               </li>
               <li className="break-words flex flex-col sm:block gap-0.5">
-                <span>+91 8317380741</span>
+                <a href="tel:+918317380741" className="hover:text-[#FF2D87]">
+                  +91 8317380741
+                </a>
                 <span className="hidden sm:inline"> | </span>
-                <span>+91 7349791297</span>
+                <a href="tel:+917349791297" className="hover:text-[#FF2D87]">
+                  +91 7349791297
+                </a>
               </li>
+              <li className="text-white/45 break-words">Mangaluru, Karnataka, India</li>
               <li className="text-white/45 break-words">Founders: Jeethesh A &amp; Sohan Raj</li>
             </ul>
 
@@ -104,21 +94,6 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 min-h-11 text-sm text-white/70 hover:border-[#FF2D87]/40 hover:text-[#FF2D87] transition-colors"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                </svg>
                 Instagram
               </a>
               <a
@@ -127,34 +102,21 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 min-h-11 text-sm text-white/70 hover:border-[#FF2D87]/40 hover:text-[#FF2D87] transition-colors"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                </svg>
                 WhatsApp
               </a>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-5 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-white/40 text-center sm:text-left">
-          <p className="break-words">&copy; {new Date().getFullYear()} Balipu Run Club. All rights reserved.</p>
-          <p className="text-[#FF2D87]/70 text-xs tracking-[0.15em] sm:tracking-[0.2em] uppercase font-medium">
-            Run Belong Repeat
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-white/35">
+          <p>© {new Date().getFullYear()} Balipu Run Club. Mangaluru, Karnataka.</p>
+          <p>
+            <a href="https://balipuclub.in" className="hover:text-[#FF2D87]">
+              balipuclub.in
+            </a>
           </p>
         </div>
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-transparent via-[#FF2D87] to-transparent" />
     </footer>
   );
 }

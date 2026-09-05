@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search, Filter, Mail, Phone, ChevronLeft, ChevronRight, MessageCircle, FileDown } from 'lucide-react';
-import type { Registration, PaymentStatus } from '@/types';
+import type { Registration } from '@/types';
 
 interface Props {
   data: Registration[];
@@ -19,7 +19,7 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
   const ROWS_PER_PAGE = 20;
 
   const filteredData = useMemo(() => {
-    let result = data.filter((reg) => {
+    const result = data.filter((reg) => {
       const matchesSearch =
         reg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -56,7 +56,13 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
         return bibB - bibA;
       }
       
-      const getTime = (val: any) => val?.seconds ? val.seconds * 1000 : new Date(val || 0).getTime();
+      const getTime = (val: unknown) => {
+        if (val && typeof val === 'object' && 'seconds' in val) {
+          const seconds = (val as { seconds?: number }).seconds;
+          if (typeof seconds === 'number') return seconds * 1000;
+        }
+        return new Date((val as string | number | Date | null | undefined) || 0).getTime();
+      };
       const timeA = getTime(a.createdAt);
       const timeB = getTime(b.createdAt);
 
@@ -354,7 +360,6 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
                               href="#"
                               onClick={(e) => {
                                 e.preventDefault();
-                                const baseUrl = window.location.origin;
                                 const waText = `Hi ${reg.name},\n\nYour registration for The Monsoon Run (Balipu Run Club) is confirmed!\n\nTicket ID: ${reg.ticketId || reg.uid.slice(0, 8).toUpperCase()}\n${reg.bibNumber ? `BIB Number: ${reg.bibNumber}\n` : ''}\nEvent Details:\n📅 Date: 12th July 2026\n⏰ Time: 6:30 AM\n📍 Venue: Decathlon, Bharath Mall\n👕 Jersey: ${reg.jerseySize || 'N/A'}\n\nPlease bring your E-Ticket (QR code) on the day of the event. We look forward to seeing you at the starting line!`;
                                 window.open(`https://wa.me/${reg.phone.replace(/\D/g, '')}?text=${encodeURIComponent(waText)}`, '_blank');
                               }}

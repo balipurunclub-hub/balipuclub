@@ -6,16 +6,35 @@ import { AdminRoute } from '@/components/AdminRoute';
 import { UploadCloud, CheckCircle2, AlertCircle, Mail, MapPin, Calendar, Clock, Link as LinkIcon, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
+type BulkParticipant = {
+  name: string;
+  email: string;
+  phone: string;
+  age: string;
+  gender: string;
+  city: string;
+  emergencyContact: string;
+  idProofType: string;
+  idProofNumber: string;
+  jerseySize: string;
+  source: string;
+};
+
+type BulkFail = {
+  entry?: Partial<BulkParticipant>;
+  reason?: string;
+};
+
 export default function BulkUploadPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [parsedData, setParsedData] = useState<any[]>([]);
+  const [parsedData, setParsedData] = useState<BulkParticipant[]>([]);
   const [entryType, setEntryType] = useState('paid');
   const [startBib, setStartBib] = useState('001');
-  const [isParsing, setIsParsing] = useState(false);
+  const [, setIsParsing] = useState(false);
   
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<any[] | null>(null);
-  const [failedEntries, setFailedEntries] = useState<any[] | null>(null);
+  const [uploadResult, setUploadResult] = useState<BulkParticipant[] | null>(null);
+  const [failedEntries, setFailedEntries] = useState<BulkFail[] | null>(null);
   const [uploadError, setUploadError] = useState('');
 
   const [isMailing, setIsMailing] = useState(false);
@@ -46,16 +65,19 @@ export default function BulkUploadPage() {
         complete: (results) => {
           const errors: string[] = [];
 
-          const mappedData = results.data.map((row: any, index: number) => {
+          const mappedData = results.data.map((raw: unknown, index: number) => {
+            const row = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
             const getVal = (keys: string[]) => {
               for (const k of keys) {
                 const foundKey = Object.keys(row).find(header => header.toLowerCase().includes(k.toLowerCase()));
-                if (foundKey && row[foundKey]) return row[foundKey].toString().trim();
+                if (foundKey && row[foundKey] != null && row[foundKey] !== '') {
+                  return String(row[foundKey]).trim();
+                }
               }
               return '';
             };
 
-            const entry = {
+            const entry: BulkParticipant = {
               name: getVal(['name', 'first', 'full']),
               email: getVal(['email', 'mail']),
               phone: getVal(['phone', 'mobile', 'contact']),
@@ -137,8 +159,8 @@ export default function BulkUploadPage() {
       
       setUploadResult(data.inserted);
       setFailedEntries(data.failed?.length > 0 ? data.failed : null);
-    } catch (err: any) {
-      setUploadError(err.message);
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setIsUploading(false);
     }
@@ -183,8 +205,8 @@ export default function BulkUploadPage() {
       }
       
       setMailSuccess(true);
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Mail failed');
     } finally {
       setIsMailing(false);
     }
@@ -218,8 +240,8 @@ export default function BulkUploadPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to send test email');
       
       alert(`Test email sent successfully to ${testEmailAddress}!`);
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Test failed');
     } finally {
       setIsTesting(false);
     }

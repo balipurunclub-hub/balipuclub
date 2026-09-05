@@ -5,6 +5,7 @@ import * as schema from './schema';
 type DbClient = ReturnType<typeof drizzle<typeof schema>>;
 
 declare global {
+  // Used for HMR-safe singleton in Node / Next
   // eslint-disable-next-line no-var
   var __balipuDb: DbClient | undefined;
 }

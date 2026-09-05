@@ -43,9 +43,8 @@ export async function POST(req: Request) {
     
     if (mailRouteImage && !mailRouteImage.startsWith('http')) {
       try {
-        const imagePath = path.join(process.cwd(), 'public', mailRouteImage);
-        if (fs.existsSync(imagePath)) {
-          const ext = path.extname(imagePath).substring(1) || 'jpeg';
+          const imagePath = path.join(process.cwd(), 'public', mailRouteImage);
+          if (fs.existsSync(imagePath)) {
           routeImageAttachment = {
             filename: mailRouteImage,
             path: imagePath,
@@ -194,8 +193,9 @@ export async function POST(req: Request) {
     transporter.close();
 
     return NextResponse.json({ success: true, successCount, failCount }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Bulk mail error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

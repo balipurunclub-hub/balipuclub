@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/components/Toast';
 
 const formSchema = z.object({
@@ -63,11 +63,24 @@ const SOURCE_OPTIONS = [
   'Other',
 ];
 
+const STEPS = [
+  { id: 0, label: 'You', fields: ['name', 'email', 'phone', 'age', 'gender'] as const },
+  {
+    id: 1,
+    label: 'Details',
+    fields: ['city', 'emergencyContact', 'source', 'jerseySize'] as const,
+  },
+  { id: 2, label: 'Confirm', fields: ['declarationAgreed'] as const },
+] as const;
+
 type PricingResponse = {
   active: {
     feeRupees: number;
     entryType: 'free' | 'paid';
   };
+  registrationOpen?: boolean;
+  scheduledUnlockAt?: string;
+  scheduledUnlockLabel?: string;
 };
 
 function loadRazorpay(): Promise<boolean> {
@@ -87,16 +100,19 @@ function loadRazorpay(): Promise<boolean> {
 export function AloysiusRegistrationForm() {
   const router = useRouter();
   const { success, error: toastError } = useToast();
+  const [step, setStep] = useState(0);
   const [submitError, setSubmitError] = useState('');
   const [isPaying, setIsPaying] = useState(false);
   const [pricing, setPricing] = useState<PricingResponse | null>(null);
   const [pricingError, setPricingError] = useState('');
   const [pricingLoading, setPricingLoading] = useState(true);
   const paymentDoneRef = useRef(false);
+  const formTopRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
     handleSubmit,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(formSchema),
@@ -107,6 +123,7 @@ export function AloysiusRegistrationForm() {
       declarationAgreed: false,
       age: '',
     },
+    mode: 'onTouched',
   });
 
   const loadPricing = async () => {
@@ -129,8 +146,27 @@ export function AloysiusRegistrationForm() {
     return () => clearInterval(interval);
   }, []);
 
+  const scrollFormIntoView = () => {
+    formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const goNext = async () => {
+    const fields = [...STEPS[step].fields];
+    const ok = await trigger(fields as (keyof FormInput)[]);
+    if (!ok) return;
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    scrollFormIntoView();
+  };
+
+  const goBack = () => {
+    setStep((s) => Math.max(s - 1, 0));
+    scrollFormIntoView();
+  };
+
   const feeRupees = pricing?.active.feeRupees ?? null;
   const isFree = pricing?.active.entryType === 'free';
+  const registrationLocked = !pricingLoading && !!pricing && pricing.registrationOpen === false;
+  const unlockLabel = pricing?.scheduledUnlockLabel || '7 September 2026, 12:00 AM IST';
 
   const failRegistration = (message?: string) => {
     const msg = message || 'Registration not completed';
@@ -156,10 +192,12 @@ export function AloysiusRegistrationForm() {
         if (orderData.code === 'FREE_SLOTS_FULL') {
           await loadPricing();
         }
+        if (orderData.code === 'REGISTRATION_LOCKED') {
+          await loadPricing();
+        }
         throw new Error(orderData.error || 'Registration not completed');
       }
 
-      // Free phase: ticket already issued
       if (orderData.free) {
         paymentDoneRef.current = true;
         success('Registration successful');
@@ -230,191 +268,283 @@ export function AloysiusRegistrationForm() {
   };
 
   const busy = isSubmitting || isPaying;
+  const isLast = step === STEPS.length - 1;
+
+  if (registrationLocked) {
+    return (
+      <div className="text-center py-6 sm:py-10 px-2 space-y-4">
+        <p className="text-[#FF2D87] text-xs font-semibold tracking-[0.25em] uppercase">
+          Registration locked
+        </p>
+        <h2 className="font-heading text-white uppercase text-2xl sm:text-3xl tracking-wide">
+          Opens soon
+        </h2>
+        <p className="text-white/65 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
+          Balipu x Aloysius registration opens on{' '}
+          <span className="text-white font-semibold">{unlockLabel}</span>. Check back then to
+          secure your spot.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6 w-full min-w-0" noValidate>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
-        <div className="sm:col-span-2 min-w-0">
-          <label className={labelClass} htmlFor="name">
-            Full Name *
-          </label>
-          <input id="name" className={fieldClass} placeholder="Your full name" {...register('name')} />
-          {errors.name && <p className={errorClass}>{errors.name.message}</p>}
-        </div>
-
-        <div className="min-w-0">
-          <label className={labelClass} htmlFor="email">
-            Email *
-          </label>
-          <input
-            id="email"
-            type="email"
-            className={fieldClass}
-            placeholder="you@example.com"
-            {...register('email')}
-          />
-          {errors.email && <p className={errorClass}>{errors.email.message}</p>}
-        </div>
-
-        <div className="min-w-0">
-          <label className={labelClass} htmlFor="phone">
-            Phone *
-          </label>
-          <input
-            id="phone"
-            className={fieldClass}
-            placeholder="10-digit mobile"
-            {...register('phone')}
-          />
-          {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
-        </div>
-
-        <div className="min-w-0">
-          <label className={labelClass} htmlFor="age">
-            Age *
-          </label>
-          <input
-            id="age"
-            type="number"
-            className={fieldClass}
-            placeholder="Age"
-            {...register('age')}
-          />
-          {errors.age && <p className={errorClass}>{errors.age.message}</p>}
-        </div>
-
-        <div className="min-w-0">
-          <label className={labelClass} htmlFor="gender">
-            Gender *
-          </label>
-          <select id="gender" className={fieldClass} defaultValue="" {...register('gender')}>
-            <option value="" disabled className="bg-[#0a0a0a]">
-              Select gender
-            </option>
-            {GENDER_OPTIONS.map((g) => (
-              <option key={g} value={g} className="bg-[#0a0a0a]">
-                {g}
-              </option>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-5 sm:space-y-6 w-full min-w-0"
+      noValidate
+    >
+      <div ref={formTopRef} className="scroll-mt-24">
+        {/* Progress */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            {STEPS.map((s, i) => (
+              <div key={s.id} className="flex-1 flex flex-col items-center gap-1.5 min-w-0">
+                <div
+                  className={`h-1.5 w-full rounded-full transition-colors ${
+                    i <= step ? 'bg-[#FF2D87]' : 'bg-white/10'
+                  }`}
+                />
+                <span
+                  className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider ${
+                    i === step ? 'text-[#FF2D87]' : i < step ? 'text-white/50' : 'text-white/30'
+                  }`}
+                >
+                  {s.label}
+                </span>
+              </div>
             ))}
-          </select>
-          {errors.gender && <p className={errorClass}>{errors.gender.message}</p>}
+          </div>
+          <p className="text-center text-xs text-white/40">
+            Step {step + 1} of {STEPS.length}
+          </p>
         </div>
 
-        <div className="min-w-0">
-          <label className={labelClass} htmlFor="city">
-            City *
-          </label>
-          <input id="city" className={fieldClass} placeholder="Mangaluru" {...register('city')} />
-          {errors.city && <p className={errorClass}>{errors.city.message}</p>}
-        </div>
+        {/* Step 1 — You */}
+        {step === 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+            <div className="sm:col-span-2 min-w-0">
+              <label className={labelClass} htmlFor="name">
+                Full Name *
+              </label>
+              <input id="name" className={fieldClass} placeholder="Your full name" {...register('name')} />
+              {errors.name && <p className={errorClass}>{errors.name.message}</p>}
+            </div>
 
-        <div className="min-w-0">
-          <label className={labelClass} htmlFor="emergencyContact">
-            Emergency Contact *
-          </label>
-          <input
-            id="emergencyContact"
-            className={fieldClass}
-            placeholder="Emergency phone number"
-            {...register('emergencyContact')}
-          />
-          {errors.emergencyContact && (
-            <p className={errorClass}>{errors.emergencyContact.message}</p>
-          )}
-        </div>
+            <div className="min-w-0">
+              <label className={labelClass} htmlFor="email">
+                Email *
+              </label>
+              <input
+                id="email"
+                type="email"
+                className={fieldClass}
+                placeholder="you@example.com"
+                {...register('email')}
+              />
+              {errors.email && <p className={errorClass}>{errors.email.message}</p>}
+            </div>
 
-        <div className="min-w-0">
-          <label className={labelClass} htmlFor="source">
-            How did you hear about us? *
-          </label>
-          <select id="source" className={fieldClass} defaultValue="" {...register('source')}>
-            <option value="" disabled className="bg-[#0a0a0a]">
-              Select source
-            </option>
-            {SOURCE_OPTIONS.map((opt) => (
-              <option key={opt} value={opt} className="bg-[#0a0a0a]">
-                {opt}
-              </option>
-            ))}
-          </select>
-          {errors.source && <p className={errorClass}>{errors.source.message}</p>}
-        </div>
+            <div className="min-w-0">
+              <label className={labelClass} htmlFor="phone">
+                Phone *
+              </label>
+              <input
+                id="phone"
+                className={fieldClass}
+                placeholder="10-digit mobile"
+                {...register('phone')}
+              />
+              {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
+            </div>
 
-        <div className="min-w-0">
-          <label className={labelClass} htmlFor="jerseySize">
-            Jersey Size *
-          </label>
-          <select
-            id="jerseySize"
-            className={fieldClass}
-            defaultValue=""
-            {...register('jerseySize')}
-          >
-            <option value="" disabled className="bg-[#0a0a0a]">
-              Select size
-            </option>
-            {JERSEY_OPTIONS.map((size) => (
-              <option key={size} value={size} className="bg-[#0a0a0a]">
-                {size}
-              </option>
-            ))}
-          </select>
-          {errors.jerseySize && <p className={errorClass}>{errors.jerseySize.message}</p>}
-        </div>
+            <div className="min-w-0">
+              <label className={labelClass} htmlFor="age">
+                Age *
+              </label>
+              <input
+                id="age"
+                type="number"
+                className={fieldClass}
+                placeholder="Age"
+                {...register('age')}
+              />
+              {errors.age && <p className={errorClass}>{errors.age.message}</p>}
+            </div>
+
+            <div className="min-w-0">
+              <label className={labelClass} htmlFor="gender">
+                Gender *
+              </label>
+              <select id="gender" className={fieldClass} defaultValue="" {...register('gender')}>
+                <option value="" disabled className="bg-[#0a0a0a]">
+                  Select gender
+                </option>
+                {GENDER_OPTIONS.map((g) => (
+                  <option key={g} value={g} className="bg-[#0a0a0a]">
+                    {g}
+                  </option>
+                ))}
+              </select>
+              {errors.gender && <p className={errorClass}>{errors.gender.message}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2 — Details */}
+        {step === 1 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+            <div className="min-w-0">
+              <label className={labelClass} htmlFor="city">
+                City *
+              </label>
+              <input id="city" className={fieldClass} placeholder="Mangaluru" {...register('city')} />
+              {errors.city && <p className={errorClass}>{errors.city.message}</p>}
+            </div>
+
+            <div className="min-w-0">
+              <label className={labelClass} htmlFor="emergencyContact">
+                Emergency Contact *
+              </label>
+              <input
+                id="emergencyContact"
+                className={fieldClass}
+                placeholder="Emergency phone number"
+                {...register('emergencyContact')}
+              />
+              {errors.emergencyContact && (
+                <p className={errorClass}>{errors.emergencyContact.message}</p>
+              )}
+            </div>
+
+            <div className="min-w-0">
+              <label className={labelClass} htmlFor="source">
+                How did you hear about us? *
+              </label>
+              <select id="source" className={fieldClass} defaultValue="" {...register('source')}>
+                <option value="" disabled className="bg-[#0a0a0a]">
+                  Select source
+                </option>
+                {SOURCE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt} className="bg-[#0a0a0a]">
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              {errors.source && <p className={errorClass}>{errors.source.message}</p>}
+            </div>
+
+            <div className="min-w-0">
+              <label className={labelClass} htmlFor="jerseySize">
+                Jersey Size *
+              </label>
+              <select
+                id="jerseySize"
+                className={fieldClass}
+                defaultValue=""
+                {...register('jerseySize')}
+              >
+                <option value="" disabled className="bg-[#0a0a0a]">
+                  Select size
+                </option>
+                {JERSEY_OPTIONS.map((size) => (
+                  <option key={size} value={size} className="bg-[#0a0a0a]">
+                    {size}
+                  </option>
+                ))}
+              </select>
+              {errors.jerseySize && <p className={errorClass}>{errors.jerseySize.message}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3 — Confirm */}
+        {step === 2 && (
+          <div className="space-y-5">
+            <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3 sm:p-4 cursor-pointer min-w-0">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black text-[#FF2D87] focus:ring-[#FF2D87]"
+                {...register('declarationAgreed')}
+              />
+              <span className="text-sm text-white/70 leading-relaxed break-words min-w-0">
+                I declare that the information provided is accurate. I understand the event involves
+                physical activity and participate at my own risk. I agree to follow all event
+                guidelines set by Balipu Run Club. *
+              </span>
+            </label>
+            {errors.declarationAgreed && (
+              <p className={errorClass}>{errors.declarationAgreed.message}</p>
+            )}
+
+            {pricingError && !pricing && (
+              <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300 break-words">
+                {pricingError}
+              </div>
+            )}
+
+            {submitError && (
+              <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300 break-words">
+                {submitError}
+              </div>
+            )}
+
+            <p className="text-center text-xs text-white/40 break-words">
+              {isFree
+                ? 'Free spots are limited. Your ticket is issued instantly after you submit.'
+                : 'Secure payment via Razorpay. You will receive your ticket after successful payment.'}
+            </p>
+          </div>
+        )}
       </div>
 
-      <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3 sm:p-4 cursor-pointer min-w-0">
-        <input
-          type="checkbox"
-          className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black text-[#FF2D87] focus:ring-[#FF2D87]"
-          {...register('declarationAgreed')}
-        />
-        <span className="text-sm text-white/70 leading-relaxed break-words min-w-0">
-          I declare that the information provided is accurate. I understand the event involves
-          physical activity and participate at my own risk. I agree to follow all event guidelines
-          set by Balipu Run Club. *
-        </span>
-      </label>
-      {errors.declarationAgreed && (
-        <p className={errorClass}>{errors.declarationAgreed.message}</p>
-      )}
-
-      {pricingError && !pricing && (
-        <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300 break-words">
-          {pricingError}
-        </div>
-      )}
-
-      {submitError && (
-        <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300 break-words">
-          {submitError}
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={busy || pricingLoading}
-        className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-7 py-4 text-sm sm:text-base font-semibold text-white hover:bg-[#ff4d9a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {busy ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Processing…
-          </>
-        ) : isFree ? (
-          <>Register for Free</>
-        ) : feeRupees != null ? (
-          <>Register & Pay ₹{feeRupees}</>
+      {/* Navigation */}
+      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-1">
+        {step > 0 ? (
+          <button
+            type="button"
+            onClick={goBack}
+            disabled={busy}
+            className="w-full sm:w-auto min-h-11 inline-flex items-center justify-center gap-1.5 rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:border-[#FF2D87]/40 hover:text-white transition-colors disabled:opacity-50"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back
+          </button>
         ) : (
-          <>Register</>
+          <div className="hidden sm:block sm:flex-1" />
         )}
-      </button>
 
-      <p className="text-center text-xs text-white/40 break-words">
-        {isFree
-          ? 'Free spots are limited. Your ticket is issued instantly after you submit.'
-          : 'Secure payment via Razorpay. You will receive your ticket after successful payment.'}
-      </p>
+        {!isLast ? (
+          <button
+            type="button"
+            onClick={goNext}
+            disabled={busy}
+            className="w-full sm:flex-1 min-h-11 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#FF2D87] px-7 py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[#ff4d9a] transition-colors disabled:opacity-60"
+          >
+            Next
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={busy || pricingLoading}
+            className="w-full sm:flex-1 min-h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-7 py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[#ff4d9a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {busy ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Processing…
+              </>
+            ) : isFree ? (
+              <>Register for Free</>
+            ) : feeRupees != null ? (
+              <>Register & Pay ₹{feeRupees}</>
+            ) : (
+              <>Register</>
+            )}
+          </button>
+        )}
+      </div>
     </form>
   );
 }

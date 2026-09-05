@@ -64,6 +64,15 @@ export const scannerSettings = pgTable('scanner_settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+/** Aloysius (and future events) registration open/closed flag */
+export const registrationSettings = pgTable('registration_settings', {
+  id: text('id').primaryKey(),
+  isOpen: boolean('is_open').notNull().default(false),
+  /** True once the Sep 7 auto-unlock has been applied (won't force-open again after admin locks) */
+  scheduledUnlockApplied: boolean('scheduled_unlock_applied').notNull().default(false),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type RegistrationRow = typeof registrations.$inferSelect;
 export type NewRegistration = typeof registrations.$inferInsert;

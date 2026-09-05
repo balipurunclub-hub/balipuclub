@@ -36,12 +36,12 @@ export default function NotFound() {
           >
             Back to Home
           </Link>
-          <Link
-            href="/#upcoming-events"
-            className="inline-flex items-center justify-center rounded-full border border-[#FF2D87] px-7 py-3.5 min-h-11 w-full sm:w-auto text-sm font-semibold text-white hover:bg-[#FF2D87]/10 transition-colors"
-          >
-            View Events
-          </Link>
+            <Link
+              href="/runs"
+              className="inline-flex items-center justify-center rounded-full border border-[#FF2D87] px-7 py-3.5 min-h-11 w-full sm:w-auto text-sm font-semibold text-white hover:bg-[#FF2D87]/10 transition-colors"
+            >
+              Upcoming Runs
+            </Link>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ToastProvider } from "@/components/Toast";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 export const viewport = {
   themeColor: '#000000',
@@ -12,53 +13,69 @@ export const viewport = {
   maximumScale: 5,
 };
 
-const poppins = Poppins({ 
+const poppins = Poppins({
   weight: ['300', '400', '500', '600', '700', '800'],
-  subsets: ["latin"], 
-  variable: "--font-inter" 
+  subsets: ["latin"],
+  variable: "--font-inter"
 });
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
 const greatVibes = Great_Vibes({ weight: "400", subsets: ["latin"], variable: "--font-script" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Balipu Run Club | Mangaluru's Premier Running Community",
+    default: "Balipu Run Club | Running Community in Mangaluru",
     template: "%s | Balipu Run Club"
   },
-  description: "Join Mangaluru's premier running community. Register for The Monsoon Run 2026, fitness events, and connect with fellow runners. Run for a better tomorrow.",
-  keywords: ["Balipu Run Club", "Mangaluru running", "Monsoon Run 2026", "fitness events Mangaluru", "running community Karnataka", "marathon Mangaluru"],
-  authors: [{ name: "Balipu Run Club" }],
-  creator: "Balipu Run Club",
-  publisher: "Balipu Run Club",
+  description:
+    "Balipu Run Club is a running community in Mangaluru bringing runners together through community runs, running events, training, fitness and unforgettable experiences.",
+  keywords: [
+    "Balipu Run Club",
+    "Balipu",
+    "Balipu Club",
+    "Balipu Running Club",
+    "Balipu Run Club Mangaluru",
+    "Balipu Run Club Mangalore",
+    "running club Mangaluru",
+    "running club Mangalore",
+    "running community Mangaluru",
+    "running events Mangaluru",
+    "5K Mangalore",
+    "runners in Mangaluru",
+  ],
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://balipu.vercel.app'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    url: 'https://balipu.vercel.app',
-    siteName: 'Balipu Run Club',
-    title: 'Balipu Run Club | Mangaluru\'s Premier Running Community',
-    description: 'Join Mangaluru\'s premier running community. Register for The Monsoon Run 2026, fitness events, and connect with fellow runners.',
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: 'Balipu Run Club | Running Community in Mangaluru',
+    description:
+      'Balipu Run Club is a running community in Mangaluru bringing runners together through community runs, running events, training and fitness.',
     images: [
       {
         url: '/IMG_3702.PNG',
         width: 1200,
         height: 630,
-        alt: 'Balipu Run Club Logo',
+        alt: 'Balipu Run Club — Mangaluru running community',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Balipu Run Club | Mangaluru\'s Premier Running Community',
-    description: 'Join Mangaluru\'s premier running community. Register for The Monsoon Run 2026 and connect with fellow runners.',
+    title: 'Balipu Run Club | Running Community in Mangaluru',
+    description:
+      'Join Balipu Run Club — Mangaluru\'s running community for group runs, events and fitness.',
     images: ['/IMG_3702.PNG'],
     creator: '@balipurunclub',
   },
@@ -73,9 +90,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'your-google-verification-code',
-  },
 };
 
 export default function RootLayout({
@@ -84,7 +98,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en-IN">
       <body className={`${poppins.variable} ${anton.variable} ${greatVibes.variable} font-sans antialiased min-h-screen flex flex-col overflow-x-hidden`}>
           <ToastProvider>
             <Navbar />

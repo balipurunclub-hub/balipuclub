@@ -159,17 +159,16 @@ export default function BalipuXAloysiusPage() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="relative aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5] w-full min-w-0 overflow-hidden rounded-2xl border border-[#FF2D87]/25 bg-[#0a0a0a]"
+              className="relative aspect-[3/2] w-full min-w-0 overflow-hidden rounded-2xl border border-[#FF2D87]/25 bg-black"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/poster2.png"
-                alt="Balipu x Aloysius"
-                className="absolute inset-0 w-full h-full object-cover object-top"
+                src="/balipuxaloy.jpeg"
+                alt="Balipu x Aloysius — Mangalore's first supercar run"
+                className="absolute inset-0 w-full h-full object-contain object-center"
               />
-              <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
               <div className="absolute inset-0 ring-1 ring-inset ring-[#FF2D87]/20 rounded-2xl pointer-events-none" />
-              <span className="absolute top-4 left-4 inline-flex items-center rounded-full bg-[#FF2D87] px-3 py-1 text-[10px] font-bold tracking-[0.2em] uppercase text-white">
+              <span className="absolute top-3 right-3 sm:top-4 sm:right-4 inline-flex items-center rounded-full bg-[#FF2D87] px-3 py-1 text-[10px] font-bold tracking-[0.2em] uppercase text-white shadow-lg">
                 Upcoming
               </span>
             </motion.div>

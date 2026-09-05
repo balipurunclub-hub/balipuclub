@@ -15,6 +15,7 @@ export default function EventPage() {
   const eventId = params.id as string;
 
   // Mock database for events (can be moved to a real DB later)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy mock event shapes vary by id
   const eventsData: Record<string, any> = {
     'next-run': {
       title: "Next Community Run",
@@ -360,7 +361,7 @@ export default function EventPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-              {event.guests.map((g: any, i: number) => (
+              {event.guests.map((g: { img: string; name: string; title: string; info: string }, i: number) => (
                 <div key={i} className={`rounded-2xl p-4 sm:p-6 flex flex-col items-center text-center shadow-sm border hover:-translate-y-1 transition-transform min-w-0 ${event.isDance ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100 hover:shadow-lg hover:shadow-slate-200/50'}`}>
                   <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full p-1.5 bg-linear-to-tr from-[#F5841F] to-[#ff9b44] mb-6 shadow-lg shadow-[#F5841F]/30">
                     <img src={g.img} className="w-full h-full rounded-full object-cover border-4 border-white bg-slate-100" alt={g.name} />
