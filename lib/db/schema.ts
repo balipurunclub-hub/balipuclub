@@ -7,11 +7,14 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+/** Admin / staff accounts — username & password stored as hashes only */
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
-  email: text('email').notNull().unique(),
+  /** SHA-256 of normalized username (email) — never store plain username */
+  usernameHash: text('username_hash').notNull().unique(),
+  /** bcrypt of password */
   passwordHash: text('password_hash').notNull(),
-  role: text('role').notNull().default('scanner'), // 'admin' | 'scanner'
+  role: text('role').notNull().default('admin'), // 'admin' | 'scanner'
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

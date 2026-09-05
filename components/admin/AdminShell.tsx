@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { LogoutButton } from '@/components/admin/LogoutButton';
 
 type AdminShellProps = {
   eyebrow?: string;
@@ -55,7 +56,10 @@ export function AdminShell({
               <div className="w-14 h-1 bg-[#FF2D87] mt-4" />
             </div>
           </div>
-          {actions && <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">{actions}</div>}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+            {actions}
+            <LogoutButton />
+          </div>
         </div>
         {children}
       </div>

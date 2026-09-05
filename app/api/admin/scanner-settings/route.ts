@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { scannerSettings } from '@/lib/db/schema';
 
@@ -40,6 +41,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    if (!(await requireAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
     const current = await ensureSettings();
 

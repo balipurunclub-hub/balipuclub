@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { desc, eq, sql } from 'drizzle-orm';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { eventCounters, registrations } from '@/lib/db/schema';
 
@@ -17,6 +18,9 @@ async function ensureMonsoonCounter() {
 
 export async function GET() {
   try {
+    if (!(await requireAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const [max] = await db
       .select({ bib: registrations.bibNumber })
       .from(registrations)
@@ -33,6 +37,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    if (!(await requireAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { entries, entryType, startBibNumber } = await req.json();
 
     if (!Array.isArray(entries) || entries.length === 0) {

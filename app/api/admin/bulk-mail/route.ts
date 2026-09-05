@@ -4,11 +4,15 @@ import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
 import { eq } from 'drizzle-orm';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { registrations } from '@/lib/db/schema';
 
 export async function POST(req: Request) {
   try {
+    if (!(await requireAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { users, mailDate, mailTime, mailLocation, mailMapsLink, mailRouteLink, mailRouteImage } = await req.json();
 
     if (!users || !Array.isArray(users) || users.length === 0) {

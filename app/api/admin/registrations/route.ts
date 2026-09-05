@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { desc, eq } from 'drizzle-orm';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { toRegistration } from '@/lib/db/mappers';
 import { registrations } from '@/lib/db/schema';
@@ -8,6 +9,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    if (!(await requireAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const rows = await db.select().from(registrations).orderBy(desc(registrations.createdAt));
     return NextResponse.json({ registrations: rows.map(toRegistration) });
   } catch (error: unknown) {
@@ -18,6 +22,9 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
+    if (!(await requireAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
     const { id, attended, emailSent } = body as {
       id?: string;
