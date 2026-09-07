@@ -59,7 +59,16 @@ export function HomePage() {
                 <p className="text-white/45 text-[0.65rem] sm:text-xs font-semibold tracking-[0.2em] uppercase mb-2.5">
                   Balipu x Aloysius · 11 Oct 2026
                 </p>
-                <EventCountdown />
+                <div className="flex flex-col items-start gap-4 sm:gap-5">
+                  <EventCountdown />
+                  <Link
+                    href="/events/balipu-x-aloysius/register"
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-6 sm:px-7 py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[#ff4d9a] transition-colors"
+                  >
+                    Register Now
+                    <ArrowRight className="w-4 h-4 shrink-0" />
+                  </Link>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 animate-fade-in-up delay-300">
@@ -218,14 +227,13 @@ export function HomePage() {
             className="group block mb-10 sm:mb-14 lg:mb-16 rounded-2xl border border-[#FF2D87]/40 bg-[#0a0a0a] overflow-hidden hover:border-[#FF2D87] transition-colors"
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 min-w-0">
-              <div className="relative aspect-[3/2] lg:aspect-auto lg:min-h-[280px] xl:min-h-[320px] overflow-hidden bg-black">
+              <div className="relative aspect-[3/4] w-full max-w-sm mx-auto lg:max-w-none lg:mx-0 overflow-hidden bg-black">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/balipuxaloy.jpeg"
                   alt="Balipu x Aloysius supercar run and 5K community event in Mangaluru"
                   className="absolute inset-0 w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.02]"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent lg:bg-linear-to-r lg:from-transparent lg:via-transparent lg:to-black/60 pointer-events-none" />
                 <span className="absolute top-3 right-3 sm:top-4 sm:right-4 inline-flex items-center rounded-full bg-[#FF2D87] px-3 py-1 text-[10px] font-bold tracking-[0.2em] uppercase text-white">
                   Upcoming
                 </span>

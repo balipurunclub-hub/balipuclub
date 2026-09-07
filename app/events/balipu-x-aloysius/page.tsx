@@ -159,7 +159,7 @@ export default function BalipuXAloysiusPage() {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="relative aspect-[3/2] w-full min-w-0 overflow-hidden rounded-2xl border border-[#FF2D87]/25 bg-black"
+              className="relative aspect-[3/4] w-full max-w-md mx-auto lg:max-w-none min-w-0 overflow-hidden rounded-2xl border border-[#FF2D87]/25 bg-black"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

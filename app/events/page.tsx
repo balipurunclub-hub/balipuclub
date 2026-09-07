@@ -41,12 +41,12 @@ export default function EventsIndexPage() {
             href="/events/balipu-x-aloysius"
             className="block rounded-2xl border border-[#FF2D87]/30 bg-[#0a0a0a] overflow-hidden hover:border-[#FF2D87] transition-colors not-prose"
           >
-            <div className="relative aspect-[3/2] bg-black">
+            <div className="relative aspect-[3/4] max-w-md mx-auto sm:max-w-lg bg-black">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/balipuxaloy.jpeg"
                 alt="Balipu x Aloysius supercar run event poster in Mangaluru"
-                className="absolute inset-0 w-full h-full object-contain"
+                className="absolute inset-0 w-full h-full object-contain object-center"
               />
             </div>
             <div className="p-5 sm:p-6">

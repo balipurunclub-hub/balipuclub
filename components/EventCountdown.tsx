@@ -34,15 +34,27 @@ type EventCountdownProps = {
   compact?: boolean;
 };
 
+const PLACEHOLDER: TimeLeft = {
+  days: 0,
+  hours: 0,
+  minutes: 0,
+  seconds: 0,
+  done: false,
+};
+
 export function EventCountdown({ className = '', compact = false }: EventCountdownProps) {
-  const [left, setLeft] = useState<TimeLeft>(() => calcLeft(Date.now()));
+  // Start null so SSR and first client paint match (avoids Date.now hydration mismatch)
+  const [left, setLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
+    setLeft(calcLeft(Date.now()));
     const id = setInterval(() => setLeft(calcLeft(Date.now())), 1000);
     return () => clearInterval(id);
   }, []);
 
-  if (left.done) {
+  const display = left ?? PLACEHOLDER;
+
+  if (display.done) {
     return (
       <p className={`text-[#FF2D87] text-sm font-semibold tracking-wide ${className}`}>
         Event day is here
@@ -51,10 +63,10 @@ export function EventCountdown({ className = '', compact = false }: EventCountdo
   }
 
   const units = [
-    { label: 'Days', value: left.days },
-    { label: 'Hrs', value: left.hours },
-    { label: 'Min', value: left.minutes },
-    { label: 'Sec', value: left.seconds },
+    { label: 'Days', value: display.days },
+    { label: 'Hrs', value: display.hours },
+    { label: 'Min', value: display.minutes },
+    { label: 'Sec', value: display.seconds },
   ];
 
   return (
@@ -62,7 +74,11 @@ export function EventCountdown({ className = '', compact = false }: EventCountdo
       className={`inline-flex flex-wrap items-center gap-1.5 sm:gap-2 ${className}`}
       role="timer"
       aria-live="polite"
-      aria-label={`Countdown: ${left.days} days, ${left.hours} hours, ${left.minutes} minutes, ${left.seconds} seconds`}
+      aria-label={
+        left
+          ? `Countdown: ${left.days} days, ${left.hours} hours, ${left.minutes} minutes, ${left.seconds} seconds`
+          : 'Countdown loading'
+      }
     >
       {units.map((u) => (
         <div
@@ -74,7 +90,7 @@ export function EventCountdown({ className = '', compact = false }: EventCountdo
           <div
             className={`font-heading text-[#FF2D87] tabular-nums leading-none ${
               compact ? 'text-sm' : 'text-base sm:text-lg'
-            }`}
+            } ${left ? '' : 'invisible'}`}
           >
             {pad(u.value)}
           </div>
