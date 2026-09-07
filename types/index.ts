@@ -34,6 +34,7 @@ export interface Registration {
   eventName?: string;
   feeRupees?: number;
   pricingPhase?: number;
+  pricingTierId?: string;
 }
 
 export interface RegistrationFormData {

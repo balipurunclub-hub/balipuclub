@@ -29,6 +29,7 @@ export function toRegistration(row: RegistrationRow): Registration {
     eventName: row.eventName ?? undefined,
     feeRupees: row.feeRupees ?? undefined,
     pricingPhase: row.pricingPhase ?? undefined,
+    pricingTierId: row.pricingTierId ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt ? row.updatedAt.toISOString() : undefined,
   };

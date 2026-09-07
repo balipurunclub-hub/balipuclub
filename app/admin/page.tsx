@@ -14,11 +14,10 @@ import {
   CheckSquare,
   X,
   CheckCircle2,
-  UserCheck,
-  Gift,
   Lock,
   Unlock,
   ExternalLink,
+  Layers,
 } from 'lucide-react';
 import type { Registration } from '@/types';
 import Link from 'next/link';
@@ -26,15 +25,73 @@ import Link from 'next/link';
 const POLL_INTERVAL_MS = 6000;
 const REGISTER_HREF = '/events/balipu-x-aloysius/register';
 
+/** Admin display phases 1–5 (free + four paid tiers). */
+function resolveTicketBucket(
+  r: Registration
+): 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' {
+  const slot =
+    typeof r.bibNumber === 'number'
+      ? r.bibNumber
+      : (() => {
+          const m = r.ticketId?.match(/^BRC-(\d+)$/);
+          return m ? parseInt(m[1], 10) : 0;
+        })();
+
+  const isFree =
+    r.entryType === 'free' ||
+    r.feeRupees === 0 ||
+    r.pricingTierId === 'phase1-free';
+
+  // Phase 1 = free (slots 1–10)
+  if (isFree || (slot >= 1 && slot <= 10 && (r.feeRupees == null || r.feeRupees === 0))) {
+    return 'phase1';
+  }
+
+  // Phase 2 = ₹200 (slots 11–100)
+  if (
+    r.pricingTierId === 'phase1-paid' ||
+    r.feeRupees === 200 ||
+    (r.pricingPhase === 1 && !isFree) ||
+    (slot >= 11 && slot <= 100)
+  ) {
+    return 'phase2';
+  }
+
+  // Phase 3 = ₹250 (slots 101–200)
+  if (
+    r.pricingTierId === 'phase2' ||
+    r.feeRupees === 250 ||
+    r.pricingPhase === 2 ||
+    (slot >= 101 && slot <= 200)
+  ) {
+    return 'phase3';
+  }
+
+  // Phase 4 = ₹300 (slots 201–300)
+  if (
+    r.pricingTierId === 'phase3' ||
+    r.feeRupees === 300 ||
+    r.pricingPhase === 3 ||
+    (slot >= 201 && slot <= 300)
+  ) {
+    return 'phase4';
+  }
+
+  // Phase 5 = ₹350 (slots 301+)
+  return 'phase5';
+}
+
 function StatCard({
   label,
   value,
   icon: Icon,
+  hint,
   suffix,
 }: {
   label: string;
   value: ReactNode;
   icon: ComponentType<{ className?: string }>;
+  hint?: string;
   suffix?: ReactNode;
 }) {
   return (
@@ -47,6 +104,9 @@ function StatCard({
           <p className="text-white/45 text-[0.65rem] sm:text-xs font-semibold tracking-[0.18em] uppercase break-words">
             {label}
           </p>
+          {hint && (
+            <p className="text-white/40 text-[0.65rem] sm:text-xs mt-0.5 break-words">{hint}</p>
+          )}
           <h3 className="font-heading text-[#FF2D87] text-2xl sm:text-3xl tracking-wide mt-0.5">
             {value}
             {suffix}
@@ -125,10 +185,15 @@ function AdminDashboardInner() {
     }
   };
 
-  const totalCount = registrations.length;
-  const freeCount = registrations.filter((r) => r.entryType === 'free').length;
-  const paidEntryCount = registrations.filter((r) => r.entryType !== 'free').length;
-  const checkedInCount = registrations.filter((r) => r.attended).length;
+  const confirmed = registrations.filter((r) => r.paymentStatus === 'paid');
+  const buckets = confirmed.map(resolveTicketBucket);
+  const totalTickets = confirmed.length;
+  const phase1 = buckets.filter((b) => b === 'phase1').length;
+  const phase2 = buckets.filter((b) => b === 'phase2').length;
+  const phase3 = buckets.filter((b) => b === 'phase3').length;
+  const phase4 = buckets.filter((b) => b === 'phase4').length;
+  const phase5 = buckets.filter((b) => b === 'phase5').length;
+  const peoplePaid = confirmed.filter((r) => resolveTicketBucket(r) !== 'phase1').length;
 
   const confirmCheckIn = async () => {
     if (!checkinTarget) return;
@@ -155,15 +220,18 @@ function AdminDashboardInner() {
 
   return (
     <div className="space-y-6 sm:space-y-8 min-w-0">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard label="Total" value={totalCount} icon={Users} />
-        <StatCard label="Paid" value={paidEntryCount} icon={IndianRupee} />
-        <StatCard label="Free" value={freeCount} icon={Gift} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard label="Total tickets" value={totalTickets} icon={Users} hint="All confirmed" />
+        <StatCard label="Phase 1" value={phase1} icon={Layers} hint="₹0 · slots 1–10" />
+        <StatCard label="Phase 2" value={phase2} icon={Layers} hint="₹200 · slots 11–100" />
+        <StatCard label="Phase 3" value={phase3} icon={Layers} hint="₹250 · slots 101–200" />
+        <StatCard label="Phase 4" value={phase4} icon={Layers} hint="₹300 · slots 201–300" />
+        <StatCard label="Phase 5" value={phase5} icon={Layers} hint="₹350 · slots 301+" />
         <StatCard
-          label="Checked In"
-          value={checkedInCount}
-          icon={UserCheck}
-          suffix={<span className="text-white/40 text-base font-sans font-normal"> / {totalCount}</span>}
+          label="People paid"
+          value={peoplePaid}
+          icon={IndianRupee}
+          hint="Paid entry (excl. free)"
         />
       </div>
 
@@ -292,7 +360,11 @@ function AdminDashboardInner() {
           </p>
         </div>
       ) : (
-        <RegistrationsTable data={registrations} onManualCheckin={setCheckinTarget} />
+        <RegistrationsTable
+          data={registrations}
+          onManualCheckin={setCheckinTarget}
+          onUpdated={() => fetchRegistrations({ silent: true })}
+        />
       )}
 
       {checkinTarget && (

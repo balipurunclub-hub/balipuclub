@@ -1,21 +1,43 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Mail, Phone, ChevronLeft, ChevronRight, MessageCircle, FileDown } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  Mail,
+  Phone,
+  ChevronLeft,
+  ChevronRight,
+  MessageCircle,
+  FileDown,
+  X,
+  CheckCircle2,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react';
 import type { Registration } from '@/types';
 
 interface Props {
   data: Registration[];
   onManualCheckin?: (reg: Registration) => void;
+  onUpdated?: () => void;
 }
 
-export function RegistrationsTable({ data, onManualCheckin }: Props) {
+type ConfirmModalState =
+  | { step: 'confirm'; reg: Registration }
+  | { step: 'working'; reg: Registration }
+  | { step: 'success'; reg: Registration; ticketId?: string; emailSent: boolean }
+  | { step: 'error'; reg: Registration; message: string };
+
+export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'paid' | 'pending' | 'all'>('paid');
   const [entryFilter, setEntryFilter] = useState<'all' | 'paid' | 'free'>('all');
   const [emailFilter, setEmailFilter] = useState<'all' | 'sent' | 'not-sent'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'bib-asc' | 'bib-desc'>('newest');
   const [checkinFilter, setCheckinFilter] = useState<'all' | 'checked-in' | 'not-checked-in'>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState | null>(null);
   const ROWS_PER_PAGE = 20;
 
   const filteredData = useMemo(() => {
@@ -27,21 +49,25 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
         (reg.eventName && reg.eventName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (reg.phone && reg.phone.includes(searchTerm)) ||
         (reg.bibNumber && reg.bibNumber.toString().includes(searchTerm));
-      const matchesEntry = 
-        entryFilter === 'all' || 
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'paid' && reg.paymentStatus === 'paid') ||
+        (statusFilter === 'pending' && reg.paymentStatus === 'pending');
+      const matchesEntry =
+        entryFilter === 'all' ||
         (entryFilter === 'free' && reg.entryType === 'free') ||
         (entryFilter === 'paid' && reg.entryType !== 'free');
-      const matchesEmail = 
-        emailFilter === 'all' || 
-        (emailFilter === 'sent' && reg.emailSent) || 
+      const matchesEmail =
+        emailFilter === 'all' ||
+        (emailFilter === 'sent' && reg.emailSent) ||
         (emailFilter === 'not-sent' && !reg.emailSent);
-        
+
       const matchesCheckin =
         checkinFilter === 'all' ||
         (checkinFilter === 'checked-in' && reg.attended) ||
         (checkinFilter === 'not-checked-in' && !reg.attended);
-        
-      return matchesSearch && matchesEntry && matchesEmail && matchesCheckin;
+
+      return matchesSearch && matchesStatus && matchesEntry && matchesEmail && matchesCheckin;
     });
 
     result.sort((a, b) => {
@@ -74,7 +100,7 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
     });
 
     return result;
-  }, [data, searchTerm, entryFilter, emailFilter, sortOrder, checkinFilter]);
+  }, [data, searchTerm, statusFilter, entryFilter, emailFilter, sortOrder, checkinFilter]);
 
   const totalPages = Math.ceil(filteredData.length / ROWS_PER_PAGE);
   const currentTableData = useMemo(() => {
@@ -86,6 +112,11 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
   // Reset to page 1 when search or filter changes
   const handleSearchChange = (val: string) => {
     setSearchTerm(val);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (val: string) => {
+    setStatusFilter(val as 'paid' | 'pending' | 'all');
     setCurrentPage(1);
   };
 
@@ -111,6 +142,44 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
 
   const checkedInCount = data.filter(r => r.attended).length;
   const notCheckedInCount = data.length - checkedInCount;
+  const paidCount = data.filter((r) => r.paymentStatus === 'paid').length;
+  const pendingCount = data.filter((r) => r.paymentStatus === 'pending').length;
+
+  const openConfirmModal = (reg: Registration) => {
+    if (reg.paymentStatus !== 'pending') return;
+    setConfirmModal({ step: 'confirm', reg });
+  };
+
+  const runConfirmPending = async () => {
+    if (!confirmModal || confirmModal.step !== 'confirm') return;
+    const reg = confirmModal.reg;
+    setConfirmModal({ step: 'working', reg });
+    try {
+      const res = await fetch('/api/admin/confirm-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: reg.uid, sendEmail: true }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || 'Confirm failed');
+      setConfirmModal({
+        step: 'success',
+        reg,
+        ticketId: payload.registration?.ticketId,
+        emailSent: Boolean(payload.emailSent),
+      });
+      onUpdated?.();
+    } catch (err) {
+      setConfirmModal({
+        step: 'error',
+        reg,
+        message: err instanceof Error ? err.message : 'Failed to confirm registration',
+      });
+    }
+  };
+
+  const confirmingId =
+    confirmModal?.step === 'working' ? confirmModal.reg.uid : null;
 
   return (
     <div className="space-y-4">
@@ -156,6 +225,23 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
         {/* Filters - stack on mobile */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 min-w-0">
           <Filter className="w-4 h-4 text-slate-400 shrink-0 hidden sm:block" />
+          <select
+            value={statusFilter}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            className="w-full sm:flex-1 sm:min-w-0 min-h-11 bg-white/5 border border-white/10 rounded-xl py-2 px-3 pr-8 text-white focus:outline-none focus:border-[#FF2D87]/50 focus:ring-1 focus:ring-[#FF2D87]/50 transition-colors text-sm appearance-none"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em' }}
+          >
+            <option value="paid" className="bg-black text-white">
+              Paid ({paidCount})
+            </option>
+            <option value="pending" className="bg-black text-white">
+              Pending ({pendingCount})
+            </option>
+            <option value="all" className="bg-black text-white">
+              All statuses ({data.length})
+            </option>
+          </select>
+
           <select
             value={entryFilter}
             onChange={(e) => handleEntryChange(e.target.value)}
@@ -248,6 +334,17 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
 
               {/* Actions */}
               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-white/5">
+                {reg.paymentStatus === 'pending' && (
+                  <button
+                    type="button"
+                    disabled={confirmingId === reg.uid}
+                    onClick={() => openConfirmModal(reg)}
+                    className="inline-flex items-center gap-1.5 bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-medium text-xs min-h-11 px-4 py-2 rounded-full transition-colors disabled:opacity-50"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    {confirmingId === reg.uid ? 'Confirming…' : 'Confirm + Send mail'}
+                  </button>
+                )}
                 {reg.phone && reg.phone !== 'Yet to be submitted' && (
                   <>
                     <a
@@ -302,7 +399,7 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
                 <th className="px-6 py-4 font-semibold">Details</th>
                 <th className="px-6 py-4 font-semibold">Payment Status</th>
                 <th className="px-6 py-4 font-semibold">Date</th>
-                {onManualCheckin && <th className="px-6 py-4 font-semibold">Actions</th>}
+                <th className="px-6 py-4 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -419,22 +516,35 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
                           })
                         : ''}
                     </td>
-                    {onManualCheckin && (
-                      <td className="px-6 py-4">
-                        {!reg.attended ? (
-                          <button 
-                            onClick={() => onManualCheckin(reg)}
-                            className="bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-medium text-xs px-4 py-2 rounded-full transition-colors active:scale-95 flex items-center justify-center min-w-[90px]"
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col items-start gap-2">
+                        {reg.paymentStatus === 'pending' && (
+                          <button
+                            type="button"
+                            disabled={confirmingId === reg.uid}
+                            onClick={() => openConfirmModal(reg)}
+                            className="bg-amber-500/90 hover:bg-amber-500 text-black font-semibold text-xs px-3 py-2 rounded-full transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
                           >
-                            Check In
+                            <Mail className="w-3.5 h-3.5" />
+                            {confirmingId === reg.uid ? '…' : 'Confirm + Mail'}
                           </button>
-                        ) : (
-                          <span className="text-green-400/50 font-medium text-[10px] uppercase tracking-wider px-3 py-1.5 border border-green-500/20 rounded-full bg-green-500/5">
-                            Done
-                          </span>
                         )}
-                      </td>
-                    )}
+                        {onManualCheckin && (
+                          !reg.attended ? (
+                            <button 
+                              onClick={() => onManualCheckin(reg)}
+                              className="bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-medium text-xs px-4 py-2 rounded-full transition-colors active:scale-95 flex items-center justify-center min-w-[90px]"
+                            >
+                              Check In
+                            </button>
+                          ) : (
+                            <span className="text-green-400/50 font-medium text-[10px] uppercase tracking-wider px-3 py-1.5 border border-green-500/20 rounded-full bg-green-500/5">
+                              Done
+                            </span>
+                          )
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -472,6 +582,154 @@ export function RegistrationsTable({ data, onManualCheckin }: Props) {
           </div>
         )}
       </div>
+
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0a0a0a] border border-[#FF2D87]/30 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in-up mx-2">
+            <div className="relative p-5 sm:p-6 text-center border-b border-white/10">
+              <div
+                className={`w-14 h-14 border rounded-full flex items-center justify-center mx-auto mb-4 ${
+                  confirmModal.step === 'error'
+                    ? 'bg-red-500/15 border-red-500/30'
+                    : confirmModal.step === 'success'
+                      ? 'bg-emerald-500/15 border-emerald-500/30'
+                      : 'bg-[#FF2D87]/15 border-[#FF2D87]/30'
+                }`}
+              >
+                {confirmModal.step === 'working' ? (
+                  <RefreshCw className="w-7 h-7 text-[#FF2D87] animate-spin" />
+                ) : confirmModal.step === 'success' ? (
+                  <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+                ) : confirmModal.step === 'error' ? (
+                  <AlertCircle className="w-7 h-7 text-red-400" />
+                ) : (
+                  <Mail className="w-7 h-7 text-[#FF2D87]" />
+                )}
+              </div>
+              <h2 className="font-heading text-white uppercase tracking-wide text-xl sm:text-2xl mb-1">
+                {confirmModal.step === 'confirm' && 'Confirm + Send mail'}
+                {confirmModal.step === 'working' && 'Confirming…'}
+                {confirmModal.step === 'success' && 'Confirmed'}
+                {confirmModal.step === 'error' && 'Could not confirm'}
+              </h2>
+              <p className="text-white/55 text-sm mt-1 break-words px-2">
+                {confirmModal.reg.name}
+              </p>
+              {confirmModal.step !== 'working' && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmModal(null)}
+                  className="absolute top-4 right-4 p-2 text-white/40 hover:bg-white/10 rounded-full transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-5">
+              {confirmModal.step === 'confirm' && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      { label: 'Email', value: confirmModal.reg.email },
+                      { label: 'Phone', value: confirmModal.reg.phone || 'N/A' },
+                      { label: 'Fee', value: confirmModal.reg.feeRupees != null ? `₹${confirmModal.reg.feeRupees}` : 'N/A' },
+                      { label: 'Order', value: confirmModal.reg.orderId || '—' },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="bg-black/50 p-3 rounded-xl border border-white/10 min-w-0"
+                      >
+                        <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/40 mb-1">
+                          {item.label}
+                        </p>
+                        <p className="font-semibold text-white text-sm break-all">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-white/60 text-sm leading-relaxed text-center">
+                    This marks the registration as paid, assigns a ticket and BIB, then sends the
+                    confirmation email with QR.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmModal(null)}
+                      className="flex-1 min-h-11 rounded-full border border-white/20 text-white/80 hover:bg-white/5 font-semibold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={runConfirmPending}
+                      className="flex-1 min-h-11 rounded-full bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-semibold inline-flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                      Confirm + Mail
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {confirmModal.step === 'working' && (
+                <p className="text-center text-white/55 text-sm py-4">
+                  Assigning ticket and sending email…
+                </p>
+              )}
+
+              {confirmModal.step === 'success' && (
+                <>
+                  <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 text-center space-y-1">
+                    {confirmModal.ticketId && (
+                      <p>
+                        Ticket:{' '}
+                        <span className="font-mono font-bold text-white">{confirmModal.ticketId}</span>
+                      </p>
+                    )}
+                    <p>
+                      {confirmModal.emailSent
+                        ? 'Confirmation email sent.'
+                        : 'Ticket assigned, but email could not be sent. Check EMAIL settings.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmModal(null)}
+                    className="w-full min-h-11 rounded-full bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-semibold transition-colors"
+                  >
+                    Done
+                  </button>
+                </>
+              )}
+
+              {confirmModal.step === 'error' && (
+                <>
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 text-center break-words">
+                    {confirmModal.message}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmModal(null)}
+                      className="flex-1 min-h-11 rounded-full border border-white/20 text-white/80 hover:bg-white/5 font-semibold transition-colors"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmModal({ step: 'confirm', reg: confirmModal.reg })}
+                      className="flex-1 min-h-11 rounded-full bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-semibold transition-colors"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
