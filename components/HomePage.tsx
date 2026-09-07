@@ -36,37 +36,64 @@ export function HomePage() {
           </div>
           <div className="pointer-events-none absolute inset-y-0 left-0 z-[1] hidden lg:block w-[48%] xl:w-[46%] bg-linear-to-r from-black via-black/85 to-transparent" />
 
-          <div className="relative z-10 flex flex-col justify-center w-full site-container pt-10 sm:pt-14 lg:py-20 lg:min-h-[min(70dvh,720px)]">
+          <div className="relative z-10 flex flex-col justify-center w-full site-container pt-10 sm:pt-14 lg:py-16 lg:min-h-[min(70dvh,720px)]">
             <div className="w-full max-w-xl xl:max-w-2xl min-w-0">
               <p className="text-[#FF2D87] text-[0.65rem] sm:text-xs md:text-sm font-semibold tracking-[0.2em] sm:tracking-[0.35em] uppercase mb-4 sm:mb-5 animate-fade-in-up">
                 Balipu Run Club
               </p>
 
-              <h1 className="font-heading text-[#FF2D87] uppercase leading-[0.92] text-[clamp(2.25rem,8vw,5.5rem)] mb-5 sm:mb-6 break-words animate-fade-in-up delay-100">
+              <h1 className="font-heading text-[#FF2D87] uppercase leading-[0.92] text-[clamp(2.25rem,8vw,5.5rem)] mb-4 sm:mb-5 break-words animate-fade-in-up delay-100">
                 Balipu Run Club
                 <span className="block text-white/90 text-[0.55em] sm:text-[0.5em] mt-2 sm:mt-3 font-heading tracking-wide normal-case">
                   Mangaluru&apos;s Running Community
                 </span>
               </h1>
 
-              <p className="text-white/85 text-sm sm:text-base md:text-lg leading-relaxed max-w-md mb-6 sm:mb-7 animate-fade-in-up delay-200">
-                Balipu Run Club brings the running community of Mangaluru together through group
-                runs, running events, fitness, friendship and shared experiences. Whether you&apos;re
-                a beginner or an experienced runner, there&apos;s a place for you at Balipu.
+              <p className="text-white/75 text-sm sm:text-base leading-relaxed max-w-md mb-7 sm:mb-8 animate-fade-in-up delay-200">
+                Group runs, fitness, friendship — and Mangalore&apos;s first supercar run is coming.
               </p>
 
-              <div className="mb-8 sm:mb-10 animate-fade-in-up delay-200">
-                <p className="text-white/45 text-[0.65rem] sm:text-xs font-semibold tracking-[0.2em] uppercase mb-2.5">
-                  Balipu x Aloysius · 11 Oct 2026
-                </p>
-                <div className="flex flex-col items-start gap-4 sm:gap-5">
-                  <EventCountdown />
+              {/* Race spotlight: timer + poster + CTAs */}
+              <div className="animate-fade-in-up delay-200 rounded-2xl border border-[#FF2D87]/30 bg-black/55 backdrop-blur-sm p-4 sm:p-5 md:p-6 mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row gap-5 sm:gap-6">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white/50 text-[0.65rem] sm:text-xs font-semibold tracking-[0.22em] uppercase mb-1">
+                      Balipu × Aloysius · 11 Oct 2026
+                    </p>
+                    <p className="font-heading text-white uppercase tracking-wide text-lg sm:text-xl md:text-2xl mb-4">
+                      The race begins in
+                    </p>
+                    <EventCountdown size="lg" />
+                    <div className="mt-5 flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-3">
+                      <Link
+                        href="/events/balipu-x-aloysius/register"
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-6 py-3 text-sm sm:text-base font-semibold text-white hover:bg-[#ff4d9a] transition-colors"
+                      >
+                        Register Now
+                        <ArrowRight className="w-4 h-4 shrink-0" />
+                      </Link>
+                      <Link
+                        href="/events/balipu-x-aloysius"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#FF2D87] px-6 py-3 text-sm sm:text-base font-semibold text-white hover:bg-[#FF2D87]/10 transition-colors"
+                      >
+                        Event details
+                      </Link>
+                    </div>
+                  </div>
+
                   <Link
-                    href="/events/balipu-x-aloysius/register"
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-6 sm:px-7 py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[#ff4d9a] transition-colors"
+                    href="/events/balipu-x-aloysius"
+                    className="group relative w-[7.75rem] sm:w-[9rem] md:w-[10rem] shrink-0 self-center sm:self-start overflow-hidden rounded-xl border border-[#FF2D87]/40 bg-black hover:border-[#FF2D87] transition-colors"
                   >
-                    Register Now
-                    <ArrowRight className="w-4 h-4 shrink-0" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/balipuxaloy.jpeg"
+                      alt="Balipu x Aloysius supercar run poster"
+                      className="block w-full aspect-[3/4] object-contain object-center transition-transform duration-300 group-hover:scale-[1.03]"
+                    />
+                    <span className="absolute inset-x-0 bottom-0 bg-black/80 py-1.5 text-center text-[9px] font-bold tracking-[0.15em] uppercase text-[#FF2D87]">
+                      Poster
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -76,14 +103,14 @@ export function HomePage() {
                   href={WHATSAPP_JOIN}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-6 sm:px-7 py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[#ff4d9a] transition-colors"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/20 px-6 sm:px-7 py-3.5 text-sm sm:text-base font-semibold text-white/90 hover:border-[#FF2D87] hover:text-white transition-colors"
                 >
                   Join the Run Club
                   <ArrowRight className="w-4 h-4 shrink-0" />
                 </a>
                 <a
                   href="#upcoming-events"
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#FF2D87] px-6 sm:px-7 py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[#FF2D87]/10 transition-colors"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 px-6 sm:px-7 py-3.5 text-sm sm:text-base font-semibold text-white/80 hover:border-[#FF2D87]/60 hover:text-white transition-colors"
                 >
                   View Upcoming Runs
                 </a>

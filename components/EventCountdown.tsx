@@ -32,6 +32,8 @@ function pad(n: number) {
 type EventCountdownProps = {
   className?: string;
   compact?: boolean;
+  /** Large digits for homepage race spotlight */
+  size?: 'sm' | 'md' | 'lg';
 };
 
 const PLACEHOLDER: TimeLeft = {
@@ -42,9 +44,13 @@ const PLACEHOLDER: TimeLeft = {
   done: false,
 };
 
-export function EventCountdown({ className = '', compact = false }: EventCountdownProps) {
-  // Start null so SSR and first client paint match (avoids Date.now hydration mismatch)
+export function EventCountdown({
+  className = '',
+  compact = false,
+  size,
+}: EventCountdownProps) {
   const [left, setLeft] = useState<TimeLeft | null>(null);
+  const resolvedSize = size ?? (compact ? 'sm' : 'md');
 
   useEffect(() => {
     setLeft(calcLeft(Date.now()));
@@ -56,7 +62,11 @@ export function EventCountdown({ className = '', compact = false }: EventCountdo
 
   if (display.done) {
     return (
-      <p className={`text-[#FF2D87] text-sm font-semibold tracking-wide ${className}`}>
+      <p
+        className={`text-[#FF2D87] font-semibold tracking-wide ${
+          resolvedSize === 'lg' ? 'text-lg sm:text-xl' : 'text-sm'
+        } ${className}`}
+      >
         Event day is here
       </p>
     );
@@ -69,9 +79,28 @@ export function EventCountdown({ className = '', compact = false }: EventCountdo
     { label: 'Sec', value: display.seconds },
   ];
 
+  const box =
+    resolvedSize === 'lg'
+      ? 'min-w-[4.25rem] sm:min-w-[5.25rem] md:min-w-[5.75rem] px-2.5 sm:px-3 py-2.5 sm:py-3 rounded-xl'
+      : resolvedSize === 'sm'
+        ? 'min-w-[2.75rem] px-1.5 py-1 rounded-lg'
+        : 'min-w-[3.25rem] sm:min-w-[3.5rem] px-2 py-1.5 rounded-lg';
+
+  const num =
+    resolvedSize === 'lg'
+      ? 'text-2xl sm:text-4xl md:text-5xl'
+      : resolvedSize === 'sm'
+        ? 'text-sm'
+        : 'text-base sm:text-lg';
+
+  const label =
+    resolvedSize === 'lg'
+      ? 'text-[9px] sm:text-[10px] mt-1.5 tracking-[0.18em]'
+      : 'text-[8px] sm:text-[9px] mt-0.5 tracking-wider';
+
   return (
     <div
-      className={`inline-flex flex-wrap items-center gap-1.5 sm:gap-2 ${className}`}
+      className={`inline-flex flex-wrap items-center gap-2 sm:gap-3 ${className}`}
       role="timer"
       aria-live="polite"
       aria-label={
@@ -83,20 +112,16 @@ export function EventCountdown({ className = '', compact = false }: EventCountdo
       {units.map((u) => (
         <div
           key={u.label}
-          className={`rounded-lg border border-[#FF2D87]/30 bg-[#FF2D87]/10 text-center ${
-            compact ? 'min-w-[2.75rem] px-1.5 py-1' : 'min-w-[3.25rem] sm:min-w-[3.5rem] px-2 py-1.5'
-          }`}
+          className={`border border-[#FF2D87]/35 bg-[#FF2D87]/10 text-center ${box}`}
         >
           <div
-            className={`font-heading text-[#FF2D87] tabular-nums leading-none ${
-              compact ? 'text-sm' : 'text-base sm:text-lg'
-            } ${left ? '' : 'invisible'}`}
+            className={`font-heading text-[#FF2D87] tabular-nums leading-none ${num} ${
+              left ? '' : 'invisible'
+            }`}
           >
             {pad(u.value)}
           </div>
-          <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-white/45 mt-0.5">
-            {u.label}
-          </div>
+          <div className={`uppercase text-white/50 ${label}`}>{u.label}</div>
         </div>
       ))}
     </div>
