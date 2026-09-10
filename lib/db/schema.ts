@@ -43,6 +43,10 @@ export const registrations = pgTable('registrations', {
   eventId: text('event_id'),
   eventName: text('event_name'),
   feeRupees: integer('fee_rupees'),
+  /** Base phase fee before coupon (e.g. 250 when JS20 applied) */
+  originalFeeRupees: integer('original_fee_rupees'),
+  /** Normalized coupon code when applied (e.g. JS20) */
+  couponCode: text('coupon_code'),
   pricingPhase: integer('pricing_phase'),
   pricingTierId: text('pricing_tiers_id'),
   linkedDocId: text('linked_doc_id'),

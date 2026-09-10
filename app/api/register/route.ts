@@ -6,6 +6,7 @@ import { razorpay } from '@/lib/razorpay';
 import {
   allocateAloysiusFreeTicket,
   getAloysiusConfirmedCount,
+  getPaidCouponUseCount,
 } from '@/lib/aloysiusRegistration';
 import { getRegistrationAccess } from '@/lib/registrationAccess';
 import {
@@ -14,6 +15,7 @@ import {
   feeRupeesToPaise,
   getPricingForCount,
 } from '@/lib/registrationPhases';
+import { applyCoupon, normalizeCouponCode } from '@/lib/coupons';
 import { sendRegistrationConfirmationEmail } from '@/lib/sendRegistrationEmail';
 
 const registrationSchema = z.object({
@@ -27,6 +29,7 @@ const registrationSchema = z.object({
   source: z.string().min(1),
   jerseySize: z.enum(['XS', 'S', 'M', 'L', 'XL', 'XXL']),
   declarationAgreed: z.literal(true),
+  couponCode: z.string().max(32).optional().nullable(),
 });
 
 export async function POST(req: Request) {
@@ -122,7 +125,30 @@ export async function POST(req: Request) {
       });
     }
 
-    const amountPaise = feeRupeesToPaise(pricing.feeRupees);
+    let feeRupees = pricing.feeRupees;
+    let originalFeeRupees: number | null = null;
+    let couponCode: string | null = null;
+
+    const rawCoupon = data.couponCode ? normalizeCouponCode(data.couponCode) : '';
+    if (rawCoupon) {
+      const paidUseCount = await getPaidCouponUseCount(rawCoupon);
+      const couponResult = applyCoupon({
+        code: rawCoupon,
+        baseFeeRupees: pricing.feeRupees,
+        paidUseCount,
+      });
+      if (!couponResult.ok) {
+        return NextResponse.json(
+          { error: couponResult.error, code: couponResult.code },
+          { status: 400 }
+        );
+      }
+      feeRupees = couponResult.feeRupees;
+      originalFeeRupees = couponResult.originalFeeRupees;
+      couponCode = couponResult.couponCode;
+    }
+
+    const amountPaise = feeRupeesToPaise(feeRupees);
     const order = await razorpay.orders.create({
       amount: amountPaise,
       currency: 'INR',
@@ -132,7 +158,10 @@ export async function POST(req: Request) {
         name: data.name,
         email: data.email,
         phase: String(pricing.phase),
-        feeRupees: String(pricing.feeRupees),
+        feeRupees: String(feeRupees),
+        ...(couponCode
+          ? { couponCode, originalFeeRupees: String(originalFeeRupees ?? pricing.feeRupees) }
+          : {}),
       },
     });
 
@@ -153,7 +182,9 @@ export async function POST(req: Request) {
         entryType: 'paid',
         paymentStatus: 'pending',
         orderId: order.id,
-        feeRupees: pricing.feeRupees,
+        feeRupees,
+        originalFeeRupees,
+        couponCode,
         pricingPhase: pricing.phase,
         pricingTierId: pricing.tierId,
       })
@@ -169,7 +200,9 @@ export async function POST(req: Request) {
       pricing: {
         phase: pricing.phase,
         label: pricing.label,
-        feeRupees: pricing.feeRupees,
+        feeRupees,
+        originalFeeRupees: originalFeeRupees ?? undefined,
+        couponCode: couponCode ?? undefined,
         entryType: 'paid',
       },
       prefill: {

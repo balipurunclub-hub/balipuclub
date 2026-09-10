@@ -81,6 +81,10 @@ type PricingResponse = {
   registrationOpen?: boolean;
   scheduledUnlockAt?: string;
   scheduledUnlockLabel?: string;
+  coupon?: {
+    offerAvailable: boolean;
+    remainingUses: number;
+  };
 };
 
 function loadRazorpay(): Promise<boolean> {
@@ -106,6 +110,16 @@ export function AloysiusRegistrationForm() {
   const [pricing, setPricing] = useState<PricingResponse | null>(null);
   const [pricingError, setPricingError] = useState('');
   const [pricingLoading, setPricingLoading] = useState(true);
+  const [couponModalOpen, setCouponModalOpen] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [couponError, setCouponError] = useState('');
+  const [couponApplying, setCouponApplying] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    feeRupees: number;
+    originalFeeRupees: number;
+  } | null>(null);
+  const couponPromptedRef = useRef(false);
   const paymentDoneRef = useRef(false);
   const formTopRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +147,19 @@ export function AloysiusRegistrationForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not load pricing');
       setPricing(data);
+
+      // Clear coupon if phase no longer offers it
+      if (!data.coupon?.offerAvailable) {
+        setAppliedCoupon(null);
+      } else if (
+        data.registrationOpen !== false &&
+        !couponPromptedRef.current
+      ) {
+        couponPromptedRef.current = true;
+        setCouponModalOpen(true);
+        setCouponError('');
+        setCouponInput('');
+      }
     } catch (err: unknown) {
       setPricingError(err instanceof Error ? err.message : 'Could not load pricing');
     } finally {
@@ -144,7 +171,40 @@ export function AloysiusRegistrationForm() {
     loadPricing();
     const interval = setInterval(loadPricing, 15000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- poll pricing; coupon prompt once
   }, []);
+
+  const applyCouponCode = async () => {
+    const code = couponInput.trim();
+    if (!code) {
+      setCouponError('Enter a coupon code.');
+      return;
+    }
+    setCouponApplying(true);
+    setCouponError('');
+    try {
+      const res = await fetch('/api/register/validate-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode: code }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'Invalid coupon code.');
+      }
+      setAppliedCoupon({
+        code: data.couponCode,
+        feeRupees: data.feeRupees,
+        originalFeeRupees: data.originalFeeRupees,
+      });
+      setCouponModalOpen(false);
+      success(`Coupon applied — pay ₹${data.feeRupees}`);
+    } catch (err: unknown) {
+      setCouponError(err instanceof Error ? err.message : 'Invalid coupon code.');
+    } finally {
+      setCouponApplying(false);
+    }
+  };
 
   const scrollFormIntoView = () => {
     formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -163,10 +223,12 @@ export function AloysiusRegistrationForm() {
     scrollFormIntoView();
   };
 
-  const feeRupees = pricing?.active.feeRupees ?? null;
+  const feeRupees = appliedCoupon?.feeRupees ?? pricing?.active.feeRupees ?? null;
+  const baseFeeRupees = pricing?.active.feeRupees ?? null;
   const isFree = pricing?.active.entryType === 'free';
   const registrationLocked = !pricingLoading && !!pricing && pricing.registrationOpen === false;
   const unlockLabel = pricing?.scheduledUnlockLabel || '7 September 2026, 12:00 AM IST';
+  const couponOfferAvailable = !!pricing?.coupon?.offerAvailable;
 
   const failRegistration = (message?: string) => {
     const msg = message || 'Registration not completed';
@@ -184,7 +246,10 @@ export function AloysiusRegistrationForm() {
       const orderRes = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          ...(appliedCoupon?.code ? { couponCode: appliedCoupon.code } : {}),
+        }),
       });
       const orderData = await orderRes.json();
 
@@ -489,6 +554,40 @@ export function AloysiusRegistrationForm() {
               </div>
             )}
 
+            {!isFree && feeRupees != null && (
+              <div className="rounded-xl border border-[#FF2D87]/25 bg-[#FF2D87]/5 px-4 py-3 text-center space-y-1.5">
+                {appliedCoupon ? (
+                  <>
+                    <p className="text-sm text-white/50">
+                      <span className="line-through">₹{appliedCoupon.originalFeeRupees}</span>
+                      <span className="text-[#FF2D87] font-semibold ml-2">₹{appliedCoupon.feeRupees}</span>
+                    </p>
+                    <p className="text-xs text-[#FF2D87]/80">
+                      Coupon {appliedCoupon.code} applied
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-white/70">
+                    Registration fee:{' '}
+                    <span className="text-white font-semibold">₹{feeRupees}</span>
+                  </p>
+                )}
+                {couponOfferAvailable && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCouponError('');
+                      setCouponInput(appliedCoupon?.code ?? '');
+                      setCouponModalOpen(true);
+                    }}
+                    className="text-xs font-semibold text-[#FF2D87] hover:underline"
+                  >
+                    {appliedCoupon ? 'Change coupon' : 'Have a coupon code?'}
+                  </button>
+                )}
+              </div>
+            )}
+
             <p className="text-center text-xs text-white/40 break-words">
               {isFree
                 ? 'Free spots are limited. Your ticket is issued instantly after you submit.'
@@ -538,13 +637,88 @@ export function AloysiusRegistrationForm() {
             ) : isFree ? (
               <>Register for Free</>
             ) : feeRupees != null ? (
-              <>Register & Pay ₹{feeRupees}</>
+              <>
+                Register & Pay ₹{feeRupees}
+                {appliedCoupon && baseFeeRupees != null && baseFeeRupees !== feeRupees ? (
+                  <span className="text-white/60 text-xs font-medium line-through ml-1">
+                    ₹{baseFeeRupees}
+                  </span>
+                ) : null}
+              </>
             ) : (
               <>Register</>
             )}
           </button>
         )}
       </div>
+
+      {couponModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="coupon-modal-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-[#FF2D87]/35 bg-[#0a0a0a] p-5 sm:p-6 shadow-xl shadow-[#FF2D87]/10">
+            <h3
+              id="coupon-modal-title"
+              className="font-heading text-white uppercase tracking-wide text-xl mb-2"
+            >
+              Have a coupon code?
+            </h3>
+            <p className="text-sm text-white/55 mb-4 leading-relaxed">
+              Enter your code to unlock a discount on this phase.
+            </p>
+            <label className={labelClass} htmlFor="couponCodeInput">
+              Coupon code
+            </label>
+            <input
+              id="couponCodeInput"
+              className={fieldClass}
+              placeholder="Enter code"
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void applyCouponCode();
+                }
+              }}
+              autoFocus
+              disabled={couponApplying}
+            />
+            {couponError && <p className={errorClass}>{couponError}</p>}
+            <div className="mt-5 flex flex-col-reverse sm:flex-row gap-2.5 sm:gap-3">
+              <button
+                type="button"
+                disabled={couponApplying}
+                onClick={() => {
+                  setCouponModalOpen(false);
+                  setCouponError('');
+                }}
+                className="w-full sm:flex-1 min-h-11 inline-flex items-center justify-center rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white/80 hover:border-white/40 transition-colors disabled:opacity-50"
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                disabled={couponApplying}
+                onClick={() => void applyCouponCode()}
+                className="w-full sm:flex-1 min-h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-5 py-3 text-sm font-semibold text-white hover:bg-[#ff4d9a] transition-colors disabled:opacity-60"
+              >
+                {couponApplying ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Applying…
+                  </>
+                ) : (
+                  'Apply'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

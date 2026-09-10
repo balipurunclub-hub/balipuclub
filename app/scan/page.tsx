@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { ScannerRoute } from '@/components/ScannerRoute';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import { CheckCircle2, AlertCircle, RefreshCw, Users, QrCode, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertCircle, RefreshCw, Users, QrCode, X } from 'lucide-react';
 import type { Registration } from '@/types';
 
 type ScanStatus = 'idle' | 'scanning' | 'processing' | 'success' | 'error' | 'already_scanned';
@@ -245,6 +246,15 @@ export default function ScanPage() {
         />
 
         <div className="relative w-full max-w-md mb-6 min-w-0">
+          <div className="mb-4">
+            <Link
+              href="/admin"
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white/70 hover:text-[#FF2D87] transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 shrink-0" />
+              Back to panel
+            </Link>
+          </div>
           <p className="text-[#FF2D87] text-[0.65rem] font-semibold tracking-[0.25em] uppercase mb-2 text-center">
             Balipu Run Club
           </p>

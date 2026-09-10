@@ -89,6 +89,20 @@ export async function getAloysiusConfirmedCount(): Promise<number> {
   return counter.confirmedCount;
 }
 
+/** Count successful paid redemptions of a coupon for Aloysius. */
+export async function getPaidCouponUseCount(couponCode: string): Promise<number> {
+  const normalized = couponCode.trim().toUpperCase();
+  const rows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(registrations)
+    .where(
+      sql`${registrations.eventId} = ${ALOYSIUS_EVENT_ID}
+        AND ${registrations.paymentStatus} = 'paid'
+        AND upper(${registrations.couponCode}) = ${normalized}`
+    );
+  return Number(rows[0]?.count ?? 0);
+}
+
 export type AssignedTicket = {
   ticketId: string;
   bibNumber: number;

@@ -10,7 +10,7 @@ import { WHATSAPP_JOIN } from '@/lib/seo';
 const navLinks: { href: string; label: string; badge?: string }[] = [
   { href: '/', label: 'Home' },
   { href: '/#about', label: 'About' },
-  { href: '/events', label: 'Events' },
+  { href: '/#upcoming-events', label: 'Events' },
   { href: '/events/balipu-x-aloysius', label: 'Balipu × Aloysius', badge: 'NEW' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/contact', label: 'Contact' },
@@ -23,9 +23,6 @@ export function Navbar() {
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
     if (href.startsWith('/#')) return false;
-    if (href === '/events') {
-      return pathname === '/events';
-    }
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
