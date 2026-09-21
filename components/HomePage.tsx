@@ -1,20 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Users, Calendar, MapPin, Heart, Clock } from 'lucide-react';
+import { ArrowRight, Calendar, MapPin, Clock } from 'lucide-react';
 import { HeroVisual } from '@/components/HeroVisual';
 import { ParallaxSection } from '@/components/ParallaxSection';
 import { EventCountdown } from '@/components/EventCountdown';
-import { CountUp } from '@/components/CountUp';
+import { SponsorsSection } from '@/components/SponsorsSection';
+import { StatsSection } from '@/components/StatsSection';
 
 const WHATSAPP_JOIN = 'https://chat.whatsapp.com/Drd93iPcBwv4sXneIDuoPc';
-
-const stats = [
-  { icon: Users, value: '600+', label: 'Runners', countTo: 600 as number | null },
-  { icon: Calendar, value: '3+', label: 'Events', countTo: 3 as number | null },
-  { icon: MapPin, value: '1', label: 'City', countTo: null },
-  { icon: Heart, value: 'A Stronger', label: 'Community', countTo: null },
-];
 
 export function HomePage() {
   return (
@@ -124,32 +118,9 @@ export function HomePage() {
           </div>
         </div>
 
-        <div className="relative z-10 border-t border-white/10 bg-black/90 backdrop-blur-sm">
-          <div className="site-container">
-            <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-white/10">
-              {stats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="flex flex-col items-center justify-center gap-1.5 sm:gap-2 py-6 sm:py-8 px-2 sm:px-4 text-center min-w-0"
-                >
-                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-[#FF2D87]" strokeWidth={1.75} />
-                  <div className="min-w-0">
-                    <div className="text-[#FF2D87] font-heading text-xl sm:text-2xl md:text-3xl tracking-wide uppercase break-words">
-                      {stat.countTo != null ? (
-                        <CountUp to={stat.countTo} suffix="+" durationMs={3200} />
-                      ) : (
-                        stat.value
-                      )}
-                    </div>
-                    <div className="text-white/70 text-[0.65rem] sm:text-xs md:text-sm font-medium tracking-[0.12em] sm:tracking-[0.2em] uppercase mt-1 break-words">
-                      {stat.label}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <SponsorsSection />
+
+        <StatsSection />
 
         <div className="relative z-10 overflow-hidden bg-black py-10 sm:py-12 lg:py-16 border-t border-white/5">
           <svg
@@ -287,7 +258,7 @@ export function HomePage() {
                   </span>
                   <span className="inline-flex items-center gap-2 min-w-0">
                     <MapPin className="w-4 h-4 text-[#FF2D87] shrink-0" />
-                    Mangaluru
+                    St Aloysius College Road, Kodailbail, Mangaluru – 575003
                   </span>
                 </div>
                 <span className="inline-flex items-center gap-2 text-[#FF2D87] font-semibold text-xs sm:text-sm tracking-wide uppercase group-hover:gap-3 transition-all">

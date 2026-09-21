@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { SeoPageShell } from '@/components/SeoPageShell';
 import { JsonLd, breadcrumbJsonLd, aloysiusEventJsonLd } from '@/components/JsonLd';
 import { pageMeta } from '@/lib/seo';
+import { SponsorsSection } from '@/components/SponsorsSection';
+import { StatsSection } from '@/components/StatsSection';
 
 export const metadata: Metadata = pageMeta({
   title: 'Running Events in Mangaluru | Balipu Run Club',
@@ -99,6 +101,8 @@ export default function EventsIndexPage() {
           .
         </p>
       </SeoPageShell>
+      <SponsorsSection />
+      <StatsSection />
     </>
   );
 }

@@ -17,6 +17,8 @@ import {
   Trophy,
 } from 'lucide-react';
 import { EventCountdown } from '@/components/EventCountdown';
+import { SponsorsSection } from '@/components/SponsorsSection';
+import { StatsSection } from '@/components/StatsSection';
 
 const WHATSAPP_JOIN = 'https://chat.whatsapp.com/Drd93iPcBwv4sXneIDuoPc';
 
@@ -131,7 +133,7 @@ export default function BalipuXAloysiusPage() {
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-[#FF2D87] shrink-0" />
-                  Mangaluru
+                  St. Aloysius (Deemed to be University), Light House Hill Road, Kodailbail, Mangaluru – 575003
                 </span>
               </div>
 
@@ -175,6 +177,7 @@ export default function BalipuXAloysiusPage() {
           </div>
         </div>
       </section>
+      <SponsorsSection />
 
       {/* EXPERIENCE + EVENT INFO (left) / LINE-UP (right) */}
       <section className="relative py-12 sm:py-16 lg:py-20 border-b border-white/5 overflow-x-clip">
@@ -214,7 +217,7 @@ export default function BalipuXAloysiusPage() {
                     { icon: Calendar, label: 'Date', value: '11th October 2026' },
                     { icon: Clock, label: 'Assembly', value: '6:15 AM' },
                     { icon: Clock, label: 'Event starts', value: '6:30 AM' },
-                    { icon: MapPin, label: 'Venue', value: 'Mangaluru' },
+                    { icon: MapPin, label: 'Venue', value: 'St. Aloysius (Deemed to be University), Light House Hill Road, Kodailbail, Mangaluru – 575003' },
                   ].map((detail) => (
                     <div
                       key={detail.label}
@@ -299,6 +302,9 @@ export default function BalipuXAloysiusPage() {
           </div>
         </div>
       </section>
+
+      <SponsorsSection />
+      <StatsSection />
     </div>
   );
 }
