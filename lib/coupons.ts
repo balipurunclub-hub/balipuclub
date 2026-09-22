@@ -10,21 +10,14 @@ export type CouponConfig = {
   minFeeRupees?: number;
 };
 
-export const JS20_COUPON: CouponConfig = {
-  code: 'JS20',
-  percentOff: 20,
-  maxUses: 50,
-  requiresFeeRupees: 250,
-};
-
 export const VEER30_COUPON: CouponConfig = {
   code: 'VEER30',
   percentOff: 30,
-  maxUses: 500,
+  maxUses: 140,
   minFeeRupees: 1,
 };
 
-export const COUPONS: CouponConfig[] = [JS20_COUPON, VEER30_COUPON];
+export const COUPONS: CouponConfig[] = [VEER30_COUPON];
 
 export function normalizeCouponCode(input: string | null | undefined): string {
   return (input ?? '').trim().toUpperCase();
@@ -116,11 +109,6 @@ export function isCouponAvailable(config: CouponConfig, baseFeeRupees: number, p
   if (config.requiresFeeRupees !== undefined && baseFeeRupees !== config.requiresFeeRupees) return false;
   if (config.minFeeRupees !== undefined && baseFeeRupees < config.minFeeRupees) return false;
   return paidUseCount < config.maxUses;
-}
-
-/** Whether the Phase 2 coupon popup should be offered for the current base fee. */
-export function isJs20OfferAvailable(baseFeeRupees: number, paidUseCount: number): boolean {
-  return isCouponAvailable(JS20_COUPON, baseFeeRupees, paidUseCount);
 }
 
 export { ALOYSIUS_EVENT_ID };

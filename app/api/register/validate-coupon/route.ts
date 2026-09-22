@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAloysiusConfirmedCount, getPaidCouponUseCount } from '@/lib/aloysiusRegistration';
-import { applyCoupon, isJs20OfferAvailable, JS20_COUPON, normalizeCouponCode, findCoupon } from '@/lib/coupons';
+import { applyCoupon, normalizeCouponCode, findCoupon, isCouponAvailable, VEER30_COUPON } from '@/lib/coupons';
 import { getPricingForCount } from '@/lib/registrationPhases';
 
 export const dynamic = 'force-dynamic';
@@ -39,8 +39,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ...result,
       phase: pricing.phase,
-      offerAvailable: isJs20OfferAvailable(pricing.feeRupees, paidUseCount),
-      maxUses: matched?.maxUses ?? JS20_COUPON.maxUses,
+      offerAvailable: matched ? isCouponAvailable(matched, pricing.feeRupees, paidUseCount) : false,
+      maxUses: matched?.maxUses ?? VEER30_COUPON.maxUses,
     });
   } catch (error: unknown) {
     console.error('Validate coupon error:', error);

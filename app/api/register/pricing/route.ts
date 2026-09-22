@@ -6,16 +6,15 @@ import {
   getTierStatus,
   PRICING_TIERS,
 } from '@/lib/registrationPhases';
-import { isCouponAvailable, isJs20OfferAvailable, JS20_COUPON, VEER30_COUPON } from '@/lib/coupons';
+import { isCouponAvailable, VEER30_COUPON } from '@/lib/coupons';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const [confirmedCount, access, js20PaidUses, veer30PaidUses] = await Promise.all([
+    const [confirmedCount, access, veer30PaidUses] = await Promise.all([
       getAloysiusConfirmedCount(),
       getRegistrationAccess(),
-      getPaidCouponUseCount(JS20_COUPON.code),
       getPaidCouponUseCount(VEER30_COUPON.code),
     ]);
     const active = getPricingForCount(confirmedCount);
@@ -25,9 +24,7 @@ export async function GET() {
       status: getTierStatus(tier, confirmedCount),
     }));
 
-    const js20Available = isJs20OfferAvailable(active.feeRupees, js20PaidUses);
     const veer30Available = isCouponAvailable(VEER30_COUPON, active.feeRupees, veer30PaidUses);
-    const anyOfferAvailable = js20Available || veer30Available;
 
     return NextResponse.json({
       confirmedCount,
@@ -37,20 +34,9 @@ export async function GET() {
       scheduledUnlockAt: access.scheduledUnlockAt,
       scheduledUnlockLabel: access.scheduledUnlockLabel,
       coupon: {
-        offerAvailable: anyOfferAvailable,
-        remainingUses: Math.max(
-          0,
-          Math.max(
-            JS20_COUPON.maxUses - js20PaidUses,
-            VEER30_COUPON.maxUses - veer30PaidUses
-          )
-        ),
+        offerAvailable: veer30Available,
+        remainingUses: Math.max(0, VEER30_COUPON.maxUses - veer30PaidUses),
         coupons: [
-          {
-            code: JS20_COUPON.code,
-            available: js20Available,
-            remainingUses: Math.max(0, JS20_COUPON.maxUses - js20PaidUses),
-          },
           {
             code: VEER30_COUPON.code,
             available: veer30Available,
