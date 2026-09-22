@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -119,7 +120,8 @@ export function AloysiusRegistrationForm() {
     feeRupees: number;
     originalFeeRupees: number;
   } | null>(null);
-  const couponPromptedRef = useRef(false);
+  const [couponFormOpen, setCouponFormOpen] = useState(false);
+  const urlCouponAppliedRef = useRef(false);
   const paymentDoneRef = useRef(false);
   const formTopRef = useRef<HTMLDivElement>(null);
 
@@ -148,17 +150,8 @@ export function AloysiusRegistrationForm() {
       if (!res.ok) throw new Error(data.error || 'Could not load pricing');
       setPricing(data);
 
-      // Clear coupon if phase no longer offers it
-      if (!data.coupon?.offerAvailable) {
+      if (data.active?.entryType === 'free') {
         setAppliedCoupon(null);
-      } else if (
-        data.registrationOpen !== false &&
-        !couponPromptedRef.current
-      ) {
-        couponPromptedRef.current = true;
-        setCouponModalOpen(true);
-        setCouponError('');
-        setCouponInput('');
       }
     } catch (err: unknown) {
       setPricingError(err instanceof Error ? err.message : 'Could not load pricing');
@@ -173,6 +166,60 @@ export function AloysiusRegistrationForm() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- poll pricing; coupon prompt once
   }, []);
+
+  const applyCouponByCode = async (code: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/register/validate-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode: code }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'Invalid coupon code.');
+      }
+      setAppliedCoupon({
+        code: data.couponCode,
+        feeRupees: data.feeRupees,
+        originalFeeRupees: data.originalFeeRupees,
+      });
+      return true;
+    } catch (err: unknown) {
+      throw err instanceof Error ? err : new Error('Invalid coupon code.');
+    }
+  };
+
+  useEffect(() => {
+    if (urlCouponAppliedRef.current) return;
+    if (!pricing || pricingLoading) return;
+    let code: string | null = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        code = params.get('coupon');
+      } catch {
+        code = null;
+      }
+    }
+    if (!code) {
+      urlCouponAppliedRef.current = true;
+      return;
+    }
+    urlCouponAppliedRef.current = true;
+    const normalized = code.trim().toUpperCase();
+    if (!normalized) return;
+    setCouponInput(normalized);
+    applyCouponByCode(normalized)
+      .then(() => {
+        success(`Coupon ${normalized} applied`);
+      })
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : 'Coupon not applied';
+        setCouponError(msg);
+        toastError(msg);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once after pricing loaded on client
+  }, [pricing, pricingLoading]);
 
   const applyCouponCode = async () => {
     const code = couponInput.trim();
@@ -555,36 +602,110 @@ export function AloysiusRegistrationForm() {
             )}
 
             {!isFree && feeRupees != null && (
-              <div className="rounded-xl border border-[#FF2D87]/25 bg-[#FF2D87]/5 px-4 py-3 text-center space-y-1.5">
-                {appliedCoupon ? (
-                  <>
-                    <p className="text-sm text-white/50">
-                      <span className="line-through">₹{appliedCoupon.originalFeeRupees}</span>
-                      <span className="text-[#FF2D87] font-semibold ml-2">₹{appliedCoupon.feeRupees}</span>
+              <div className="rounded-xl border border-[#FF2D87]/25 bg-[#FF2D87]/5 p-4 sm:p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-bold tracking-[0.25em] uppercase text-[#FF2D87]/80 mb-1">
+                      Registration fee
                     </p>
-                    <p className="text-xs text-[#FF2D87]/80">
-                      Coupon {appliedCoupon.code} applied
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-white/70">
-                    Registration fee:{' '}
-                    <span className="text-white font-semibold">₹{feeRupees}</span>
-                  </p>
-                )}
-                {couponOfferAvailable && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCouponError('');
-                      setCouponInput(appliedCoupon?.code ?? '');
-                      setCouponModalOpen(true);
-                    }}
-                    className="text-xs font-semibold text-[#FF2D87] hover:underline"
-                  >
-                    {appliedCoupon ? 'Change coupon' : 'Have a coupon code?'}
-                  </button>
-                )}
+                    {appliedCoupon ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm text-white/50">
+                          <span className="line-through">₹{appliedCoupon.originalFeeRupees}</span>
+                        </p>
+                        <p className="text-xl sm:text-2xl font-heading text-white">
+                          ₹{appliedCoupon.feeRupees}
+                        </p>
+                        <span className="inline-flex items-center rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
+                          {appliedCoupon.code} applied
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-xl sm:text-2xl font-heading text-white">
+                        ₹{feeRupees}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t border-white/5 pt-4 space-y-2">
+                  <label htmlFor="step3-coupon" className="block text-[11px] font-bold tracking-[0.25em] uppercase text-white/60">
+                    Have a coupon code?
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      id="step3-coupon"
+                      type="text"
+                      autoCapitalize="characters"
+                      autoComplete="off"
+                      spellCheck={false}
+
+                      value={couponInput}
+                      disabled={couponApplying}
+                      onChange={(e) => {
+                        if (appliedCoupon) setAppliedCoupon(null);
+                        setCouponError('');
+                        setCouponInput(e.target.value.toUpperCase());
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          applyCouponCode();
+                        }
+                      }}
+                      className="flex-1 min-w-0 rounded-xl border border-white/10 bg-black px-4 py-3 text-white placeholder:text-white/30 text-sm font-medium tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-[#FF2D87]/50 focus:border-[#FF2D87]/50 disabled:opacity-60"
+                    />
+                    <div className="flex gap-2">
+                      {appliedCoupon ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAppliedCoupon(null);
+                            setCouponError('');
+                            success('Coupon removed');
+                          }}
+                          className="shrink-0 inline-flex items-center justify-center rounded-xl border border-white/15 px-4 py-3 min-w-[110px] text-sm font-semibold text-white/80 hover:border-white/30 hover:text-white transition-colors"
+                        >
+                          Remove
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={applyCouponCode}
+                        disabled={couponApplying || !couponInput.trim()}
+                        className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#FF2D87] px-4 sm:px-5 py-3 min-w-[90px] text-sm font-bold text-white hover:bg-[#ff4d9a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {couponApplying ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Applying…
+                          </>
+                        ) : (
+                          'Apply'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  {couponError && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-red-400"
+                    >
+                      {couponError}
+                    </motion.p>
+                  )}
+                  {appliedCoupon && !couponError && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-emerald-400"
+                    >
+                      Coupon {appliedCoupon.code} applied — you save ₹
+                      {Number(appliedCoupon.originalFeeRupees) - Number(appliedCoupon.feeRupees)}
+                    </motion.p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -675,7 +796,7 @@ export function AloysiusRegistrationForm() {
             <input
               id="couponCodeInput"
               className={fieldClass}
-              placeholder="Enter code"
+
               value={couponInput}
               onChange={(e) => setCouponInput(e.target.value)}
               onKeyDown={(e) => {

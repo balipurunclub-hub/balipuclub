@@ -4,8 +4,10 @@ export type CouponConfig = {
   code: string;
   percentOff: number;
   maxUses: number;
-  /** Only valid when current phase base fee equals this */
-  requiresFeeRupees: number;
+  /** If set, coupon only valid when current phase base fee exactly equals this */
+  requiresFeeRupees?: number;
+  /** If set, coupon only valid when baseFeeRupees >= this threshold */
+  minFeeRupees?: number;
 };
 
 export const JS20_COUPON: CouponConfig = {
@@ -15,7 +17,14 @@ export const JS20_COUPON: CouponConfig = {
   requiresFeeRupees: 250,
 };
 
-export const COUPONS: CouponConfig[] = [JS20_COUPON];
+export const VEER30_COUPON: CouponConfig = {
+  code: 'VEER30',
+  percentOff: 30,
+  maxUses: 500,
+  minFeeRupees: 1,
+};
+
+export const COUPONS: CouponConfig[] = [JS20_COUPON, VEER30_COUPON];
 
 export function normalizeCouponCode(input: string | null | undefined): string {
   return (input ?? '').trim().toUpperCase();
@@ -43,6 +52,16 @@ export function findCoupon(code: string): CouponConfig | undefined {
   return COUPONS.find((c) => c.code === normalized);
 }
 
+function formatCouponNotApplicable(config: CouponConfig): string {
+  if (config.requiresFeeRupees !== undefined) {
+    return `This coupon is only valid in Phase 2 (₹${config.requiresFeeRupees}).`;
+  }
+  if (config.minFeeRupees !== undefined && config.minFeeRupees > 0) {
+    return 'This coupon is only valid for paid registrations.';
+  }
+  return 'This coupon is not applicable to the current pricing phase.';
+}
+
 export function applyCoupon(args: {
   code: string;
   baseFeeRupees: number;
@@ -57,11 +76,19 @@ export function applyCoupon(args: {
     };
   }
 
-  if (args.baseFeeRupees !== config.requiresFeeRupees) {
+  if (config.requiresFeeRupees !== undefined && args.baseFeeRupees !== config.requiresFeeRupees) {
     return {
       ok: false,
       code: 'COUPON_NOT_APPLICABLE',
-      error: 'This coupon is only valid in Phase 2 (₹250).',
+      error: formatCouponNotApplicable(config),
+    };
+  }
+
+  if (config.minFeeRupees !== undefined && args.baseFeeRupees < config.minFeeRupees) {
+    return {
+      ok: false,
+      code: 'COUPON_NOT_APPLICABLE',
+      error: formatCouponNotApplicable(config),
     };
   }
 
@@ -85,9 +112,15 @@ export function applyCoupon(args: {
   };
 }
 
+export function isCouponAvailable(config: CouponConfig, baseFeeRupees: number, paidUseCount: number): boolean {
+  if (config.requiresFeeRupees !== undefined && baseFeeRupees !== config.requiresFeeRupees) return false;
+  if (config.minFeeRupees !== undefined && baseFeeRupees < config.minFeeRupees) return false;
+  return paidUseCount < config.maxUses;
+}
+
 /** Whether the Phase 2 coupon popup should be offered for the current base fee. */
 export function isJs20OfferAvailable(baseFeeRupees: number, paidUseCount: number): boolean {
-  return (
-    baseFeeRupees === JS20_COUPON.requiresFeeRupees && paidUseCount < JS20_COUPON.maxUses
-  );
+  return isCouponAvailable(JS20_COUPON, baseFeeRupees, paidUseCount);
 }
+
+export { ALOYSIUS_EVENT_ID };
