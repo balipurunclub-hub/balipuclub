@@ -7,7 +7,7 @@ export const metadata: Metadata = pageMeta({
   description:
     "Balipu Run Club presents Balipu x Aloysius — Mangalore's first supercar run with a 5K community run, DJ on wheels, Zumba, fitness challenges, dance battle and Baila in Mangaluru.",
   path: '/events/balipu-x-aloysius',
-  image: '/balipuxaloy.jpeg',
+  image: '/IMG_6009.PNG',
 });
 
 export default function BalipuXAloysiusLayout({

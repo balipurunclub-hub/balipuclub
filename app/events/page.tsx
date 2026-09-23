@@ -11,7 +11,7 @@ export const metadata: Metadata = pageMeta({
   description:
     'Running events in Mangaluru by Balipu Run Club — 5K runs, community runs, special events and past experiences across Mangalore and Coastal Karnataka.',
   path: '/events',
-  image: '/balipuxaloy.jpeg',
+  image: '/IMG_6009.PNG',
 });
 
 export default function EventsIndexPage() {
@@ -43,12 +43,12 @@ export default function EventsIndexPage() {
             href="/events/balipu-x-aloysius"
             className="block rounded-2xl border border-[#FF2D87]/30 bg-[#0a0a0a] overflow-hidden hover:border-[#FF2D87] transition-colors not-prose"
           >
-            <div className="relative aspect-[3/4] max-w-md mx-auto sm:max-w-lg bg-black">
+            <div className="relative max-w-md mx-auto sm:max-w-lg bg-black">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/balipuxaloy.jpeg"
+                src="/IMG_6009.PNG"
                 alt="Balipu x Aloysius supercar run event poster in Mangaluru"
-                className="absolute inset-0 w-full h-full object-contain object-center"
+                className="block w-full h-auto"
               />
             </div>
             <div className="p-5 sm:p-6">

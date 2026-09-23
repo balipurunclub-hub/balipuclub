@@ -61,7 +61,7 @@ export function aloysiusEventJsonLd() {
     endDate: '2026-10-11T12:00:00+05:30',
     eventStatus: 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    image: ['https://balipuclub.in/balipuxaloy.jpeg'],
+    image: ['https://balipuclub.in/IMG_6009.PNG'],
     url: 'https://balipuclub.in/events/balipu-x-aloysius',
     location: {
       '@type': 'Place',
