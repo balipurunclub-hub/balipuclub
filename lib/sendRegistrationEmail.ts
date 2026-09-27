@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 import QRCode from 'qrcode';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
@@ -19,6 +19,46 @@ export type RegistrationEmailPayload = {
 const EVENT_DATE = '11th October 2026';
 const EVENT_TIME = '6:30 AM';
 const EVENT_VENUE = 'Mangaluru';
+
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 500;
+
+let cachedTransporter: Transporter | null = null;
+
+function getTransporter(): Transporter {
+  if (cachedTransporter) {
+    return cachedTransporter;
+  }
+  cachedTransporter = nodemailer.createTransport({
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 100,
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+  return cachedTransporter;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTransientError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const msg = err.message.toLowerCase();
+  const code = (err as { code?: string }).code;
+  const response = (err as { response?: string }).response ?? '';
+  const rcpt = (err as { responseCode?: number }).responseCode;
+
+  if (code === 'ETIMEDOUT' || code === 'ECONNRESET' || code === 'ESOCKET') return true;
+  if (rcpt != null && rcpt >= 400 && rcpt < 500) return true;
+  if (/rate.?limit|4\.7\.|temporary|try again later|throttled|insufficient quota/i.test(response)) return true;
+  if (/econnrefused|timeout|socket|tls|dns|etimedout/.test(msg)) return true;
+  return false;
+}
 
 function buildHtml(user: RegistrationEmailPayload) {
   const eventName = user.eventName || ALOYSIUS_EVENT_NAME;
@@ -93,7 +133,9 @@ function buildHtml(user: RegistrationEmailPayload) {
 
 /**
  * Sends a registration confirmation email with QR attachment.
- * Does not throw — logs and returns false on failure so registration is never blocked.
+ * Uses pooled SMTP connections, exponential-backoff retries for transient errors,
+ * and a BCC audit copy. Does not throw — logs and returns false on final failure
+ * so registration is never blocked for the end user.
  */
 export async function sendRegistrationConfirmationEmail(
   user: RegistrationEmailPayload
@@ -104,49 +146,74 @@ export async function sendRegistrationConfirmationEmail(
   }
 
   if (!user.email || !user.ticketId) {
+    console.warn('sendRegistrationConfirmationEmail: missing email or ticketId for', user.registrationId);
     return false;
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+  let lastError: unknown = null;
 
-    const qrBuffer = await QRCode.toBuffer(user.ticketId, {
-      width: 360,
-      margin: 2,
-      errorCorrectionLevel: 'M',
-      color: { dark: '#1B1B4D', light: '#FFFFFF' },
-    });
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const transporter = getTransporter();
 
-    const eventName = user.eventName || ALOYSIUS_EVENT_NAME;
+      const qrBuffer = await QRCode.toBuffer(user.ticketId, {
+        width: 360,
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        color: { dark: '#1B1B4D', light: '#FFFFFF' },
+      });
 
-    await transporter.sendMail({
-      from: `"Balipu Run Club" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: `Congratulations! You're registered for ${eventName}`,
-      html: buildHtml(user),
-      attachments: [
-        {
-          filename: `QR_${user.ticketId}.png`,
-          content: qrBuffer,
-          contentType: 'image/png',
-        },
-      ],
-    });
+      const eventName = user.eventName || ALOYSIUS_EVENT_NAME;
 
-    await db
-      .update(registrations)
-      .set({ emailSent: true, updatedAt: new Date() })
-      .where(eq(registrations.id, user.registrationId));
+      await transporter.sendMail({
+        from: `"Balipu Run Club" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        bcc: process.env.EMAIL_USER,
+        subject: `Congratulations! You're registered for ${eventName}`,
+        html: buildHtml(user),
+        attachments: [
+          {
+            filename: `QR_${user.ticketId}.png`,
+            content: qrBuffer,
+            contentType: 'image/png',
+          },
+        ],
+      });
 
-    return true;
-  } catch (err) {
-    console.error('Failed to send registration confirmation email:', err);
-    return false;
+      try {
+        await db
+          .update(registrations)
+          .set({ emailSent: true, updatedAt: new Date() })
+          .where(eq(registrations.id, user.registrationId));
+      } catch (dbErr) {
+        console.error('Failed to mark emailSent=true for', user.registrationId, dbErr);
+      }
+
+      return true;
+    } catch (err) {
+      lastError = err;
+      const transient = isTransientError(err);
+      const isLast = attempt === MAX_RETRIES - 1;
+
+      if (transient && !isLast) {
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt);
+        console.warn(
+          `sendRegistrationConfirmationEmail transient error (attempt ${attempt + 1}/${MAX_RETRIES}) for ${user.email}:`,
+          (err as Error).message ?? err,
+          `— retrying in ${delay}ms`
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      console.error(
+        `sendRegistrationConfirmationEmail failed (attempt ${attempt + 1}/${MAX_RETRIES}${transient ? ' transient' : ''}) for ${user.email}:`,
+        err
+      );
+      break;
+    }
   }
+
+  console.error('Final failure sending registration confirmation email to', user.email, 'regId:', user.registrationId, 'err:', lastError);
+  return false;
 }

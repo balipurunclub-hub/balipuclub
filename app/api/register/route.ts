@@ -99,7 +99,7 @@ export async function POST(req: Request) {
         })
         .returning();
 
-      void sendRegistrationConfirmationEmail({
+      const emailPromise = sendRegistrationConfirmationEmail({
         registrationId: row.id,
         name: row.name,
         email: row.email,
@@ -109,6 +109,11 @@ export async function POST(req: Request) {
         entryType: row.entryType,
         eventName: row.eventName,
       });
+
+      await Promise.race([
+        emailPromise,
+        new Promise<void>((resolve) => setTimeout(resolve, 8000)),
+      ]);
 
       return NextResponse.json({
         free: true,

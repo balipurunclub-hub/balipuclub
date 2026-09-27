@@ -79,7 +79,7 @@ export async function POST(req: Request) {
       })
       .where(eq(registrations.id, registrationId));
 
-    void sendRegistrationConfirmationEmail({
+    const emailPromise = sendRegistrationConfirmationEmail({
       registrationId,
       name: reg.name,
       email: reg.email,
@@ -89,6 +89,11 @@ export async function POST(req: Request) {
       entryType: reg.entryType ?? 'paid',
       eventName: reg.eventName || ALOYSIUS_EVENT_NAME,
     });
+
+    await Promise.race([
+      emailPromise,
+      new Promise<void>((resolve) => setTimeout(resolve, 8000)),
+    ]);
 
     return NextResponse.json({
       success: true,
