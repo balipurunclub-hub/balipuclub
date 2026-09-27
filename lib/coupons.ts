@@ -4,6 +4,8 @@ export type CouponConfig = {
   code: string;
   percentOff: number;
   maxUses: number;
+  validFrom?: Date | string | null;
+  validUntil?: Date | string | null;
   /** If set, coupon only valid when current phase base fee exactly equals this */
   requiresFeeRupees?: number;
   /** If set, coupon only valid when baseFeeRupees >= this threshold */
@@ -17,7 +19,7 @@ export const VEER30_COUPON: CouponConfig = {
   minFeeRupees: 1,
 };
 
-export const COUPONS: CouponConfig[] = [VEER30_COUPON];
+export const STATIC_COUPONS: CouponConfig[] = [VEER30_COUPON];
 
 export function normalizeCouponCode(input: string | null | undefined): string {
   return (input ?? '').trim().toUpperCase();
@@ -35,17 +37,39 @@ export type CouponApplyOk = {
 export type CouponApplyErr = {
   ok: false;
   error: string;
-  code: 'COUPON_INVALID' | 'COUPON_NOT_APPLICABLE' | 'COUPON_EXHAUSTED';
+  code: 'COUPON_INVALID' | 'COUPON_NOT_APPLICABLE' | 'COUPON_EXHAUSTED' | 'COUPON_EXPIRED';
 };
 
 export type CouponApplyResult = CouponApplyOk | CouponApplyErr;
 
-export function findCoupon(code: string): CouponConfig | undefined {
-  const normalized = normalizeCouponCode(code);
-  return COUPONS.find((c) => c.code === normalized);
+export function isCouponWithinValidity(config: CouponConfig, now: Date = new Date()): boolean {
+  if (config.validFrom) {
+    const from = config.validFrom instanceof Date ? config.validFrom : new Date(config.validFrom);
+    if (now < from) return false;
+  }
+  if (config.validUntil) {
+    const until = config.validUntil instanceof Date ? config.validUntil : new Date(config.validUntil);
+    if (now > until) return false;
+  }
+  return true;
 }
 
-function formatCouponNotApplicable(config: CouponConfig): string {
+export function formatCouponNotApplicable(config: CouponConfig, now: Date = new Date()): string {
+  if (!isCouponWithinValidity(config, now)) {
+    if (config.validFrom) {
+      const from = config.validFrom instanceof Date ? config.validFrom : new Date(config.validFrom);
+      if (now < from) {
+        return `This coupon is not yet valid. It will be active from ${from.toLocaleDateString()}.`;
+      }
+    }
+    if (config.validUntil) {
+      const until = config.validUntil instanceof Date ? config.validUntil : new Date(config.validUntil);
+      if (now > until) {
+        return `This coupon expired on ${until.toLocaleDateString()}.`;
+      }
+    }
+    return 'This coupon is outside its validity period.';
+  }
   if (config.requiresFeeRupees !== undefined) {
     return `This coupon is only valid in Phase 2 (₹${config.requiresFeeRupees}).`;
   }
@@ -59,13 +83,27 @@ export function applyCoupon(args: {
   code: string;
   baseFeeRupees: number;
   paidUseCount: number;
+  dbCoupons?: CouponConfig[];
 }): CouponApplyResult {
-  const config = findCoupon(args.code);
+  const normalized = normalizeCouponCode(args.code);
+  const dbList = args.dbCoupons ?? [];
+  const config =
+    dbList.find((c) => normalizeCouponCode(c.code) === normalized) ??
+    STATIC_COUPONS.find((c) => c.code === normalized);
+
   if (!config) {
     return {
       ok: false,
       code: 'COUPON_INVALID',
       error: 'Invalid coupon code.',
+    };
+  }
+
+  if (!isCouponWithinValidity(config)) {
+    return {
+      ok: false,
+      code: 'COUPON_EXPIRED',
+      error: formatCouponNotApplicable(config),
     };
   }
 
@@ -105,7 +143,22 @@ export function applyCoupon(args: {
   };
 }
 
-export function isCouponAvailable(config: CouponConfig, baseFeeRupees: number, paidUseCount: number): boolean {
+export function findCoupon(code: string, dbCoupons?: CouponConfig[]): CouponConfig | undefined {
+  const normalized = normalizeCouponCode(code);
+  const dbList = dbCoupons ?? [];
+  return (
+    dbList.find((c) => normalizeCouponCode(c.code) === normalized) ??
+    STATIC_COUPONS.find((c) => c.code === normalized)
+  );
+}
+
+export function isCouponAvailable(
+  config: CouponConfig,
+  baseFeeRupees: number,
+  paidUseCount: number,
+  now: Date = new Date()
+): boolean {
+  if (!isCouponWithinValidity(config, now)) return false;
   if (config.requiresFeeRupees !== undefined && baseFeeRupees !== config.requiresFeeRupees) return false;
   if (config.minFeeRupees !== undefined && baseFeeRupees < config.minFeeRupees) return false;
   return paidUseCount < config.maxUses;

@@ -16,6 +16,7 @@ import {
   getPricingForCount,
 } from '@/lib/registrationPhases';
 import { applyCoupon, normalizeCouponCode } from '@/lib/coupons';
+import { coupons } from '@/lib/db/schema';
 import { sendRegistrationConfirmationEmail } from '@/lib/sendRegistrationEmail';
 
 const registrationSchema = z.object({
@@ -137,10 +138,33 @@ export async function POST(req: Request) {
     const rawCoupon = data.couponCode ? normalizeCouponCode(data.couponCode) : '';
     if (rawCoupon) {
       const paidUseCount = await getPaidCouponUseCount(rawCoupon);
+      type DbCouponShape = {
+        code: string;
+        percentOff: number;
+        maxUses: number;
+        validFrom: Date | null;
+        validUntil: Date | null;
+        minFeeRupees: number;
+      };
+      let dbCouponsList: DbCouponShape[] = [];
+      try {
+        const dbRows = await db.select().from(coupons);
+        dbCouponsList = dbRows.map((r): DbCouponShape => ({
+          code: r.code,
+          percentOff: r.percentOff,
+          maxUses: r.maxUses,
+          validFrom: r.validFrom,
+          validUntil: r.validUntil,
+          minFeeRupees: 1,
+        }));
+      } catch {
+        dbCouponsList = [];
+      }
       const couponResult = applyCoupon({
         code: rawCoupon,
         baseFeeRupees: pricing.feeRupees,
         paidUseCount,
+        dbCoupons: dbCouponsList,
       });
       if (!couponResult.ok) {
         return NextResponse.json(

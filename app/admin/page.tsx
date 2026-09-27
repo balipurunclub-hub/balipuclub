@@ -18,6 +18,7 @@ import {
   Unlock,
   ExternalLink,
   Layers,
+  TicketPercent,
 } from 'lucide-react';
 import type { Registration } from '@/types';
 import Link from 'next/link';
@@ -303,15 +304,22 @@ function AdminDashboardInner() {
 
       <div className="flex flex-wrap gap-3">
         <Link
-          href="/admin/send-emails"
+          href="/admin/vouchers"
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ff4d9a] transition-colors"
+        >
+          <TicketPercent className="w-4 h-4" />
+          Manage Vouchers
+        </Link>
+        <Link
+          href="/admin/send-emails"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#FF2D87] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#FF2D87]/10 transition-colors"
         >
           <Mail className="w-4 h-4" />
           Send Emails
         </Link>
         <Link
           href="/scan"
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#FF2D87] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#FF2D87]/10 transition-colors"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white/80 hover:border-[#FF2D87]/40 hover:text-white transition-colors"
         >
           <QrCode className="w-4 h-4" />
           Open Scanner

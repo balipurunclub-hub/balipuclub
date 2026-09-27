@@ -77,6 +77,19 @@ export const registrationSettings = pgTable('registration_settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const coupons = pgTable('coupons', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  code: text('code').notNull().unique(),
+  percentOff: integer('percent_off').notNull().default(0),
+  maxUses: integer('max_uses').notNull().default(1),
+  validFrom: timestamp('valid_from', { withTimezone: true }),
+  validUntil: timestamp('valid_until', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type RegistrationRow = typeof registrations.$inferSelect;
 export type NewRegistration = typeof registrations.$inferInsert;
+export type CouponRow = typeof coupons.$inferSelect;
+export type NewCoupon = typeof coupons.$inferInsert;

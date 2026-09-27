@@ -8,7 +8,7 @@ export const metadata: Metadata = pageMeta({
   description:
     "Register for Balipu x Aloysius — Mangalore's first supercar run with a 5K community run. Organised by Balipu Run Club in Mangaluru on 11th October 2026.",
   path: '/events/balipu-x-aloysius/register',
-  image: '/balipuxaloy.jpeg',
+  image: '/IMG_6009.PNG',
 });
 
 export default function AloysiusRegisterPage() {

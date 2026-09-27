@@ -60,7 +60,7 @@ export function getEventMetadata(eventId: string): Metadata {
             eventId === 'monsoon-run'
               ? '/poster.png'
               : eventId === 'balipu-x-aloysius' || eventId === 'next-run'
-                ? '/balipuxaloy.jpeg'
+                ? '/IMG_6009.PNG'
                 : '/dancePoster.png',
           width: 1200,
           height: 630,
