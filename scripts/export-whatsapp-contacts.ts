@@ -6,7 +6,7 @@ config({ path: '.env', override: false });
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { registrations } from '@/lib/db/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, or, sql, desc } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 
