@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 import QRCode from 'qrcode';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
@@ -40,6 +41,20 @@ function getTransporter(): Transporter {
     },
   });
   return cachedTransporter;
+}
+
+let cachedResend: Resend | null = null;
+
+function getResend(): Resend | null {
+  if (cachedResend) return cachedResend;
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  cachedResend = new Resend(key);
+  return cachedResend;
+}
+
+function hasGmailAuth(): boolean {
+  return Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 }
 
 function sleep(ms: number) {
@@ -140,8 +155,8 @@ function buildHtml(user: RegistrationEmailPayload) {
 export async function sendRegistrationConfirmationEmail(
   user: RegistrationEmailPayload
 ): Promise<boolean> {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('EMAIL_USER / EMAIL_PASS not set — skipping confirmation email');
+  if (!hasGmailAuth() && !getResend()) {
+    console.warn('No email provider configured — set EMAIL_USER/EMAIL_PASS or RESEND_API_KEY');
     return false;
   }
 
@@ -154,8 +169,6 @@ export async function sendRegistrationConfirmationEmail(
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const transporter = getTransporter();
-
       const qrBuffer = await QRCode.toBuffer(user.ticketId, {
         width: 360,
         margin: 2,
@@ -164,21 +177,79 @@ export async function sendRegistrationConfirmationEmail(
       });
 
       const eventName = user.eventName || ALOYSIUS_EVENT_NAME;
+      const subject = `Congratulations! You're registered for ${eventName}`;
+      const html = buildHtml(user);
+      const from = process.env.EMAIL_USER
+        ? `"Balipu Run Club" <${process.env.EMAIL_USER}>`
+        : `Balipu Run Club <onboarding@resend.dev>`;
 
-      await transporter.sendMail({
-        from: `"Balipu Run Club" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        bcc: process.env.EMAIL_USER,
-        subject: `Congratulations! You're registered for ${eventName}`,
-        html: buildHtml(user),
-        attachments: [
-          {
-            filename: `QR_${user.ticketId}.png`,
-            content: qrBuffer,
-            contentType: 'image/png',
-          },
-        ],
-      });
+      const providers: Array<() => Promise<void>> = [];
+
+      if (hasGmailAuth()) {
+        providers.push(async () => {
+          const transporter = getTransporter();
+          await transporter.sendMail({
+            from,
+            to: user.email,
+            bcc: process.env.EMAIL_USER,
+            subject,
+            html,
+            attachments: [
+              {
+                filename: `QR_${user.ticketId}.png`,
+                content: qrBuffer,
+                contentType: 'image/png',
+              },
+            ],
+          });
+        });
+      }
+
+      const resend = getResend();
+      if (resend) {
+        providers.push(async () => {
+          await resend.emails.send({
+            from,
+            to: [user.email],
+            bcc: process.env.EMAIL_USER ? [process.env.EMAIL_USER] : undefined,
+            subject,
+            html,
+            attachments: [
+              {
+                filename: `QR_${user.ticketId}.png`,
+                content: qrBuffer.toString('base64'),
+              },
+            ],
+          });
+        });
+      }
+
+      let providerSuccess = false;
+      let providerError: unknown = null;
+
+      for (const send of providers) {
+        try {
+          await send();
+          providerSuccess = true;
+          break;
+        } catch (pErr) {
+          providerError = pErr;
+          const errMsg = pErr instanceof Error ? pErr.message : String(pErr);
+          const isAuthErr = /535|BadCredentials|EAUTH|Username and Password not accepted|Invalid login/i.test(errMsg);
+          console.warn(
+            `sendRegistrationConfirmationEmail: provider failed for ${user.email}:`,
+            pErr instanceof Error ? pErr.message : pErr,
+            isAuthErr ? '— trying next provider' : ''
+          );
+          if (!isAuthErr) {
+            break;
+          }
+        }
+      }
+
+      if (!providerSuccess) {
+        throw providerError ?? new Error('All email providers failed');
+      }
 
       try {
         await db

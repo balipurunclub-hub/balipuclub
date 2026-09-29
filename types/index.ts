@@ -33,6 +33,8 @@ export interface Registration {
   eventId?: string;
   eventName?: string;
   feeRupees?: number;
+  originalFeeRupees?: number;
+  couponCode?: string;
   pricingPhase?: number;
   pricingTierId?: string;
 }
