@@ -9,6 +9,8 @@ import {
   verifyPassword,
 } from '@/lib/auth';
 
+export const maxDuration = 60;
+
 const loginSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),

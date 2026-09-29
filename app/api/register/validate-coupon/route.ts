@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { coupons } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const bodySchema = z.object({
   couponCode: z.string().min(1).max(32),

@@ -8,6 +8,8 @@ import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { registrations } from '@/lib/db/schema';
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   try {
     if (!(await requireAdmin())) {

@@ -9,6 +9,7 @@ import {
 import { isCouponAvailable, VEER30_COUPON } from '@/lib/coupons';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET() {
   try {

@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { scannerSettings } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 async function ensureSettings() {
   const rows = await db

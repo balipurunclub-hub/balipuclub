@@ -19,12 +19,21 @@ import {
   ExternalLink,
   Layers,
   TicketPercent,
+  Send,
+  AlertCircle,
 } from 'lucide-react';
 import type { Registration } from '@/types';
 import Link from 'next/link';
 
 const POLL_INTERVAL_MS = 6000;
 const REGISTER_HREF = '/events/balipu-x-aloysius/register';
+
+type PendingEmailsState =
+  | { phase: 'idle'; count: number }
+  | { phase: 'counting' }
+  | { phase: 'sending'; current: number; total: number }
+  | { phase: 'done'; success: number; failed: number }
+  | { phase: 'error'; message: string };
 
 /** Admin display phases 1–5 (free + four paid tiers). */
 function resolveTicketBucket(
@@ -129,6 +138,18 @@ function AdminDashboardInner() {
   const [unlockLabel, setUnlockLabel] = useState('7 September 2026, 12:00 AM IST');
   const [regToggleBusy, setRegToggleBusy] = useState(false);
   const [showInitialSpinner, setShowInitialSpinner] = useState(true);
+  const [pendingEmails, setPendingEmails] = useState<PendingEmailsState>({ phase: 'idle', count: 0 });
+
+  const countPendingEmails = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/send-pending-confirmations', { method: 'GET', cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      setPendingEmails({ phase: 'idle', count: Number(data.count) || 0 });
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const fetchRegistrations = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
@@ -160,12 +181,52 @@ function AdminDashboardInner() {
     }
   }, []);
 
+  const sendAllPendingEmails = useCallback(async () => {
+    setPendingEmails({ phase: 'counting' });
+    try {
+      const infoRes = await fetch('/api/admin/send-pending-confirmations', { method: 'GET', cache: 'no-store' });
+      if (!infoRes.ok) throw new Error('Could not load pending list');
+      const info = await infoRes.json();
+      const total = Number(info.count) || 0;
+      if (total === 0) {
+        setPendingEmails({ phase: 'done', success: 0, failed: 0 });
+        return;
+      }
+      if (!confirm(`Send ${total} pending confirmation email(s)? This may take a while — keep this tab open.`)) {
+        setPendingEmails({ phase: 'idle', count: total });
+        return;
+      }
+      setPendingEmails({ phase: 'sending', current: 0, total });
+      const res = await fetch('/api/admin/send-pending-confirmations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send emails');
+      setPendingEmails({ phase: 'done', success: Number(data.success) || 0, failed: Number(data.failed) || 0 });
+      fetchRegistrations({ silent: true });
+      setTimeout(() => countPendingEmails(), 500);
+    } catch (err) {
+      setPendingEmails({
+        phase: 'error',
+        message: err instanceof Error ? err.message : 'Failed',
+      });
+      setTimeout(() => countPendingEmails(), 4000);
+    }
+  }, [countPendingEmails, fetchRegistrations]);
+
   useEffect(() => {
     fetchRegistrations();
     fetchRegistrationSettings();
+    countPendingEmails();
     const interval = setInterval(() => fetchRegistrations({ silent: true }), POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [fetchRegistrations, fetchRegistrationSettings]);
+    const emailInterval = setInterval(() => countPendingEmails(), 30000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(emailInterval);
+    };
+  }, [fetchRegistrations, fetchRegistrationSettings, countPendingEmails]);
 
   const toggleRegistration = async (isOpen: boolean) => {
     setRegToggleBusy(true);
@@ -234,6 +295,125 @@ function AdminDashboardInner() {
           icon={IndianRupee}
           hint="Paid entry (excl. free)"
         />
+        <StatCard
+          label="Pending emails"
+          value={
+            pendingEmails.phase === 'counting' || pendingEmails.phase === 'sending' ? (
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            ) : pendingEmails.phase === 'error' ? (
+              <AlertCircle className="w-6 h-6 text-red-400" />
+            ) : (
+              pendingEmails.phase === 'done' ? pendingEmails.failed : pendingEmails.count
+            )
+          }
+          icon={Mail}
+          hint="Confirmed tickets awaiting confirmation email"
+          suffix={
+            pendingEmails.phase === 'sending' ? (
+              <span className="ml-2 text-xs text-white/60 font-sans font-medium">
+                {pendingEmails.current}/{pendingEmails.total}
+              </span>
+            ) : undefined
+          }
+        />
+      </div>
+
+      <div
+        className={`rounded-2xl border p-4 sm:p-5 space-y-3 sm:space-y-4 min-w-0 ${
+          pendingEmails.phase === 'error'
+            ? 'border-red-500/30 bg-red-500/5'
+            : pendingEmails.phase === 'done' && pendingEmails.failed === 0
+              ? 'border-emerald-500/30 bg-emerald-500/5'
+              : (pendingEmails.phase === 'idle' && pendingEmails.count > 0) ||
+                  pendingEmails.phase === 'sending' ||
+                  pendingEmails.phase === 'counting'
+                ? 'border-amber-500/25 bg-amber-500/5'
+                : 'border-white/10 bg-[#0a0a0a]'
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 min-w-0">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-[#FF2D87] text-[0.65rem] font-semibold tracking-[0.2em] uppercase mb-0">
+                Confirmation emails
+              </p>
+            </div>
+            <h2 className="font-heading text-white uppercase tracking-wide text-lg sm:text-xl mt-1">
+              {pendingEmails.phase === 'counting'
+                ? 'Checking for pending emails…'
+                : pendingEmails.phase === 'sending'
+                  ? 'Dispatching confirmation emails'
+                  : pendingEmails.phase === 'done'
+                    ? pendingEmails.failed === 0
+                      ? 'All confirmation emails delivered'
+                      : 'Emails sent (some failed)'
+                    : pendingEmails.phase === 'error'
+                      ? 'Could not send pending emails'
+                      : pendingEmails.phase === 'idle' && pendingEmails.count === 0
+                        ? 'No pending confirmation emails'
+                        : pendingEmails.phase === 'idle'
+                          ? `${pendingEmails.count} confirmed ticket${pendingEmails.count === 1 ? '' : 's'} waiting for confirmation email`
+                          : 'No pending confirmation emails'}
+            </h2>
+            <p className="text-white/50 text-sm mt-1 break-words">
+              {pendingEmails.phase === 'error'
+                ? pendingEmails.message
+                : pendingEmails.phase === 'sending'
+                  ? `Sending ${pendingEmails.total} email${pendingEmails.total === 1 ? '' : 's'} — keep this tab open.`
+                  : pendingEmails.phase === 'done'
+                    ? `Success: ${pendingEmails.success}  ·  Failed: ${pendingEmails.failed}`
+                    : pendingEmails.phase === 'idle' && pendingEmails.count === 0
+                      ? 'Every confirmed ticket has been sent its confirmation email with QR code and BIB.'
+                      : 'These registrations are confirmed (ticket assigned) but the automatic confirmation email did not go through. Send them now to catch up.'}
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => countPendingEmails()}
+              disabled={pendingEmails.phase === 'counting' || pendingEmails.phase === 'sending'}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/20 px-4 py-2.5 text-sm font-semibold text-white/80 hover:border-[#FF2D87]/40 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${
+                  pendingEmails.phase === 'counting' || pendingEmails.phase === 'sending'
+                    ? 'animate-spin'
+                    : ''
+                }`}
+              />
+              Refresh
+            </button>
+            {pendingEmails.phase === 'idle' && pendingEmails.count > 0 && (
+              <button
+                type="button"
+                onClick={sendAllPendingEmails}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ff4d9a] transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                Send all {pendingEmails.count}
+              </button>
+            )}
+            {pendingEmails.phase === 'done' && pendingEmails.failed > 0 && (
+              <button
+                type="button"
+                onClick={sendAllPendingEmails}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ff4d9a] transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                Retry {pendingEmails.failed} failed
+              </button>
+            )}
+          </div>
+        </div>
+
+        {pendingEmails.phase === 'sending' && pendingEmails.total > 0 && (
+          <div className="w-full bg-black rounded-full h-2 border border-white/10 overflow-hidden">
+            <div
+              className="bg-[#FF2D87] h-2 rounded-full transition-all duration-300"
+              style={{ width: `${Math.round((pendingEmails.current / pendingEmails.total) * 100)}%` }}
+            />
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-[#FF2D87]/25 bg-[#0a0a0a] p-4 sm:p-5 space-y-4">

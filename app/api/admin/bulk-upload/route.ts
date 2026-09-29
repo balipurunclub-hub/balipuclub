@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { eventCounters, registrations } from '@/lib/db/schema';
 
+export const maxDuration = 60;
+
 async function ensureMonsoonCounter() {
   const id = 'monsoon-run';
   const existing = await db.select().from(eventCounters).where(eq(eventCounters.id, id)).limit(1);

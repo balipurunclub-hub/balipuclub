@@ -8,6 +8,8 @@ import { allocateAloysiusTicket } from '@/lib/aloysiusRegistration';
 import { sendRegistrationConfirmationEmail } from '@/lib/sendRegistrationEmail';
 import { ALOYSIUS_EVENT_NAME } from '@/lib/registrationPhases';
 
+export const maxDuration = 60;
+
 const verifySchema = z.object({
   registrationId: z.string().uuid(),
   razorpay_order_id: z.string().min(1),

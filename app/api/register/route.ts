@@ -19,6 +19,8 @@ import { applyCoupon, normalizeCouponCode } from '@/lib/coupons';
 import { coupons } from '@/lib/db/schema';
 import { sendRegistrationConfirmationEmail } from '@/lib/sendRegistrationEmail';
 
+export const maxDuration = 60;
+
 const registrationSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),

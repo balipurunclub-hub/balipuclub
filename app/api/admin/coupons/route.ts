@@ -8,6 +8,7 @@ import { normalizeCouponCode, STATIC_COUPONS } from '@/lib/coupons';
 import { ALOYSIUS_EVENT_ID } from '@/lib/registrationPhases';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const createSchema = z.object({
   code: z.string().min(1).max(32),

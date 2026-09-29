@@ -10,6 +10,7 @@ import { sendRegistrationConfirmationEmail } from '@/lib/sendRegistrationEmail';
 import { ALOYSIUS_EVENT_NAME } from '@/lib/registrationPhases';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const bodySchema = z.object({
   id: z.string().uuid(),

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 
+export const maxDuration = 60;
+
 export async function GET() {
   const user = await getSessionUser();
   if (!user) {

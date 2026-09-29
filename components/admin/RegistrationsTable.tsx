@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   RefreshCw,
   AlertCircle,
+  Send,
 } from 'lucide-react';
 import type { Registration } from '@/types';
 
@@ -22,6 +23,12 @@ interface Props {
   onManualCheckin?: (reg: Registration) => void;
   onUpdated?: () => void;
 }
+
+type SendOneState = {
+  uid: string;
+  phase: 'sending' | 'sent' | 'error';
+  message?: string;
+} | null;
 
 type ConfirmModalState =
   | { step: 'confirm'; reg: Registration }
@@ -38,7 +45,41 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
   const [checkinFilter, setCheckinFilter] = useState<'all' | 'checked-in' | 'not-checked-in'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState | null>(null);
+  const [sendOneState, setSendOneState] = useState<SendOneState>(null);
   const ROWS_PER_PAGE = 20;
+
+  const needsConfirmationEmail = (reg: Registration) =>
+    reg.ticketId &&
+    !reg.emailSent &&
+    (reg.paymentStatus === 'paid' || reg.entryType === 'free');
+
+  const handleSendSingleEmail = async (reg: Registration) => {
+    setSendOneState({ uid: reg.uid, phase: 'sending' });
+    try {
+      const res = await fetch('/api/admin/send-pending-confirmations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [reg.uid] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      const mine = data.results?.find((r: { id: string; ok: boolean }) => r.id === reg.uid);
+      if (mine?.ok) {
+        setSendOneState({ uid: reg.uid, phase: 'sent' });
+        onUpdated?.();
+        setTimeout(() => setSendOneState(null), 2500);
+      } else {
+        throw new Error('Email service returned failure. Check server logs.');
+      }
+    } catch (err) {
+      setSendOneState({
+        uid: reg.uid,
+        phase: 'error',
+        message: err instanceof Error ? err.message : 'Failed',
+      });
+      setTimeout(() => setSendOneState(null), 4500);
+    }
+  };
 
   const filteredData = useMemo(() => {
     const result = data.filter((reg) => {
@@ -334,6 +375,35 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
 
               {/* Actions */}
               <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-white/5">
+                {needsConfirmationEmail(reg) && (
+                  sendOneState?.uid === reg.uid ? (
+                    sendOneState.phase === 'sending' ? (
+                      <span className="inline-flex items-center gap-1.5 bg-white/5 text-white/70 font-medium text-xs min-h-11 px-4 py-2 rounded-full border border-white/10">
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#FF2D87]" />
+                        Sending…
+                      </span>
+                    ) : sendOneState.phase === 'sent' ? (
+                      <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 font-medium text-xs min-h-11 px-4 py-2 rounded-full border border-emerald-500/30">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Sent ✓
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 bg-red-500/10 text-red-400 font-medium text-xs min-h-11 px-4 py-2 rounded-full border border-red-500/30" title={sendOneState.message}>
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        Failed
+                      </span>
+                    )
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSendSingleEmail(reg)}
+                      className="inline-flex items-center gap-1.5 bg-emerald-500/90 hover:bg-emerald-500 text-white font-medium text-xs min-h-11 px-4 py-2 rounded-full transition-colors"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      Send confirmation email
+                    </button>
+                  )
+                )}
                 {reg.paymentStatus === 'pending' && (
                   <button
                     type="button"
@@ -518,6 +588,35 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col items-start gap-2">
+                        {needsConfirmationEmail(reg) && (
+                          sendOneState?.uid === reg.uid ? (
+                            sendOneState.phase === 'sending' ? (
+                              <span className="inline-flex items-center gap-1.5 bg-white/5 text-white/70 font-semibold text-xs px-3 py-2 rounded-full border border-white/10">
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#FF2D87]" />
+                                Sending…
+                              </span>
+                            ) : sendOneState.phase === 'sent' ? (
+                              <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 font-semibold text-xs px-3 py-2 rounded-full border border-emerald-500/30">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Sent ✓
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 bg-red-500/10 text-red-400 font-semibold text-xs px-3 py-2 rounded-full border border-red-500/30" title={sendOneState.message}>
+                                <AlertCircle className="w-3.5 h-3.5" />
+                                Failed
+                              </span>
+                            )
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSendSingleEmail(reg)}
+                              className="bg-emerald-500/90 hover:bg-emerald-500 text-white font-semibold text-xs px-3 py-2 rounded-full transition-colors inline-flex items-center gap-1.5"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              Resend confirmation
+                            </button>
+                          )
+                        )}
                         {reg.paymentStatus === 'pending' && (
                           <button
                             type="button"
