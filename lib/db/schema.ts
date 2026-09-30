@@ -21,7 +21,7 @@ export const users = pgTable('users', {
 export const registrations = pgTable('registrations', {
   id: uuid('id').defaultRandom().primaryKey(),
   ticketId: text('ticket_id').unique(),
-  bibNumber: integer('bib_number'),
+  bibNumber: integer('bib_number').unique(),
   name: text('name').notNull(),
   email: text('email').notNull(),
   phone: text('phone').notNull(),
@@ -34,8 +34,8 @@ export const registrations = pgTable('registrations', {
   source: text('source').notNull(),
   jerseySize: text('jersey_size').notNull(),
   paymentStatus: text('payment_status').notNull().default('pending'), // pending | paid | failed
-  orderId: text('order_id'),
-  paymentId: text('payment_id'),
+  orderId: text('order_id').unique(),
+  paymentId: text('payment_id').unique(),
   entryType: text('entry_type').default('paid'), // paid | free
   emailSent: boolean('email_sent').default(false),
   attended: boolean('attended').default(false),

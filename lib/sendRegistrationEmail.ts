@@ -165,6 +165,27 @@ export async function sendRegistrationConfirmationEmail(
     return false;
   }
 
+  // ---- IDEMPOTENCY: if DB already says emailSent, skip entirely to avoid duplicates ----
+  try {
+    const rows = await db
+      .select({ emailSent: registrations.emailSent })
+      .from(registrations)
+      .where(eq(registrations.id, user.registrationId))
+      .limit(1);
+    if (rows.length > 0 && rows[0].emailSent === true) {
+      console.log(
+        `[sendRegistrationConfirmationEmail] email already marked sent for ${user.registrationId} — skipping to avoid duplicate.`
+      );
+      return true;
+    }
+  } catch (dbReadErr) {
+    // Non-fatal: if transient DB read fails, proceed with send anyway (don't block confirmations).
+    console.warn(
+      '[sendRegistrationConfirmationEmail] pre-send emailSent check failed — proceeding:',
+      dbReadErr instanceof Error ? dbReadErr.message : String(dbReadErr)
+    );
+  }
+
   let lastError: unknown = null;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {

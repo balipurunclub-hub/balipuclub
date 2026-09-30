@@ -102,12 +102,31 @@ function loadRazorpay(): Promise<boolean> {
   });
 }
 
+type PaymentStatus =
+  | 'idle'
+  | 'creating-order'
+  | 'razorpay-open'
+  | 'verifying'
+  | 'retry-needed'
+  | 'success';
+
+type VerifyPayload = {
+  registrationId: string;
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
 export function AloysiusRegistrationForm() {
   const router = useRouter();
   const { success, error: toastError } = useToast();
   const [step, setStep] = useState(0);
   const [submitError, setSubmitError] = useState('');
-  const [isPaying, setIsPaying] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
+  const [verifyMessage, setVerifyMessage] = useState('');
+  const [pendingVerify, setPendingVerify] = useState<VerifyPayload | null>(null);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [pendingRegistrationId, setPendingRegistrationId] = useState<string | null>(null);
   const [pricing, setPricing] = useState<PricingResponse | null>(null);
   const [pricingError, setPricingError] = useState('');
   const [pricingLoading, setPricingLoading] = useState(true);
@@ -123,6 +142,7 @@ export function AloysiusRegistrationForm() {
   const [couponFormOpen, setCouponFormOpen] = useState(false);
   const urlCouponAppliedRef = useRef(false);
   const paymentDoneRef = useRef(false);
+  const verifyRunningRef = useRef(false);
   const formTopRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -277,16 +297,93 @@ export function AloysiusRegistrationForm() {
   const unlockLabel = pricing?.scheduledUnlockLabel || '7 September 2026, 12:00 AM IST';
   const couponOfferAvailable = !!pricing?.coupon?.offerAvailable;
 
+  /**
+   * Send the verification payload to the server.
+   * On idempotent success → redirect to ticket page.
+   * On 4xx (signature / amount mismatch) → show error but NOT a "you can retry payment" error.
+   * On 5xx / network → drop into retry-needed state with warning + Retry button.
+   */
+  const runVerification = async (payload: VerifyPayload) => {
+    if (verifyRunningRef.current) return;
+    verifyRunningRef.current = true;
+    setPaymentStatus('verifying');
+    setVerifyMessage('Payment received. Verifying your registration...');
+    setSubmitError('');
+
+    try {
+      const verifyRes = await fetch('/api/register/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const verifyData = await verifyRes.json();
+
+      if (verifyRes.ok && verifyData.success) {
+        setPaymentStatus('success');
+        paymentDoneRef.current = true;
+        success('Registration successful');
+        setTimeout(() => router.push(`/ticket/${verifyData.uid}`), 700);
+        return;
+      }
+
+      // ---- Failure: classify severity ----
+      const status = verifyRes.status;
+      const msg = verifyData.error || 'Registration verification did not complete.';
+
+      const isTransient =
+        status === 0 /* network abort (fetch throws instead, but just in case) */ ||
+        status >= 500 ||
+        status === 409 /* payment not yet captured — user should retry */ ||
+        status === 502;
+
+      if (isTransient) {
+        // CRITICAL: do NOT tell user payment failed. Do NOT clear IDs. Show retry button.
+        setPaymentStatus('retry-needed');
+        setPendingVerify(payload);
+        setVerifyMessage('');
+        setSubmitError(
+          'Your payment may have been received. Please do NOT make another payment. Use the Retry Verification button below.'
+        );
+        toastError('Verification delayed — use Retry button below. Do NOT pay again.');
+      } else {
+        // Hard 4xx — signature/amount/order mismatch. The user-facing message should NOT say
+        // "registration failed" as the payment may actually succeed server-side shortly.
+        // Stay in retry-needed so they can retry, but include the specific message.
+        setPaymentStatus('retry-needed');
+        setPendingVerify(payload);
+        setVerifyMessage('');
+        setSubmitError(msg);
+        toastError(msg);
+      }
+    } catch (err: unknown) {
+      // Network-level error (CORS, timeout, abort, DNS, ...) — transient.
+      const msg = err instanceof Error ? err.message : 'Network error during verification.';
+      setPaymentStatus('retry-needed');
+      setPendingVerify(payload);
+      setVerifyMessage('');
+      setSubmitError(
+        'Your payment may have been received. Please do NOT make another payment. Use the Retry Verification button below.'
+      );
+      toastError('Verification delayed — use Retry button below. Do NOT pay again.');
+      console.warn('verify fetch threw (transient):', msg);
+    } finally {
+      verifyRunningRef.current = false;
+    }
+  };
+
   const failRegistration = (message?: string) => {
     const msg = message || 'Registration not completed';
     setSubmitError(msg);
     toastError(msg);
-    setIsPaying(false);
+    setPaymentStatus('idle');
+    setPendingVerify(null);
+    setPendingOrderId(null);
+    setPendingRegistrationId(null);
   };
 
   const onSubmit = async (values: FormValues) => {
     setSubmitError('');
-    setIsPaying(true);
+    setPaymentStatus('creating-order');
     paymentDoneRef.current = false;
 
     try {
@@ -307,24 +404,38 @@ export function AloysiusRegistrationForm() {
         if (orderData.code === 'REGISTRATION_LOCKED') {
           await loadPricing();
         }
+        if (orderData.code === 'ALREADY_REGISTERED' && orderData.existingRegistrationId) {
+          // User already paid in a prior session. Jump straight to their ticket.
+          success('You are already registered. Redirecting to your ticket...');
+          setTimeout(() => router.push(`/ticket/${orderData.existingRegistrationId}`), 900);
+          return;
+        }
         throw new Error(orderData.error || 'Registration not completed');
       }
 
       if (orderData.free) {
         paymentDoneRef.current = true;
+        setPaymentStatus('success');
         success('Registration successful');
         setTimeout(() => router.push(`/ticket/${orderData.uid}`), 700);
         return;
       }
 
+      // Save order IDs so they survive a Razorpay modal dismiss / reload scenario (user can
+      // still click Retry Verification if the modal fired the handler but then the UI crashed).
+      setPendingRegistrationId(orderData.registrationId);
+      setPendingOrderId(orderData.orderId);
+
       const loaded = await loadRazorpay();
       if (!loaded || !window.Razorpay) {
-        throw new Error('Registration not completed');
+        throw new Error('Could not load payment provider. Please refresh and try again.');
       }
 
       if (!orderData.key) {
-        throw new Error('Registration not completed');
+        throw new Error('Payment provider not configured on server.');
       }
+
+      setPaymentStatus('razorpay-open');
 
       const rzp = new window.Razorpay({
         key: orderData.key,
@@ -340,35 +451,23 @@ export function AloysiusRegistrationForm() {
           razorpay_payment_id: string;
           razorpay_signature: string;
         }) => {
-          try {
-            const verifyRes = await fetch('/api/register/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                registrationId: orderData.registrationId,
-                ...response,
-              }),
-            });
-            const verifyData = await verifyRes.json();
-            if (!verifyRes.ok) {
-              throw new Error(verifyData.error || 'Registration not completed');
-            }
-            paymentDoneRef.current = true;
-            success('Registration successful');
-            setTimeout(() => router.push(`/ticket/${verifyData.uid}`), 700);
-          } catch (err: unknown) {
-            failRegistration(
-              err instanceof Error ? err.message : 'Registration not completed'
-            );
-          }
+          const payload: VerifyPayload = {
+            registrationId: orderData.registrationId,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          };
+          setPendingVerify(payload);
+          void runVerification(payload);
         },
         modal: {
           ondismiss: () => {
-            if (!paymentDoneRef.current) {
-              failRegistration('Registration not completed');
-            } else {
-              setIsPaying(false);
+            if (!paymentDoneRef.current && !pendingVerify) {
+              // User closed the Razorpay modal WITHOUT completing a payment.
+              failRegistration('You closed the payment window before completing payment.');
             }
+            // If pendingVerify is set → handler already fired and verification is running or
+            // pending-retry. Don't clear IDs — let the Retry button handle it.
           },
         },
       });
@@ -379,7 +478,7 @@ export function AloysiusRegistrationForm() {
     }
   };
 
-  const busy = isSubmitting || isPaying;
+  const busy = isSubmitting || paymentStatus !== 'idle';
   const isLast = step === STEPS.length - 1;
 
   if (registrationLocked) {
@@ -439,7 +538,7 @@ export function AloysiusRegistrationForm() {
               <label className={labelClass} htmlFor="name">
                 Full Name *
               </label>
-              <input id="name" className={fieldClass} placeholder="Your full name" {...register('name')} />
+              <input id="name" className={fieldClass} {...register('name')} />
               {errors.name && <p className={errorClass}>{errors.name.message}</p>}
             </div>
 
@@ -451,7 +550,6 @@ export function AloysiusRegistrationForm() {
                 id="email"
                 type="email"
                 className={fieldClass}
-                placeholder="you@example.com"
                 {...register('email')}
               />
               {errors.email && <p className={errorClass}>{errors.email.message}</p>}
@@ -464,7 +562,6 @@ export function AloysiusRegistrationForm() {
               <input
                 id="phone"
                 className={fieldClass}
-                placeholder="10-digit mobile"
                 {...register('phone')}
               />
               {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
@@ -478,7 +575,6 @@ export function AloysiusRegistrationForm() {
                 id="age"
                 type="number"
                 className={fieldClass}
-                placeholder="Age"
                 {...register('age')}
               />
               {errors.age && <p className={errorClass}>{errors.age.message}</p>}
@@ -510,7 +606,7 @@ export function AloysiusRegistrationForm() {
               <label className={labelClass} htmlFor="city">
                 City *
               </label>
-              <input id="city" className={fieldClass} placeholder="Mangaluru" {...register('city')} />
+              <input id="city" className={fieldClass} {...register('city')} />
               {errors.city && <p className={errorClass}>{errors.city.message}</p>}
             </div>
 
@@ -521,7 +617,6 @@ export function AloysiusRegistrationForm() {
               <input
                 id="emergencyContact"
                 className={fieldClass}
-                placeholder="Emergency phone number"
                 {...register('emergencyContact')}
               />
               {errors.emergencyContact && (
@@ -577,6 +672,7 @@ export function AloysiusRegistrationForm() {
               <input
                 type="checkbox"
                 className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black text-[#FF2D87] focus:ring-[#FF2D87]"
+                disabled={paymentStatus !== 'idle' && paymentStatus !== 'retry-needed'}
                 {...register('declarationAgreed')}
               />
               <span className="text-sm text-white/70 leading-relaxed break-words min-w-0">
@@ -589,13 +685,83 @@ export function AloysiusRegistrationForm() {
               <p className={errorClass}>{errors.declarationAgreed.message}</p>
             )}
 
+            {/* VERIFYING: prominent processing banner — reassure the user their money was captured */}
+            {paymentStatus === 'verifying' && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-[#FF2D87]/40 bg-[#FF2D87]/5 p-4 sm:p-5"
+              >
+                <div className="flex items-start gap-3">
+                  <Loader2 className="w-6 h-6 text-[#FF2D87] animate-spin shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-white tracking-wide">
+                      {verifyMessage || 'Verifying payment...'}
+                    </p>
+                    <p className="text-xs text-white/55 mt-1 leading-relaxed break-words">
+                      Your payment has been received by Razorpay. Please keep this tab open — we are
+                      confirming the transaction and generating your ticket. This usually takes a
+                      few seconds.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* RETRY NEEDED: critical warning + Retry button using SAME IDs */}
+            {paymentStatus === 'retry-needed' && pendingVerify && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-amber-400/35 bg-amber-400/5 p-4 sm:p-5 space-y-4"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 shrink-0 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center mt-0.5">
+                    <span className="text-amber-300 text-xs font-bold">!</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-amber-200 tracking-wide">
+                      Do NOT make another payment
+                    </p>
+                    <p className="text-xs text-white/60 mt-1 leading-relaxed break-words">
+                      Your payment with Razorpay may already be complete. Please use the Retry button
+                      below to finish verifying your registration with the same transaction details.
+                      If you close this page and need help, email balipurunclub@gmail.com with your
+                      order ID.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono bg-black/40 rounded-xl p-3 border border-white/5 break-all">
+                  <div>
+                    <p className="text-white/40 mb-1">Order ID</p>
+                    <p className="text-white/80">{pendingVerify.razorpay_order_id}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Payment ID</p>
+                    <p className="text-white/80">{pendingVerify.razorpay_payment_id}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => void runVerification(pendingVerify)}
+                  disabled={verifyRunningRef.current}
+                  className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[#FF2D87] px-6 py-3 text-sm font-bold text-white hover:bg-[#ff4d9a] disabled:opacity-50 transition-colors"
+                >
+                  <Loader2 className={`w-4 h-4 animate-spin ${verifyRunningRef.current ? '' : 'hidden'}`} />
+                  {verifyRunningRef.current ? 'Verifying...' : 'Retry Verification'}
+                </button>
+              </motion.div>
+            )}
+
             {pricingError && !pricing && (
               <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300 break-words">
                 {pricingError}
               </div>
             )}
 
-            {submitError && (
+            {submitError && paymentStatus !== 'retry-needed' && (
               <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300 break-words">
                 {submitError}
               </div>
@@ -753,7 +919,13 @@ export function AloysiusRegistrationForm() {
             {busy ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Processing…
+                {(paymentStatus as PaymentStatus) === 'verifying'
+                  ? 'Verifying payment...'
+                  : (paymentStatus as PaymentStatus) === 'razorpay-open'
+                  ? 'Opening payment...'
+                  : (paymentStatus as PaymentStatus) === 'creating-order'
+                  ? 'Preparing your order...'
+                  : 'Processing...'}
               </>
             ) : isFree ? (
               <>Register for Free</>

@@ -15,6 +15,7 @@ import {
   RefreshCw,
   AlertCircle,
   Send,
+  XCircle,
 } from 'lucide-react';
 import type { Registration } from '@/types';
 
@@ -30,11 +31,23 @@ type SendOneState = {
   message?: string;
 } | null;
 
+type CheckinOneState = {
+  uid: string;
+  phase: 'checking-in' | 'unchecking' | 'error';
+  message?: string;
+} | null;
+
 type ConfirmModalState =
   | { step: 'confirm'; reg: Registration }
   | { step: 'working'; reg: Registration }
   | { step: 'success'; reg: Registration; ticketId?: string; emailSent: boolean }
   | { step: 'error'; reg: Registration; message: string };
+
+type BulkUncheckModalState =
+  | { step: 'confirm' }
+  | { step: 'working' }
+  | { step: 'success'; updatedCount: number }
+  | { step: 'error'; message: string };
 
 export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,7 +58,9 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
   const [checkinFilter, setCheckinFilter] = useState<'all' | 'checked-in' | 'not-checked-in'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState | null>(null);
+  const [bulkUncheckModal, setBulkUncheckModal] = useState<BulkUncheckModalState | null>(null);
   const [sendOneState, setSendOneState] = useState<SendOneState>(null);
+  const [checkinOneState, setCheckinOneState] = useState<CheckinOneState>(null);
   const ROWS_PER_PAGE = 20;
 
   const needsConfirmationEmail = (reg: Registration) =>
@@ -78,6 +93,61 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
         message: err instanceof Error ? err.message : 'Failed',
       });
       setTimeout(() => setSendOneState(null), 4500);
+    }
+  };
+
+  const handleUncheckAttendance = async (reg: Registration) => {
+    if (!reg.attended) return;
+    const ok = window.confirm(
+      `Undo check-in for ${reg.name} (${reg.ticketId || reg.uid})?\n\nThis will clear the attended flag.`
+    );
+    if (!ok) return;
+    setCheckinOneState({ uid: reg.uid, phase: 'unchecking' });
+    try {
+      const res = await fetch('/api/admin/registrations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: reg.uid, attended: false }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed to uncheck attendance');
+      }
+      onUpdated?.();
+      setCheckinOneState(null);
+    } catch (err) {
+      setCheckinOneState({
+        uid: reg.uid,
+        phase: 'error',
+        message: err instanceof Error ? err.message : 'Failed',
+      });
+      setTimeout(() => setCheckinOneState(null), 4500);
+    }
+  };
+
+  const runBulkUncheck = async () => {
+    const checkedInIds = data.filter(r => r.attended).map(r => r.uid);
+    if (checkedInIds.length === 0) return;
+    setBulkUncheckModal({ step: 'working' });
+    try {
+      const res = await fetch('/api/admin/registrations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: checkedInIds, attended: false }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || 'Failed to bulk uncheck');
+      }
+      const d = await res.json().catch(() => ({}));
+      const updatedCount = Number(d.updatedCount) || checkedInIds.length;
+      onUpdated?.();
+      setBulkUncheckModal({ step: 'success', updatedCount });
+    } catch (err) {
+      setBulkUncheckModal({
+        step: 'error',
+        message: err instanceof Error ? err.message : 'Failed',
+      });
     }
   };
 
@@ -225,28 +295,40 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
   return (
     <div className="space-y-4">
       {/* Check-in filter tabs */}
-      <div className="flex gap-2 flex-wrap">
-        {([
-          { val: 'all', label: `All (${data.length})` },
-          { val: 'checked-in', label: `✓ Checked In (${checkedInCount})` },
-          { val: 'not-checked-in', label: `⏳ Not Yet (${notCheckedInCount})` },
-        ] as const).map(tab => (
+      <div className="flex gap-2 flex-wrap items-center justify-between">
+        <div className="flex gap-2 flex-wrap">
+          {([
+            { val: 'all', label: `All (${data.length})` },
+            { val: 'checked-in', label: `✓ Checked In (${checkedInCount})` },
+            { val: 'not-checked-in', label: `⏳ Not Yet (${notCheckedInCount})` },
+          ] as const).map(tab => (
+            <button
+              key={tab.val}
+              onClick={() => handleCheckinFilterChange(tab.val)}
+              className={`px-4 py-2 min-h-11 rounded-xl text-xs font-bold transition-all border ${
+                checkinFilter === tab.val
+                  ? tab.val === 'checked-in'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md'
+                    : tab.val === 'not-checked-in'
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-md'
+                    : 'bg-[#FF2D87] text-white border-[#FF2D87] shadow-md'
+                  : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {checkedInCount > 0 && (
           <button
-            key={tab.val}
-            onClick={() => handleCheckinFilterChange(tab.val)}
-            className={`px-4 py-2 min-h-11 rounded-xl text-xs font-bold transition-all border ${
-              checkinFilter === tab.val
-                ? tab.val === 'checked-in'
-                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-md'
-                  : tab.val === 'not-checked-in'
-                  ? 'bg-amber-500 text-white border-amber-500 shadow-md'
-                  : 'bg-[#FF2D87] text-white border-[#FF2D87] shadow-md'
-                : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
-            }`}
+            type="button"
+            onClick={() => setBulkUncheckModal({ step: 'confirm' })}
+            className="inline-flex items-center gap-1.5 px-4 py-2 min-h-11 rounded-xl text-xs font-bold transition-all border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200"
           >
-            {tab.label}
+            <XCircle className="w-3.5 h-3.5" />
+            Uncheck All {checkedInCount}
           </button>
-        ))}
+        )}
       </div>
 
       {/* Controls */}
@@ -446,8 +528,27 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
                       >
                         Check In
                       </button>
+                    ) : checkinOneState?.uid === reg.uid ? (
+                      checkinOneState.phase === 'unchecking' ? (
+                        <span className="inline-flex items-center gap-1.5 text-[#FF2D87] text-xs font-semibold">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          Undoing…
+                        </span>
+                      ) : (
+                        <span className="text-red-400 text-xs font-bold" title={checkinOneState.message}>
+                          Failed
+                        </span>
+                      )
                     ) : (
-                      <span className="text-green-400/60 text-xs font-bold uppercase tracking-wider">✓ Done</span>
+                      <button
+                        type="button"
+                        onClick={() => handleUncheckAttendance(reg)}
+                        className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-semibold text-xs min-h-11 px-4 py-2 rounded-full transition-colors inline-flex items-center gap-1.5"
+                        title="Revert check-in (uncheck)"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        ✓ Checked In · Undo
+                      </button>
                     )}
                   </div>
                 )}
@@ -636,10 +737,27 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
                             >
                               Check In
                             </button>
+                          ) : checkinOneState?.uid === reg.uid ? (
+                            checkinOneState.phase === 'unchecking' ? (
+                              <span className="inline-flex items-center gap-1.5 text-[#FF2D87] text-[11px] font-semibold px-3 py-1.5 border border-[#FF2D87]/30 rounded-full bg-[#FF2D87]/10">
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                Undoing…
+                              </span>
+                            ) : (
+                              <span className="text-red-400 text-[11px] font-bold px-3 py-1.5 border border-red-500/20 rounded-full bg-red-500/5" title={checkinOneState.message}>
+                                Failed
+                              </span>
+                            )
                           ) : (
-                            <span className="text-green-400/50 font-medium text-[10px] uppercase tracking-wider px-3 py-1.5 border border-green-500/20 rounded-full bg-green-500/5">
-                              Done
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleUncheckAttendance(reg)}
+                              className="text-emerald-300 hover:text-emerald-100 hover:bg-emerald-500/25 font-semibold text-[10px] uppercase tracking-wider px-3 py-1.5 border border-emerald-500/30 rounded-full bg-emerald-500/10 inline-flex items-center gap-1.5 transition-colors"
+                              title="Revert check-in (uncheck)"
+                            >
+                              <X className="w-3 h-3" />
+                              Checked-in · Undo
+                            </button>
                           )
                         )}
                       </div>
@@ -819,6 +937,133 @@ export function RegistrationsTable({ data, onManualCheckin, onUpdated }: Props) 
                       type="button"
                       onClick={() => setConfirmModal({ step: 'confirm', reg: confirmModal.reg })}
                       className="flex-1 min-h-11 rounded-full bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-semibold transition-colors"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bulkUncheckModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0a0a0a] border border-red-500/30 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in-up mx-2">
+            <div className="relative p-5 sm:p-6 text-center border-b border-white/10">
+              <div
+                className={`w-14 h-14 border rounded-full flex items-center justify-center mx-auto mb-4 ${
+                  bulkUncheckModal.step === 'error'
+                    ? 'bg-red-500/15 border-red-500/30'
+                    : bulkUncheckModal.step === 'success'
+                      ? 'bg-emerald-500/15 border-emerald-500/30'
+                      : 'bg-red-500/15 border-red-500/30'
+                }`}
+              >
+                {bulkUncheckModal.step === 'working' ? (
+                  <RefreshCw className="w-7 h-7 text-red-400 animate-spin" />
+                ) : bulkUncheckModal.step === 'success' ? (
+                  <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+                ) : bulkUncheckModal.step === 'error' ? (
+                  <AlertCircle className="w-7 h-7 text-red-400" />
+                ) : (
+                  <XCircle className="w-7 h-7 text-red-400" />
+                )}
+              </div>
+              <h2 className="font-heading text-white uppercase tracking-wide text-xl sm:text-2xl mb-1">
+                {bulkUncheckModal.step === 'confirm' && 'Uncheck All Attendees'}
+                {bulkUncheckModal.step === 'working' && 'Unchecking…'}
+                {bulkUncheckModal.step === 'success' && 'Done'}
+                {bulkUncheckModal.step === 'error' && 'Could Not Uncheck'}
+              </h2>
+              {bulkUncheckModal.step !== 'working' && (
+                <button
+                  type="button"
+                  onClick={() => setBulkUncheckModal(null)}
+                  className="absolute top-4 right-4 p-2 text-white/40 hover:bg-white/10 rounded-full transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-5">
+              {bulkUncheckModal.step === 'confirm' && (
+                <>
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-200 text-center space-y-2">
+                    <p>
+                      This will revert the check-in status for{' '}
+                      <span className="font-bold text-white">{checkedInCount}</span>{' '}
+                      attendee{checkedInCount === 1 ? '' : 's'}.
+                    </p>
+                    <p className="text-red-300/80 text-xs">
+                      The attended flag and timestamp will be cleared for all currently checked-in registrations.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setBulkUncheckModal(null)}
+                      className="flex-1 min-h-11 rounded-full border border-white/20 text-white/80 hover:bg-white/5 font-semibold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={runBulkUncheck}
+                      className="flex-1 min-h-11 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold inline-flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <XCircle className="w-5 h-5" />
+                      Uncheck All {checkedInCount}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {bulkUncheckModal.step === 'working' && (
+                <p className="text-center text-white/55 text-sm py-4">
+                  Clearing check-in status for all attendees…
+                </p>
+              )}
+
+              {bulkUncheckModal.step === 'success' && (
+                <>
+                  <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 text-center">
+                    <p>
+                      Reverted check-in for{' '}
+                      <span className="font-bold text-white">{bulkUncheckModal.updatedCount}</span>{' '}
+                      attendee{bulkUncheckModal.updatedCount === 1 ? '' : 's'}.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setBulkUncheckModal(null)}
+                    className="w-full min-h-11 rounded-full bg-[#FF2D87] hover:bg-[#ff4d9a] text-white font-semibold transition-colors"
+                  >
+                    Done
+                  </button>
+                </>
+              )}
+
+              {bulkUncheckModal.step === 'error' && (
+                <>
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 text-center break-words">
+                    {bulkUncheckModal.message}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setBulkUncheckModal(null)}
+                      className="flex-1 min-h-11 rounded-full border border-white/20 text-white/80 hover:bg-white/5 font-semibold transition-colors"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBulkUncheckModal({ step: 'confirm' })}
+                      className="flex-1 min-h-11 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
                     >
                       Try again
                     </button>

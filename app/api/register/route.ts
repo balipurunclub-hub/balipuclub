@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { registrations } from '@/lib/db/schema';
+import { registrations, coupons as couponsTable } from '@/lib/db/schema';
 import { razorpay } from '@/lib/razorpay';
 import {
   allocateAloysiusFreeTicket,
@@ -15,8 +16,7 @@ import {
   feeRupeesToPaise,
   getPricingForCount,
 } from '@/lib/registrationPhases';
-import { applyCoupon, normalizeCouponCode } from '@/lib/coupons';
-import { coupons } from '@/lib/db/schema';
+import { applyCoupon, normalizeCouponCode, findCoupon } from '@/lib/coupons';
 import { sendRegistrationConfirmationEmail } from '@/lib/sendRegistrationEmail';
 
 export const maxDuration = 60;
@@ -34,6 +34,14 @@ const registrationSchema = z.object({
   declarationAgreed: z.literal(true),
   couponCode: z.string().max(32).optional().nullable(),
 });
+
+function normalizeEmail(e: string): string {
+  return e.trim().toLowerCase();
+}
+function normalizePhone(p: string): string {
+  // Strip non-digits so +91-98765-43210 and 9876543210 compare equal.
+  return (p ?? '').replace(/\D/g, '');
+}
 
 export async function POST(req: Request) {
   try {
@@ -64,9 +72,78 @@ export async function POST(req: Request) {
     const confirmedCount = await getAloysiusConfirmedCount();
     const pricing = getPricingForCount(confirmedCount);
 
+    // ---- Duplicate protection: prevent accidental double-clicks creating paid dupes ----
+    // Only block if an already-PAID registration exists with the same email+phone+event.
+    // Pending registrations are allowed because: (a) user may legitimately re-try after
+    // an abandoned order, and (b) families sharing contact info is allowed via multiple
+    // independent pending → paid flows (uniqueness constraints and idempotent verify
+    // still prevent double-charging).
+    const normEmail = normalizeEmail(data.email);
+    const normPhone = normalizePhone(data.phone);
+    const existingPaidMatches = await db
+      .select({ id: registrations.id, ticketId: registrations.ticketId })
+      .from(registrations)
+      .where(
+        and(
+          eq(registrations.eventId, ALOYSIUS_EVENT_ID),
+          eq(registrations.paymentStatus, 'paid'),
+          sql`lower(${registrations.email}) = ${normEmail}`,
+          sql`regexp_replace(${registrations.phone}, '[^0-9]', '', 'g') = ${normPhone}`
+        )
+      )
+      .limit(1);
+
+    if (existingPaidMatches.length > 0) {
+      const hit = existingPaidMatches[0];
+      return NextResponse.json(
+        {
+          error: 'A completed registration already exists for this contact. Check your email or visit the ticket page.',
+          code: 'ALREADY_REGISTERED',
+          existingRegistrationId: hit.id,
+          existingTicketId: hit.ticketId ?? null,
+        },
+        { status: 409 }
+      );
+    }
+
     if (pricing.feeRupees === 0) {
-      const assigned = await allocateAloysiusFreeTicket();
-      if (!assigned) {
+      // ---- FREE TIER: allocation + insert in ONE atomic transaction ----
+      // If INSERT fails (constraint violation, DB down, …), counter bumps roll back.
+      const freeResult = await db.transaction(async (tx) => {
+        const assigned = await allocateAloysiusFreeTicket(tx);
+        if (!assigned) {
+          return { kind: 'full' as const };
+        }
+
+        const [row] = await tx
+          .insert(registrations)
+          .values({
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            age: data.age,
+            gender: data.gender,
+            city: data.city,
+            emergencyContact: data.emergencyContact,
+            source: data.source,
+            jerseySize: data.jerseySize,
+            eventId: ALOYSIUS_EVENT_ID,
+            eventName: ALOYSIUS_EVENT_NAME,
+            entryType: 'free',
+            paymentStatus: 'paid',
+            paymentId: 'FREE',
+            feeRupees: 0,
+            pricingPhase: 1,
+            pricingTierId: 'phase1-free',
+            ticketId: assigned.ticketId,
+            bibNumber: assigned.bibNumber,
+          })
+          .returning();
+
+        return { kind: 'ok' as const, row, assigned };
+      });
+
+      if (freeResult.kind === 'full') {
         return NextResponse.json(
           {
             error:
@@ -77,32 +154,10 @@ export async function POST(req: Request) {
         );
       }
 
-      const [row] = await db
-        .insert(registrations)
-        .values({
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          age: data.age,
-          gender: data.gender,
-          city: data.city,
-          emergencyContact: data.emergencyContact,
-          source: data.source,
-          jerseySize: data.jerseySize,
-          eventId: ALOYSIUS_EVENT_ID,
-          eventName: ALOYSIUS_EVENT_NAME,
-          entryType: 'free',
-          paymentStatus: 'paid',
-          paymentId: 'FREE',
-          feeRupees: 0,
-          pricingPhase: 1,
-          pricingTierId: 'phase1-free',
-          ticketId: assigned.ticketId,
-          bibNumber: assigned.bibNumber,
-        })
-        .returning();
+      const { row } = freeResult;
 
-      const emailPromise = sendRegistrationConfirmationEmail({
+      // Email dispatched AFTER success (never blocks response).
+      void sendRegistrationConfirmationEmail({
         registrationId: row.id,
         name: row.name,
         email: row.email,
@@ -111,12 +166,12 @@ export async function POST(req: Request) {
         jerseySize: row.jerseySize,
         entryType: row.entryType,
         eventName: row.eventName,
+      }).catch((emailErr) => {
+        console.error('[register:free] async email send failed', {
+          registrationId: row.id,
+          err: emailErr instanceof Error ? emailErr.message : String(emailErr),
+        });
       });
-
-      await Promise.race([
-        emailPromise,
-        new Promise<void>((resolve) => setTimeout(resolve, 8000)),
-      ]);
 
       return NextResponse.json({
         free: true,
@@ -150,6 +205,7 @@ export async function POST(req: Request) {
       };
       let dbCouponsList: DbCouponShape[] = [];
       try {
+        // @ts-expect-error coupons table alias compat
         const dbRows = await db.select().from(coupons);
         dbCouponsList = dbRows.map((r): DbCouponShape => ({
           code: r.code,
