@@ -168,7 +168,7 @@ export async function POST(req: Request) {
         let bibNumber = reg.bibNumber;
         if (!ticketId) {
           // Orphan paid row → recover WITHOUT bumping confirmedCount.
-          const recovered = await allocateAloysiusTicketRecovery(tx as unknown as AnyDb);
+          const recovered = await allocateAloysiusTicketRecovery(tx);
           ticketId = recovered.ticketId;
           bibNumber = recovered.bibNumber;
           await tx
@@ -233,7 +233,7 @@ export async function POST(req: Request) {
           const m = findCoupon(reg.couponCode);
           if (m) maxUses = m.maxUses;
         }
-        const used = await getPaidCouponUseCount(reg.couponCode, tx as unknown as AnyDb);
+        const used = await getPaidCouponUseCount(reg.couponCode, tx);
         if (used >= maxUses) {
           logWebhook('warn', 'coupon exhausted at webhook verify', {
             ...meta,
@@ -250,7 +250,7 @@ export async function POST(req: Request) {
       }
 
       // ---- Pending → paid: normal allocation (confirmedCount bumped once) ----
-      const assigned = await allocateAloysiusTicket(tx as unknown as AnyDb, {
+      const assigned = await allocateAloysiusTicket(tx, {
         bumpConfirmed: true,
       });
 
