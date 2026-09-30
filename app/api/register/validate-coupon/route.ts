@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAloysiusConfirmedCount, getPaidCouponUseCount } from '@/lib/aloysiusRegistration';
 import { applyCoupon, normalizeCouponCode, findCoupon, isCouponAvailable, VEER30_COUPON } from '@/lib/coupons';
-import { getPricingForCount } from '@/lib/registrationPhases';
+import { getPricingForCount, PRICING_TIERS } from '@/lib/registrationPhases';
 import { db } from '@/lib/db';
 import { coupons } from '@/lib/db/schema';
 
@@ -33,9 +33,22 @@ async function getDbCoupons(): Promise<DbCouponShape[]> {
       validUntil: r.validUntil,
       minFeeRupees: 1,
     }));
-  } catch {
+  } catch (err) {
+    console.error('getDbCoupons failed:', err);
     return [];
   }
+}
+
+/**
+ * When free slots are active (feeRupees = 0), coupons can't apply to a ₹0 fee.
+ * Use the first paid tier's fee instead so the coupon validation makes sense.
+ * The actual registration flow will also land on paid pricing when a coupon is used
+ * (the /api/register route re-checks pricing server-side).
+ */
+function getEffectiveFeeRupees(feeRupees: number): number {
+  if (feeRupees > 0) return feeRupees;
+  const firstPaidTier = PRICING_TIERS.find((t) => t.feeRupees > 0);
+  return firstPaidTier?.feeRupees ?? 200;
 }
 
 export async function POST(req: Request) {
@@ -53,9 +66,13 @@ export async function POST(req: Request) {
     const code = normalizeCouponCode(parsed.data.couponCode);
     const paidUseCount = await getPaidCouponUseCount(code);
     const dbCoupons = await getDbCoupons();
+
+    // Use effective fee — if currently free tier, validate against first paid tier fee
+    const effectiveFee = getEffectiveFeeRupees(pricing.feeRupees);
+
     const result = applyCoupon({
       code,
-      baseFeeRupees: pricing.feeRupees,
+      baseFeeRupees: effectiveFee,
       paidUseCount,
       dbCoupons,
     });
@@ -69,7 +86,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ...result,
       phase: pricing.phase,
-      offerAvailable: matched ? isCouponAvailable(matched, pricing.feeRupees, paidUseCount) : false,
+      offerAvailable: matched ? isCouponAvailable(matched, effectiveFee, paidUseCount) : false,
       maxUses: matched?.maxUses ?? VEER30_COUPON.maxUses,
     });
   } catch (error: unknown) {

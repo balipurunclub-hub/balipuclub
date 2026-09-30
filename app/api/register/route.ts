@@ -15,6 +15,7 @@ import {
   ALOYSIUS_EVENT_NAME,
   feeRupeesToPaise,
   getPricingForCount,
+  PRICING_TIERS,
 } from '@/lib/registrationPhases';
 import { applyCoupon, normalizeCouponCode, findCoupon } from '@/lib/coupons';
 import { sendRegistrationConfirmationEmail } from '@/lib/sendRegistrationEmail';
@@ -192,6 +193,13 @@ export async function POST(req: Request) {
     let originalFeeRupees: number | null = null;
     let couponCode: string | null = null;
 
+    // When free slots are active (feeRupees = 0), validate the coupon against
+    // the first paid tier fee — same logic as validate-coupon route.
+    const effectiveFee =
+      pricing.feeRupees > 0
+        ? pricing.feeRupees
+        : (PRICING_TIERS.find((t) => t.feeRupees > 0)?.feeRupees ?? 200);
+
     const rawCoupon = data.couponCode ? normalizeCouponCode(data.couponCode) : '';
     if (rawCoupon) {
       const paidUseCount = await getPaidCouponUseCount(rawCoupon);
@@ -205,8 +213,7 @@ export async function POST(req: Request) {
       };
       let dbCouponsList: DbCouponShape[] = [];
       try {
-        // @ts-expect-error coupons table alias compat
-        const dbRows = await db.select().from(coupons);
+        const dbRows = await db.select().from(couponsTable);
         dbCouponsList = dbRows.map((r): DbCouponShape => ({
           code: r.code,
           percentOff: r.percentOff,
@@ -215,12 +222,13 @@ export async function POST(req: Request) {
           validUntil: r.validUntil,
           minFeeRupees: 1,
         }));
-      } catch {
+      } catch (err) {
+        console.error('[register] getDbCoupons failed:', err);
         dbCouponsList = [];
       }
       const couponResult = applyCoupon({
         code: rawCoupon,
-        baseFeeRupees: pricing.feeRupees,
+        baseFeeRupees: effectiveFee,
         paidUseCount,
         dbCoupons: dbCouponsList,
       });
