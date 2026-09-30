@@ -7,8 +7,8 @@ import nodemailer from 'nodemailer';
 import QRCode from 'qrcode';
 import fs from 'fs';
 import path from 'path';
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
 import { registrations } from '@/lib/db/schema';
 import { eq, and, isNull, or, inArray, ilike, sql } from 'drizzle-orm';
 import { ALOYSIUS_EVENT_NAME } from '@/lib/registrationPhases';
@@ -145,8 +145,8 @@ async function main() {
   }
 
   const delayMs = args.delayMs ?? 1000;
-  const sqlClient = neon(dbUrl);
-  const db = drizzle(sqlClient);
+  const pool = new Pool({ connectionString: dbUrl });
+  const db = drizzle(pool);
 
   const targets: { email: string }[] = [];
 

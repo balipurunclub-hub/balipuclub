@@ -3,8 +3,8 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env', override: false });
 
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
 import { registrations } from '@/lib/db/schema';
 import { eq, and, sql, or, asc } from 'drizzle-orm';
 import fs from 'fs';
@@ -158,8 +158,8 @@ async function main() {
     process.exit(1);
   }
 
-  const sqlClient = neon(dbUrl);
-  const db = drizzle(sqlClient);
+  const pool = new Pool({ connectionString: dbUrl });
+  const db = drizzle(pool);
 
   console.log('\nFetching confirmed tickets from DB...');
 

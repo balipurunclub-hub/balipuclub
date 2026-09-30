@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
-import type { NeonHttpDatabase, NeonTransaction } from 'drizzle-orm/neon-http';
+import type { NeonDatabase, NeonTransaction } from 'drizzle-orm/neon-serverless';
 import { db } from '@/lib/db';
 import { eventCounters, registrations } from '@/lib/db/schema';
 import { ALOYSIUS_EVENT_ID } from '@/lib/registrationPhases';
@@ -8,7 +8,7 @@ import type * as schema from '@/lib/db/schema';
 // Accept either the global Neon DB singleton OR an active transaction.
 // Use a looser structural type at runtime-check sites because Drizzle transaction
 // objects share the same structural query-builder surface (select/insert/update/etc).
-export type AnyDb = NeonHttpDatabase<typeof schema> | NeonTransaction<any, any>;
+export type AnyDb = NeonDatabase<typeof schema> | NeonTransaction<any, any>;
 
 function withDb(tx?: AnyDb): AnyDb {
   return tx ?? (db as unknown as AnyDb);

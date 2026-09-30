@@ -1,5 +1,5 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
 import * as schema from './schema';
 
 type DbClient = ReturnType<typeof drizzle<typeof schema>>;
@@ -15,8 +15,8 @@ function createDb(): DbClient {
   if (!url) {
     throw new Error('DATABASE_URL is not set. Add your Neon connection string to .env.local');
   }
-  const sql = neon(url);
-  return drizzle(sql, { schema });
+  const pool = new Pool({ connectionString: url });
+  return drizzle(pool, { schema });
 }
 
 export const db = new Proxy({} as DbClient, {
