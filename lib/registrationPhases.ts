@@ -3,13 +3,11 @@
  * Phases unlock automatically from confirmed (paid/free) registration count.
  *
  * Slot numbers are 1-based (registration #1, #2, …):
- *   1–10      → Free
- *   11–100    → ₹200 (Phase 1)
- *   101–200   → ₹250 (Phase 2)
- *   201–300   → ₹300 (Phase 3)
- *   301–1217  → ₹350 (Phase 4, filled)
- *   1218–1267 → ₹400 (Phase 5, next 50 from current count)
- *   1268+     → ₹450 (Phase 6)
+ *   1–10    → Free
+ *   11–100  → ₹200 (Phase 1)
+ *   101–200 → ₹250 (Phase 2)
+ *   201–300 → ₹300 (Phase 3)
+ *   301+    → ₹400 (Phase 4)
  */
 
 export const ALOYSIUS_EVENT_ID = 'balipu-x-aloysius';
@@ -71,28 +69,10 @@ export const PRICING_TIERS: PricingTier[] = [
     id: 'phase4',
     phase: 4,
     label: 'Phase 4',
-    rangeLabel: '301 – 1217',
+    rangeLabel: '301 & above',
     minSlot: 301,
-    maxSlot: 1217,
-    feeRupees: 350,
-  },
-  {
-    id: 'phase5',
-    phase: 5,
-    label: 'Phase 5',
-    rangeLabel: '1218 – 1267',
-    minSlot: 1218,
-    maxSlot: 1267,
-    feeRupees: 400,
-  },
-  {
-    id: 'phase6',
-    phase: 6,
-    label: 'Phase 6',
-    rangeLabel: '1268 & above',
-    minSlot: 1268,
     maxSlot: null,
-    feeRupees: 450,
+    feeRupees: 400,
   },
 ];
 
