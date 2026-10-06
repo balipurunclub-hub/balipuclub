@@ -7,7 +7,7 @@
  *   11–100  → ₹200 (Phase 1)
  *   101–200 → ₹250 (Phase 2)
  *   201–300 → ₹300 (Phase 3)
- *   301+    → ₹400 (Phase 4)
+ *   301+    → ₹350 (Phase 4)
  */
 
 export const ALOYSIUS_EVENT_ID = 'balipu-x-aloysius';
@@ -72,7 +72,7 @@ export const PRICING_TIERS: PricingTier[] = [
     rangeLabel: '301 & above',
     minSlot: 301,
     maxSlot: null,
-    feeRupees: 400,
+    feeRupees: 350,
   },
 ];
 
